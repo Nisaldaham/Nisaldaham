@@ -4,193 +4,417 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Educational Resources - Free Study Materials for Students</title>
+    <title>CineSearch Pro | Deep Search Mode</title>
 
     <!-- GOOGLE FONTS -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-        as="style">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- FONT AWESOME -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
-        media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
     <!-- TAILWIND CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <meta property="og:image" content="https://apilage.lk/banner_3.png">
-    <meta name="twitter:image" content="https://apilage.lk/banner_3.png">
-    <meta name="description"
-        content="Access free educational resources for students affected by recent floods. Browse materials by grade or subject and download instantly.">
-
     <style>
-        * {
-            font-family: 'Inter', sans-serif;
+        body { font-family: 'Inter', sans-serif; }
+
+        .dot { transition: transform 0.3s ease; }
+        #viewToggle:checked ~ .relative .block { background-color: #ef4444; }
+        #viewToggle:checked ~ .relative .dot { transform: translateX(1.5rem); }
+
+        /* Deep Search Toggle Style */
+        #deepSearchToggle:checked ~ .relative .block { background-color: #8b5cf6; }
+        #deepSearchToggle:checked ~ .relative .dot { transform: translateX(1.5rem); }
+
+        #resultsContainer.grid-view {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.5rem;
         }
 
-        /* Custom Styles for a more polished UI */
-        body {
-            background-color: #f8fafc; /* Softer gray background */
+        #resultsContainer.list-view {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
         }
 
-        #google_translate_element {
-            position: fixed;
-            top: 1rem;
-            right: 1rem;
-            z-index: 1000;
+        .movie-card {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            border: 1px solid #e2e8f0;
             background: white;
-            padding: 0.25rem 0.5rem;
-            border-radius: 0.5rem;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            font-size: 0.875rem;
         }
 
-        .goog-te-gadget img {
-            display: none;
+        .movie-card:hover {
+            transform: scale(1.02);
+            border-color: #ef4444;
+            box-shadow: 0 10px 25px -5px rgba(239, 68, 68, 0.15);
         }
 
-        .header-card {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        .category-badge {
+            font-size: 0.6rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
-        .filter-btn {
-            transition: all 0.2s ease-in-out;
-            border: 1px solid transparent;
+        .highlight {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border-radius: 2px;
+            font-weight: 700;
         }
 
-        .filter-btn.active {
-            background-color: #3b82f6; /* Professional blue */
-            color: white;
-            border-color: #3b82f6;
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+        .deep-highlight {
+            background-color: #ede9fe;
+            color: #5b21b6;
+            border-radius: 2px;
+            font-weight: 700;
+        }
+
+        .sticky-search {
+            position: sticky;
+            top: 1rem;
+            z-index: 50;
+        }
+
+        .btn-filter {
+            transition: all 0.2s;
+        }
+        .btn-filter:hover {
             transform: translateY(-2px);
         }
 
-        .filter-btn:not(.active):hover {
-            background-color: #f3f4f6;
-            border-color: #d1d5db;
+        /* Loading Animation */
+        .scanning-line {
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #8b5cf6, transparent);
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            animation: scan 2s linear infinite;
+        }
+
+        @keyframes scan {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
         }
     </style>
 </head>
 
-<body class="p-4 md:p-6">
-    <!-- Header -->
-    <header class="bg-white rounded-xl header-card sticky top-4 z-50">
-        <div class="container mx-auto px-4 py-3">
-            <div class="flex items-center justify-between">
-                <a href="/" class="flex items-center gap-3">
-                    <div class="bg-blue-600 p-3 rounded-lg">
-                        <i class="fas fa-book-open text-2xl text-white"></i>
-                    </div>
-                    <div>
-                        <h1 class="text-xl md:text-2xl font-bold text-gray-800">Educational Resources</h1>
-                        <p class="text-xs md:text-sm text-gray-500">Support for flood-affected students</p>
-                    </div>
-                </a>
-                <a href="/"
-                    class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 md:px-5 py-2 rounded-lg transition-colors text-sm md:text-base font-medium">
-                    <i class="fas fa-home mr-2 opacity-70"></i>Home
-                </a>
-            </div>
-        </div>
-    </header>
+<body class="bg-slate-50 min-h-screen pb-20">
 
-    <div class="container mx-auto max-w-7xl px-4 py-6 md:py-8">
-        <!-- Breadcrumb -->
-        <div id="breadcrumb" class="mb-6 flex items-center gap-2 text-sm text-gray-500 flex-wrap">
-            <a href="#" onclick="showGrades(); return false;" class="hover:text-blue-600 transition-colors">
-                <i class="fas fa-home mr-1.5"></i>All Grades
-            </a>
+    <div class="container mx-auto max-w-5xl px-4 py-12">
+        <div class="text-center mb-10">
+            <div class="inline-block bg-indigo-600 text-white px-4 py-1 rounded-md text-[10px] font-black mb-4 uppercase tracking-widest shadow-lg shadow-indigo-200">System v4.0</div>
+            <h1 class="text-4xl font-black text-slate-900 mb-2 tracking-tighter">DEEP FILM FINDER</h1>
+            <p class="text-slate-500 font-medium italic">Scanning sub-directories of animation & movie nodes...</p>
         </div>
 
-        <!-- Search & Filter Bar -->
-        <div class="bg-white rounded-xl shadow-sm p-4 md:p-6 mb-8">
-            <div class="flex flex-col md:flex-row items-stretch md:items-center gap-4">
-                <div class="flex-1">
-                     <h2 class="text-lg font-semibold text-gray-700 mb-3">Browse Resources</h2>
-                    <div class="relative">
-                        <input type="text" id="searchInput" placeholder="Search for notes, past papers, etc."
-                            onkeyup="searchMaterials(this.value)"
-                            class="w-full px-4 py-3 pl-11 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none text-sm md:text-base">
-                        <i
-                            class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                    </div>
+        <!-- Search Bar Area -->
+        <div class="sticky-search bg-white/95 backdrop-blur-xl p-4 rounded-3xl shadow-2xl border border-white mb-6">
+            <div class="flex flex-col md:flex-row gap-4 items-center">
+                <div class="relative flex-grow w-full">
+                    <i class="fas fa-search-plus absolute left-4 top-1/2 -translate-y-1/2 text-indigo-500"></i>
+                    <input type="text" id="searchInput" placeholder="Enter title or deep keywords..."
+                        class="w-full pl-12 pr-4 py-4 rounded-2xl border-none bg-slate-50 focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all outline-none text-lg font-semibold">
+                    <div id="scanningLine" class="scanning-line hidden"></div>
                 </div>
-                <div class="md:ml-4">
-                     <h2 class="text-lg font-semibold text-gray-700 mb-3">Filter by Type</h2>
-                    <div id="filterContainer" class="flex flex-wrap gap-2">
-                        <button class="filter-btn px-4 py-2 rounded-lg bg-gray-100 text-gray-800 font-medium" data-filter="" onclick="filterByType('')">All Types</button>
-                        <button class="filter-btn px-4 py-2 rounded-lg bg-gray-100 text-gray-800 font-medium" data-filter="notes" onclick="filterByType('notes')">Notes</button>
-                        <button class="filter-btn px-4 py-2 rounded-lg bg-gray-100 text-gray-800 font-medium" data-filter="past_papers" onclick="filterByType('past_papers')">Past Papers</button>
-                        <button class="filter-btn px-4 py-2 rounded-lg bg-gray-100 text-gray-800 font-medium" data-filter="worksheets" onclick="filterByType('worksheets')">Worksheets</button>
-                        <button class="filter-btn px-4 py-2 rounded-lg bg-gray-100 text-gray-800 font-medium" data-filter="videos" onclick="filterByType('videos')">Videos</button>
+
+                <div class="flex gap-4 w-full md:w-auto">
+                    <!-- Deep Search Toggle -->
+                    <div class="flex items-center bg-indigo-50 p-2 rounded-2xl flex-grow md:flex-grow-0">
+                        <span class="text-[9px] font-black text-indigo-400 px-2 uppercase">Deep Search</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="deepSearchToggle" class="sr-only">
+                            <div class="block bg-slate-300 w-14 h-8 rounded-full relative">
+                                <div class="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full shadow-md"></div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- View Toggle -->
+                    <div class="flex items-center bg-slate-100 p-2 rounded-2xl">
+                        <span class="text-[9px] font-black text-slate-400 px-2 uppercase">Grid</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="viewToggle" class="sr-only" checked>
+                            <div class="block bg-slate-300 w-14 h-8 rounded-full relative">
+                                <div class="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full shadow-md"></div>
+                            </div>
+                        </label>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Content Area -->
-        <div id="contentArea">
-            <!-- Dynamic content will be loaded here -->
+        <!-- Quick Filters -->
+        <div class="flex flex-wrap justify-center gap-2 mb-12">
+            <button onclick="quickSearch('Animation')" class="btn-filter bg-amber-500 text-white px-4 py-2 rounded-xl text-xs font-bold uppercase shadow-md shadow-amber-100">
+                <i class="fas fa-dragon mr-2"></i> Animations
+            </button>
+            <button onclick="quickSearch('Movie')" class="btn-filter bg-blue-600 text-white px-4 py-2 rounded-xl text-xs font-bold uppercase shadow-md shadow-blue-100">
+                <i class="fas fa-film mr-2"></i> Movie Hub
+            </button>
+            <button onclick="quickSearch('Hindi')" class="btn-filter bg-orange-600 text-white px-4 py-2 rounded-xl text-xs font-bold uppercase shadow-md shadow-orange-100">
+                <i class="fas fa-bolt mr-2"></i> Bollywood
+            </button>
+            <button onclick="quickSearch('Anime')" class="btn-filter bg-purple-600 text-white px-4 py-2 rounded-xl text-xs font-bold uppercase shadow-md shadow-purple-100">
+                <i class="fas fa-mask mr-2"></i> Anime
+            </button>
         </div>
 
-        <!-- Loading State -->
-        <div id="loadingState" class="text-center py-12">
-            <div class="inline-block">
-                <i class="fas fa-spinner fa-spin text-5xl text-blue-500 mb-4"></i>
-                <p class="text-gray-600 text-lg font-medium">Loading resources...</p>
+        <!-- Results Info -->
+        <div id="resultsCount" class="text-center mb-6 hidden">
+            <span class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">Found <span id="countNum">0</span> Matches</span>
+        </div>
+
+        <!-- Welcome Message -->
+        <div id="welcomeMsg" class="text-center py-20">
+            <div class="w-24 h-24 bg-indigo-600 text-white rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-indigo-300 rotate-3">
+                <i class="fas fa-radar text-4xl"></i>
             </div>
+            <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tight">System Ready</h2>
+            <p class="text-slate-500 max-w-sm mx-auto mt-2">Enable "Deep Search" to index hidden metadata within server sub-folders.</p>
+        </div>
+
+        <!-- Results Container -->
+        <div id="resultsContainer" class="grid-view hidden"></div>
+
+        <!-- No Results -->
+        <div id="noResults" class="hidden text-center py-20">
+            <div class="text-6xl mb-4">🛸</div>
+            <p class="text-slate-600 text-lg font-bold">No deep matches found.</p>
+            <p class="text-slate-400 text-sm">Try broadening your search or checking the root nodes.</p>
         </div>
     </div>
 
-    <!-- Download Modal -->
-    <div id="downloadModal"
-        class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div class="sticky top-0 bg-white p-5 border-b border-gray-200 flex items-center justify-between">
-                <h3 class="text-xl font-bold text-gray-800">Download Material</h3>
-                <button onclick="closeDownloadModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
-                    <i class="fas fa-times text-2xl"></i>
+    <!-- Modal -->
+    <div id="movieModal" class="hidden fixed inset-0 bg-slate-950/95 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-[2.5rem] shadow-2xl max-w-sm w-full p-8 relative border-t-8 border-indigo-600">
+            <button id="closeModal" class="absolute top-6 right-6 text-slate-300 hover:text-slate-950 transition-colors">
+                <i class="fas fa-times-circle text-2xl"></i>
+            </button>
+
+            <div class="flex flex-col items-center text-center">
+                <div id="modalIcon" class="w-20 h-20 bg-indigo-50 text-indigo-600 rounded-3xl flex items-center justify-center mb-6 border border-indigo-100">
+                    <i id="iconClass" class="fas fa-film text-3xl"></i>
+                </div>
+                <h2 id="modalTitle" class="text-2xl font-black text-slate-900 mb-1 leading-tight uppercase">Movie Title</h2>
+                <p id="modalCategory" class="text-indigo-600 font-black text-[10px] uppercase tracking-widest mb-6 px-4 py-1 bg-indigo-50 rounded-full">CATEGORY</p>
+
+                <div class="bg-slate-50 p-4 rounded-2xl mb-8 w-full">
+                    <p class="text-slate-400 text-[10px] uppercase font-bold mb-1">Source Path</p>
+                    <code id="modalUrl" class="text-[10px] text-slate-600 break-all font-mono">http://...</code>
+                </div>
+
+                <button id="modalLink" disabled
+                    class="flex items-center justify-center w-full bg-slate-400 text-slate-600 py-5 rounded-2xl font-black cursor-not-allowed transition-all shadow-inner">
+                    Player Unavailable
                 </button>
             </div>
-            <div id="modalContent" class="p-6">
-                <!-- Modal content loaded here -->
-            </div>
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="border-t border-gray-200 mt-12">
-        <div class="container mx-auto max-w-7xl px-4 py-6">
-            <div class="text-center text-sm text-gray-500">
-                <p>
-                    <i class="fas fa-heart text-red-500 mr-1"></i>
-                    Providing free educational resources to support students.
-                </p>
-                <p class="mt-2 text-xs">
-                    © 2025 Flood Support Portal. All materials are for educational purposes.
-                </p>
-            </div>
-        </div>
-    </footer>
+    <script>
+        const movieData = [
+            // --- SERVERS ---
+            { title: "Movie Data Repository (103)", cat: "Server", tags: "root movies primary data index", url: "http://103.145.232.246/Data/movies/" },
+            { title: "Animation Edge CDN (IR)", cat: "Server", tags: "animation cdn hosein edge 105 iran", url: "https://edge12.105.ir.cdn.ir/hosein/Animation/" },
 
-    <!-- Google Translate Widget -->
-    <div id="google_translate_element"></div>
-    <script type="text/javascript">
-        function googleTranslateElementInit() {
-            new google.translate.TranslateElement({
-                pageLanguage: 'en',
-                includedLanguages: 'ta,si',
-                layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
-                autoDisplay: false
-            }, 'google_translate_element');
+            // --- ANIMATION DB TITLES ---
+            { title: "Despicable Me 4", cat: "Animation", tags: "minions gru 2024 illumination cartoon", url: "https://edge12.105.ir.cdn.ir/hosein/Animation/Despicable.Me.4.2024/" },
+            { title: "Inside Out 2", cat: "Animation", tags: "pixar emotions joy anxiety riley 2024", url: "https://edge12.105.ir.cdn.ir/hosein/Animation/Inside.Out.2.2024/" },
+            { title: "Kung Fu Panda 4", cat: "Animation", tags: "po jack black dreamworks 2024", url: "https://edge12.105.ir.cdn.ir/hosein/Animation/Kung.Fu.Panda.4.2024/" },
+            { title: "Spider-Man: Spider-Verse", cat: "Animation", tags: "miles morales marvel miles gwen 2023", url: "https://edge12.105.ir.cdn.ir/hosein/Animation/Spider-Man.Across.the.Spider-Verse.2023/" },
+            { title: "Super Mario Bros", cat: "Animation", tags: "nintendo mario luigi bowser peach 2023", url: "https://edge12.105.ir.cdn.ir/hosein/Animation/The.Super.Mario.Bros.Movie.2023/" },
+            { title: "Elemental", cat: "Animation", tags: "pixar fire water disney love story 2023", url: "https://edge12.105.ir.cdn.ir/hosein/Animation/Elemental.2023/" },
+            { title: "Wish", cat: "Animation", tags: "disney 100 years star king magnifico 2023", url: "https://edge12.105.ir.cdn.ir/hosein/Animation/Wish.2023/" },
+            { title: "The Garfield Movie", cat: "Animation", tags: "cat orange chris pratt lasagna 2024", url: "https://edge12.105.ir.cdn.ir/hosein/Animation/The.Garfield.Movie.2024/" },
+            { title: "Migration", cat: "Animation", tags: "duck birds illumination comedy 2023", url: "https://edge12.105.ir.cdn.ir/hosein/Animation/Migration.2023/" },
+            { title: "Orion and the Dark", cat: "Animation", tags: "netflix dreamworks fear dark night 2024", url: "https://edge12.105.ir.cdn.ir/hosein/Animation/Orion.and.the.Dark.2024/" },
+
+            // --- HINDI / BOLLYWOOD ---
+            { title: "Animal", cat: "Hindi", tags: "ranbir kapoor bobby deol action sandeep reddy vanga 2023", url: "http://103.145.232.246/Data/movies/hindi/Animal.2023/" },
+            { title: "Jawan", cat: "Hindi", tags: "srk shah rukh khan atlee action mass 2023", url: "http://103.145.232.246/Data/movies/hindi/Jawan.2023/" },
+            { title: "Pathaan", cat: "Hindi", tags: "srk spy universe john abraham action 2023", url: "http://103.145.232.246/Data/movies/hindi/Pathaan.2023/" },
+            { title: "Stree 2", cat: "Hindi", tags: "horror comedy rajkummar rao shraddha kapoor 2024", url: "http://103.145.232.246/Data/movies/hindi/Stree.2.2024/" },
+            { title: "Fighter", cat: "Hindi", tags: "hrithik roshan deepika padukone air force 2024", url: "http://103.145.232.246/Data/movies/hindi/Fighter.2024/" },
+
+            // --- ENGLISH / HOLLYWOOD ---
+            { title: "Deadpool & Wolverine", cat: "English", tags: "marvel mcu ryan reynolds hugh jackman 2024", url: "http://103.145.232.246/Data/movies/english/Deadpool.and.Wolverine.2024/" },
+            { title: "John Wick 4", cat: "English", tags: "keanu reeves action baba yaga guns 2023", url: "http://103.145.232.246/Data/movies/english/John.Wick.Chapter.4.2023/" },
+            { title: "Oppenheimer", cat: "English", tags: "nolan bomb science history biopic 2023", url: "http://103.145.232.246/Data/movies/english/Oppenheimer.2023/" },
+            { title: "Barbie", cat: "English", tags: "margot robbie ryan gosling pink dolls 2023", url: "http://103.145.232.246/Data/movies/english/Barbie.2023/" },
+
+            // --- ANIME ---
+            { title: "Naruto Shippuden", cat: "Anime", tags: "ninja sasuke itachi shonen fillers episodes", url: "https://storage.kanzaki.ru/ANIME___/Naruto/" },
+            { title: "One Punch Man", cat: "Anime", tags: "saitama hero funny punch bald", url: "https://storage.kanzaki.ru/ANIME___/One-Punch_Man/" },
+            { title: "Solo Leveling", cat: "Anime", tags: "jinwoo hunter dungeon power up 2024", url: "https://storage.kanzaki.ru/ANIME___/Mahouka_Koukou_no_Rettousei/" }
+        ];
+
+        const searchInput = document.getElementById('searchInput');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const welcomeMsg = document.getElementById('welcomeMsg');
+        const noResults = document.getElementById('noResults');
+        const viewToggle = document.getElementById('viewToggle');
+        const deepSearchToggle = document.getElementById('deepSearchToggle');
+        const scanningLine = document.getElementById('scanningLine');
+        const resultsCount = document.getElementById('resultsCount');
+        const countNum = document.getElementById('countNum');
+
+        const movieModal = document.getElementById('movieModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalCategory = document.getElementById('modalCategory');
+        const modalUrl = document.getElementById('modalUrl');
+        const modalLink = document.getElementById('modalLink');
+        const closeModal = document.getElementById('closeModal');
+        const iconClass = document.getElementById('iconClass');
+
+        function quickSearch(term) {
+            searchInput.value = term;
+            handleSearch();
+            searchInput.focus();
         }
+
+        function highlightMatch(text, term, isDeep = false) {
+            if (!term) return text;
+            const className = isDeep ? 'deep-highlight' : 'highlight';
+            const regex = new RegExp(`(${term})`, 'gi');
+            return text.replace(regex, `<span class="${className}">$1</span>`);
+        }
+
+        function handleSearch() {
+            const query = searchInput.value.trim().toLowerCase();
+            const isDeepMode = deepSearchToggle.checked;
+
+            if (query.length === 0) {
+                resultsContainer.classList.add('hidden');
+                noResults.classList.add('hidden');
+                resultsCount.classList.add('hidden');
+                welcomeMsg.classList.remove('hidden');
+                scanningLine.classList.add('hidden');
+                return;
+            }
+
+            if (isDeepMode) {
+                scanningLine.classList.remove('hidden');
+                // Artificial delay to simulate deep scanning
+                setTimeout(() => performFilter(query, true), 300);
+            } else {
+                scanningLine.classList.add('hidden');
+                performFilter(query, false);
+            }
+        }
+
+        function performFilter(query, deep) {
+            const searchTerms = [query];
+            if (query === 'film') searchTerms.push('movie');
+            if (query === 'movie') searchTerms.push('film');
+
+            const filtered = movieData.filter(m => {
+                return searchTerms.some(term => {
+                    const inTitle = m.title.toLowerCase().includes(term);
+                    const inCat = m.cat.toLowerCase().includes(term);
+                    const inTags = m.tags.toLowerCase().includes(term);
+
+                    // Deep Search Logic: check parts of the URL and expanded tags
+                    const inUrl = deep ? m.url.toLowerCase().includes(term) : false;
+
+                    return inTitle || inCat || inTags || inUrl;
+                });
+            });
+
+            welcomeMsg.classList.add('hidden');
+
+            if (filtered.length > 0) {
+                resultsContainer.classList.remove('hidden');
+                noResults.classList.add('hidden');
+                resultsCount.classList.remove('hidden');
+                countNum.innerText = filtered.length;
+                renderResults(filtered, query, deep);
+            } else {
+                resultsContainer.classList.add('hidden');
+                resultsCount.classList.add('hidden');
+                noResults.classList.remove('hidden');
+            }
+        }
+
+        function renderResults(movies, query, deep) {
+            resultsContainer.innerHTML = '';
+            const isGrid = viewToggle.checked;
+
+            movies.forEach(movie => {
+                const card = document.createElement('div');
+                let catColor = 'bg-red-600 text-white';
+                if(movie.cat === 'Anime') catColor = 'bg-purple-600 text-white';
+                if(movie.cat === 'Animation') catColor = 'bg-amber-500 text-white';
+                if(movie.cat === 'Server') catColor = 'bg-indigo-600 text-white';
+                if(movie.cat === 'Hindi') catColor = 'bg-orange-600 text-white';
+
+                const displayTitle = highlightMatch(movie.title, query, deep);
+                const icon = movie.cat === 'Server' ? 'fa-server' : (movie.cat === 'Animation' ? 'fa-dragon' : 'fa-play');
+
+                if (isGrid) {
+                    card.className = `movie-card rounded-[2rem] overflow-hidden p-5 shadow-md flex flex-col items-center text-center ${deep ? 'ring-2 ring-indigo-100' : ''}`;
+                    card.innerHTML = `
+                        <div class="w-full aspect-[2/3] bg-slate-50 rounded-2xl mb-4 flex items-center justify-center text-slate-200">
+                             <i class="fas ${icon} text-5xl opacity-30"></i>
+                        </div>
+                        <span class="category-badge ${catColor} mb-2">${movie.cat}</span>
+                        <h3 class="font-black text-slate-900 text-xs leading-tight uppercase tracking-tight">${displayTitle}</h3>
+                        ${deep ? '<p class="text-[8px] text-indigo-400 mt-1 font-bold">DEEP INDEXED</p>' : ''}
+                    `;
+                } else {
+                    card.className = `movie-card rounded-2xl p-4 shadow-sm border-l-4 ${deep ? 'border-indigo-500' : 'border-slate-200'}`;
+                    card.innerHTML = `
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 ${catColor.replace('text-white', 'bg-opacity-10')} rounded-xl flex items-center justify-center">
+                                    <i class="fas ${icon} text-lg ${catColor.replace('bg-', 'text-')}"></i>
+                                </div>
+                                <div>
+                                    <span class="category-badge ${catColor} mb-1 inline-block">${movie.cat}</span>
+                                    <h3 class="font-black text-slate-900 text-base uppercase tracking-tighter">${displayTitle}</h3>
+                                    ${deep ? `<p class="text-[9px] text-slate-400 font-mono truncate max-w-[200px]">${movie.url}</p>` : ''}
+                                </div>
+                            </div>
+                            <div class="text-slate-200 group-hover:text-indigo-500 transition-colors">
+                                <i class="fas fa-arrow-right"></i>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                card.onclick = () => {
+                    modalTitle.innerText = movie.title;
+                    modalCategory.innerText = movie.cat;
+                    modalUrl.innerText = movie.url;
+                    modalLink.href = movie.url;
+                    iconClass.className = `fas ${icon} text-3xl`;
+                    movieModal.classList.remove('hidden');
+                };
+
+                resultsContainer.appendChild(card);
+            });
+        }
+
+        searchInput.addEventListener('input', handleSearch);
+        deepSearchToggle.addEventListener('change', handleSearch);
+
+        viewToggle.addEventListener('change', () => {
+            if (viewToggle.checked) {
+                resultsContainer.classList.replace('list-view', 'grid-view');
+            } else {
+                resultsContainer.classList.replace('grid-view', 'list-view');
+            }
+            handleSearch();
+        });
+
+        closeModal.onclick = () => movieModal.classList.add('hidden');
+        window.onclick = (e) => { if (e.target == movieModal) movieModal.classList.add('hidden'); }
     </script>
-    <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
-
-    <script src="js/educational_resources.js?V=15.04.12.2025"></script>
 </body>
-
 </html>
