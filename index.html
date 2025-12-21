@@ -106,8 +106,2564 @@
         </div>
     </div>
 
-    <script src="js/movies.js"></script>
-    <script src="js/movie_search.js"></script>
+    <script>
+        const movieData = [
+    {
+        "title": "Isekai_No_Seikishi_Monogatari",
+        "url": "https://storage.kanzaki.ru/ANIME___/Isekai_No_Seikishi_Monogatari/"
+    },
+    {
+        "title": "Youjo_Senki",
+        "url": "https://storage.kanzaki.ru/ANIME___/Youjo_Senki/"
+    },
+    {
+        "title": "Mahouka_Koukou_no_Rettousei",
+        "url": "https://storage.kanzaki.ru/ANIME___/Mahouka_Koukou_no_Rettousei/"
+    },
+    {
+        "title": "Recorder_to_Randoseru",
+        "url": "https://storage.kanzaki.ru/ANIME___/Recorder_to_Randoseru/"
+    },
+    {
+        "title": "Kaiji_-_Ultimate_Survivor",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kaiji_-_Ultimate_Survivor/"
+    },
+    {
+        "title": "Hackadoll_the_Animation",
+        "url": "https://storage.kanzaki.ru/ANIME___/Hackadoll_the_Animation/"
+    },
+    {
+        "title": "Boku_no_Imouto_wa_Osaka_Okan",
+        "url": "https://storage.kanzaki.ru/ANIME___/Boku_no_Imouto_wa_Osaka_Okan/"
+    },
+    {
+        "title": "Ansatsu_Kyoushitsu",
+        "url": "https://storage.kanzaki.ru/ANIME___/Ansatsu_Kyoushitsu/"
+    },
+    {
+        "title": "Kuusen_Madoushi_Kouhosei_no_Kyoukan",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kuusen_Madoushi_Kouhosei_no_Kyoukan/"
+    },
+    {
+        "title": "Baka_to_Test_to_Shoukanjuu",
+        "url": "https://storage.kanzaki.ru/ANIME___/Baka_to_Test_to_Shoukanjuu/"
+    },
+    {
+        "title": "Kinpatsu_no_Jeanie",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kinpatsu_no_Jeanie/"
+    },
+    {
+        "title": "Tsugumomo",
+        "url": "https://storage.kanzaki.ru/ANIME___/Tsugumomo/"
+    },
+    {
+        "title": "Nanatsuiro_Drops",
+        "url": "https://storage.kanzaki.ru/ANIME___/Nanatsuiro_Drops/"
+    },
+    {
+        "title": "Black_Bullet",
+        "url": "https://storage.kanzaki.ru/ANIME___/Black_Bullet/"
+    },
+    {
+        "title": "Kobayashi-san_Chi_no_Maid_Dragon",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kobayashi-san_Chi_no_Maid_Dragon/"
+    },
+    {
+        "title": "Cardfight!!_Vanguard",
+        "url": "https://storage.kanzaki.ru/ANIME___/Cardfight!!_Vanguard/"
+    },
+    {
+        "title": "Haganai~Boku_wa_Tomodachi_ga_Sukunai",
+        "url": "https://storage.kanzaki.ru/ANIME___/Haganai~Boku_wa_Tomodachi_ga_Sukunai/"
+    },
+    {
+        "title": "Re-Kan!",
+        "url": "https://storage.kanzaki.ru/ANIME___/Re-Kan!/"
+    },
+    {
+        "title": "Rokudenashi_Majutsu_Koushi_to_Akashic_Records",
+        "url": "https://storage.kanzaki.ru/ANIME___/Rokudenashi_Majutsu_Koushi_to_Akashic_Records/"
+    },
+    {
+        "title": "Aldnoah_Zero",
+        "url": "https://storage.kanzaki.ru/ANIME___/Aldnoah_Zero/"
+    },
+    {
+        "title": "Maps",
+        "url": "https://storage.kanzaki.ru/ANIME___/Maps/"
+    },
+    {
+        "title": "Noragami",
+        "url": "https://storage.kanzaki.ru/ANIME___/Noragami/"
+    },
+    {
+        "title": "Yuyushiki",
+        "url": "https://storage.kanzaki.ru/ANIME___/Yuyushiki/"
+    },
+    {
+        "title": "Hiiro_no_Kakera",
+        "url": "https://storage.kanzaki.ru/ANIME___/Hiiro_no_Kakera/"
+    },
+    {
+        "title": "Hikounin_Sentai_AkibaRanger",
+        "url": "https://storage.kanzaki.ru/ANIME___/Hikounin_Sentai_AkibaRanger/"
+    },
+    {
+        "title": "Boku_dake_ga_Inai_Machi",
+        "url": "https://storage.kanzaki.ru/ANIME___/Boku_dake_ga_Inai_Machi/"
+    },
+    {
+        "title": "Yahari_Ore_no_Seishun_Love_Comedy_wa_Machigatteiru",
+        "url": "https://storage.kanzaki.ru/ANIME___/Yahari_Ore_no_Seishun_Love_Comedy_wa_Machigatteiru"
+    },
+    {
+        "title": "Blade_of_the_immortal",
+        "url": "https://storage.kanzaki.ru/ANIME___/Blade_of_the_immortal/"
+    },
+    {
+        "title": "Twin_Angel_BREAK",
+        "url": "https://storage.kanzaki.ru/ANIME___/Twin_Angel_BREAK/"
+    },
+    {
+        "title": "Maken-Ki!",
+        "url": "https://storage.kanzaki.ru/ANIME___/Maken-Ki!/"
+    },
+    {
+        "title": "I_My_Me_Strawberry_Eggs",
+        "url": "https://storage.kanzaki.ru/ANIME___/I_My_Me_Strawberry_Eggs/"
+    },
+    {
+        "title": "Mobile_Suit_Gundam",
+        "url": "https://storage.kanzaki.ru/ANIME___/Mobile_Suit_Gundam/"
+    },
+    {
+        "title": "Senki_Zesshou_Symphogear",
+        "url": "https://storage.kanzaki.ru/ANIME___/Senki_Zesshou_Symphogear/"
+    },
+    {
+        "title": "Magical_Girl_Madoka_Magica",
+        "url": "https://storage.kanzaki.ru/ANIME___/Magical_Girl_Madoka_Magica/"
+    },
+    {
+        "title": "Ooyasan_wa_Shishunki!",
+        "url": "https://storage.kanzaki.ru/ANIME___/Ooyasan_wa_Shishunki!/"
+    },
+    {
+        "title": "Boku_no_Hero_Academia",
+        "url": "https://storage.kanzaki.ru/ANIME___/Boku_no_Hero_Academia/"
+    },
+    {
+        "title": "Kotoura-san",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kotoura-san/"
+    },
+    {
+        "title": "Suzumiya_Haruhi_no_Yuuutsu",
+        "url": "https://storage.kanzaki.ru/ANIME___/Suzumiya_Haruhi_no_Yuuutsu/"
+    },
+    {
+        "title": "Yuri!!!_on_Ice",
+        "url": "https://storage.kanzaki.ru/ANIME___/Yuri!!!_on_Ice/"
+    },
+    {
+        "title": "High_Score",
+        "url": "https://storage.kanzaki.ru/ANIME___/High_Score/"
+    },
+    {
+        "title": "Hanasaku_Iroha",
+        "url": "https://storage.kanzaki.ru/ANIME___/Hanasaku_Iroha/"
+    },
+    {
+        "title": "Cross_Ange",
+        "url": "https://storage.kanzaki.ru/ANIME___/Cross_Ange/"
+    },
+    {
+        "title": "Blood-C",
+        "url": "https://storage.kanzaki.ru/ANIME___/Blood-C/"
+    },
+    {
+        "title": "Usagi_Drop",
+        "url": "https://storage.kanzaki.ru/ANIME___/Usagi_Drop/"
+    },
+    {
+        "title": "Fukigen_na_Mononokean",
+        "url": "https://storage.kanzaki.ru/ANIME___/Fukigen_na_Mononokean/"
+    },
+    {
+        "title": "Sin_-_Nanatsu_no_Taizai",
+        "url": "https://storage.kanzaki.ru/ANIME___/Sin_-_Nanatsu_no_Taizai/"
+    },
+    {
+        "title": "Touken_Ranbu",
+        "url": "https://storage.kanzaki.ru/ANIME___/Touken_Ranbu/"
+    },
+    {
+        "title": "Flying_Witch",
+        "url": "https://storage.kanzaki.ru/ANIME___/Flying_Witch/"
+    },
+    {
+        "title": "Wakaba_Girl",
+        "url": "https://storage.kanzaki.ru/ANIME___/Wakaba_Girl/"
+    },
+    {
+        "title": "Mayoi_Neko_Overrun!",
+        "url": "https://storage.kanzaki.ru/ANIME___/Mayoi_Neko_Overrun!/"
+    },
+    {
+        "title": "Beelzebub",
+        "url": "https://storage.kanzaki.ru/ANIME___/Beelzebub/"
+    },
+    {
+        "title": "Stella_no_Mahou",
+        "url": "https://storage.kanzaki.ru/ANIME___/Stella_no_Mahou/"
+    },
+    {
+        "title": "Al_Caral_no_Isan",
+        "url": "https://storage.kanzaki.ru/ANIME___/Al_Caral_no_Isan/"
+    },
+    {
+        "title": "Dash!_Kappei",
+        "url": "https://storage.kanzaki.ru/ANIME___/Dash!_Kappei/"
+    },
+    {
+        "title": "Senyuu",
+        "url": "https://storage.kanzaki.ru/ANIME___/Senyuu/"
+    },
+    {
+        "title": "Reideen_the_Superior",
+        "url": "https://storage.kanzaki.ru/ANIME___/Reideen_the_Superior/"
+    },
+    {
+        "title": "Re_Zero_kara_Hajimeru_Isekai_Seikatsu",
+        "url": "https://storage.kanzaki.ru/ANIME___/Re_Zero_kara_Hajimeru_Isekai_Seikatsu/"
+    },
+    {
+        "title": "Seto_no_Hanayome",
+        "url": "https://storage.kanzaki.ru/ANIME___/Seto_no_Hanayome/"
+    },
+    {
+        "title": "Idol_Jihen",
+        "url": "https://storage.kanzaki.ru/ANIME___/Idol_Jihen/"
+    },
+    {
+        "title": "Gin_no_Guardian",
+        "url": "https://storage.kanzaki.ru/ANIME___/Gin_no_Guardian/"
+    },
+    {
+        "title": "Hibike!_Euphonium",
+        "url": "https://storage.kanzaki.ru/ANIME___/Hibike!_Euphonium/"
+    },
+    {
+        "title": "Shingeki_no_Kyojin",
+        "url": "https://storage.kanzaki.ru/ANIME___/Shingeki_no_Kyojin/"
+    },
+    {
+        "title": "Kiniro_Mosaic",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kiniro_Mosaic/"
+    },
+    {
+        "title": "Long_Riders!",
+        "url": "https://storage.kanzaki.ru/ANIME___/Long_Riders!/"
+    },
+    {
+        "title": "World_Trigger",
+        "url": "https://storage.kanzaki.ru/ANIME___/World_Trigger/"
+    },
+    {
+        "title": "Uta_no_Prince-sama_-_Maji_Love_1000%",
+        "url": "https://storage.kanzaki.ru/ANIME___/Uta_no_Prince-sama_-_Maji_Love_1000%/"
+    },
+    {
+        "title": "Bleach_Jigoku-Hen",
+        "url": "https://storage.kanzaki.ru/ANIME___/Bleach_Jigoku-Hen/"
+    },
+    {
+        "title": "Uta_no_Prince_Sama_Legend_Star",
+        "url": "https://storage.kanzaki.ru/ANIME___/Uta_no_Prince_Sama_Legend_Star/"
+    },
+    {
+        "title": "Norn9_-_Norn+Nonet",
+        "url": "https://storage.kanzaki.ru/ANIME___/Norn9_-_Norn+Nonet/"
+    },
+    {
+        "title": "Hikari_no_Densetsu_(Legend_of_Light)",
+        "url": "https://storage.kanzaki.ru/ANIME___/Hikari_no_Densetsu_(Legend_of_Light)/"
+    },
+    {
+        "title": "Chou_kuse_ni_narisou",
+        "url": "https://storage.kanzaki.ru/ANIME___/Chou_kuse_ni_narisou/"
+    },
+    {
+        "title": "Kokoro_Connect",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kokoro_Connect/"
+    },
+    {
+        "title": "Etotama",
+        "url": "https://storage.kanzaki.ru/ANIME___/Etotama/"
+    },
+    {
+        "title": "Ao_no_Exorcist",
+        "url": "https://storage.kanzaki.ru/ANIME___/Ao_no_Exorcist/"
+    },
+    {
+        "title": "Owari_no_Seraph",
+        "url": "https://storage.kanzaki.ru/ANIME___/Owari_no_Seraph/"
+    },
+    {
+        "title": "Renai_Boukun",
+        "url": "https://storage.kanzaki.ru/ANIME___/Renai_Boukun/"
+    },
+    {
+        "title": "Galaxy_Angel",
+        "url": "https://storage.kanzaki.ru/ANIME___/Galaxy_Angel/"
+    },
+    {
+        "title": "Tokyo_Ghoul",
+        "url": "https://storage.kanzaki.ru/ANIME___/Tokyo_Ghoul/"
+    },
+    {
+        "title": "Triage_X",
+        "url": "https://storage.kanzaki.ru/ANIME___/Triage_X/"
+    },
+    {
+        "title": "Fullmetal_Alchemist_(2003)",
+        "url": "https://storage.kanzaki.ru/ANIME___/Fullmetal_Alchemist_(2003)/"
+    },
+    {
+        "title": "C3_-_Cube_x_Cursed_x_Curious",
+        "url": "https://storage.kanzaki.ru/ANIME___/C3_-_Cube_x_Cursed_x_Curious/"
+    },
+    {
+        "title": "Kiitarou_Shounen_no_Youkai_Enikki",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kiitarou_Shounen_no_Youkai_Enikki/"
+    },
+    {
+        "title": "Souten_No_Ken",
+        "url": "https://storage.kanzaki.ru/ANIME___/Souten_No_Ken/"
+    },
+    {
+        "title": "Okusama_ga_Seitokaichou!",
+        "url": "https://storage.kanzaki.ru/ANIME___/Okusama_ga_Seitokaichou!/"
+    },
+    {
+        "title": "Gunslinger_Stratos",
+        "url": "https://storage.kanzaki.ru/ANIME___/Gunslinger_Stratos/"
+    },
+    {
+        "title": "new",
+        "url": "http://103.145.232.246/Data/movies/animation/new/"
+    },
+    {
+        "title": "Ikeike!_Momon-chan",
+        "url": "https://storage.kanzaki.ru/ANIME___/Ikeike!_Momon-chan/"
+    },
+    {
+        "title": "One-Punch_Man",
+        "url": "https://storage.kanzaki.ru/ANIME___/One-Punch_Man/"
+    },
+    {
+        "title": "Madan_no_Ou_to_Vanadis",
+        "url": "https://storage.kanzaki.ru/ANIME___/Madan_no_Ou_to_Vanadis/"
+    },
+    {
+        "title": "Nanatsu_no_Taizai",
+        "url": "https://storage.kanzaki.ru/ANIME___/Nanatsu_no_Taizai/"
+    },
+    {
+        "title": "Kamisama_no_Memochou",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kamisama_no_Memochou/"
+    },
+    {
+        "title": "Maria_the_Virgin_Witch",
+        "url": "https://storage.kanzaki.ru/ANIME___/Maria_the_Virgin_Witch/"
+    },
+    {
+        "title": "Bananya",
+        "url": "https://storage.kanzaki.ru/ANIME___/Bananya/"
+    },
+    {
+        "title": "Drifters",
+        "url": "https://storage.kanzaki.ru/ANIME___/Drifters/"
+    },
+    {
+        "title": "Makeruna!!_Aku_no_Gundan!",
+        "url": "https://storage.kanzaki.ru/ANIME___/Makeruna!!_Aku_no_Gundan!/"
+    },
+    {
+        "title": "Working",
+        "url": "https://storage.kanzaki.ru/ANIME___/Working/"
+    },
+    {
+        "title": "Gabriel_DropOut",
+        "url": "https://storage.kanzaki.ru/ANIME___/Gabriel_DropOut/"
+    },
+    {
+        "title": "Witch_Craft_Works",
+        "url": "https://storage.kanzaki.ru/ANIME___/Witch_Craft_Works/"
+    },
+    {
+        "title": "Shimoneta_to_Iu_Gainen_ga_Sonzai_Shinai_Taikuts..>",
+        "url": "https://storage.kanzaki.ru/ANIME___/Shimoneta_to_Iu_Gainen_ga_Sonzai_Shinai_Taikuts..>"
+    },
+    {
+        "title": "Danshi_Koukousei_no_Nichijou",
+        "url": "https://storage.kanzaki.ru/ANIME___/Danshi_Koukousei_no_Nichijou/"
+    },
+    {
+        "title": "B-Project_-_Kodou_Ambitious",
+        "url": "https://storage.kanzaki.ru/ANIME___/B-Project_-_Kodou_Ambitious/"
+    },
+    {
+        "title": "Nazo_no_Kanojo_X",
+        "url": "https://storage.kanzaki.ru/ANIME___/Nazo_no_Kanojo_X/"
+    },
+    {
+        "title": "Yami_Shibai_-_Japanese_Ghost_Stories",
+        "url": "https://storage.kanzaki.ru/ANIME___/Yami_Shibai_-_Japanese_Ghost_Stories/"
+    },
+    {
+        "title": "Hai_to_Gensou_no_Grimgar",
+        "url": "https://storage.kanzaki.ru/ANIME___/Hai_to_Gensou_no_Grimgar/"
+    },
+    {
+        "title": "Kanojo_to_Kanojo_no_Neko_(She_and_Her_Cat_-_Eve..>",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kanojo_to_Kanojo_no_Neko_(She_and_Her_Cat_-_Eve..>"
+    },
+    {
+        "title": "Chuunibyou_Demo_Koi_ga_Shitai!",
+        "url": "https://storage.kanzaki.ru/ANIME___/Chuunibyou_Demo_Koi_ga_Shitai!/"
+    },
+    {
+        "title": "Nijiiro_Days",
+        "url": "https://storage.kanzaki.ru/ANIME___/Nijiiro_Days/"
+    },
+    {
+        "title": "Oban_Star-Racers",
+        "url": "https://storage.kanzaki.ru/ANIME___/Oban_Star-Racers/"
+    },
+    {
+        "title": "Ozma",
+        "url": "https://storage.kanzaki.ru/ANIME___/Ozma/"
+    },
+    {
+        "title": "Ange_Vierge",
+        "url": "https://storage.kanzaki.ru/ANIME___/Ange_Vierge/"
+    },
+    {
+        "title": "ClassicaLoid",
+        "url": "https://storage.kanzaki.ru/ANIME___/ClassicaLoid/"
+    },
+    {
+        "title": "Astarotte_no_Omocha!",
+        "url": "https://storage.kanzaki.ru/ANIME___/Astarotte_no_Omocha!/"
+    },
+    {
+        "title": "Brave_Beats",
+        "url": "https://storage.kanzaki.ru/ANIME___/Brave_Beats/"
+    },
+    {
+        "title": "Sora_no_Manimani",
+        "url": "https://storage.kanzaki.ru/ANIME___/Sora_no_Manimani/"
+    },
+    {
+        "title": "Hikaru_no_Go",
+        "url": "https://storage.kanzaki.ru/ANIME___/Hikaru_no_Go/"
+    },
+    {
+        "title": "Kono_Danshi,_Mahou_ga_Oshigoto_Desu",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kono_Danshi,_Mahou_ga_Oshigoto_Desu/"
+    },
+    {
+        "title": "Dance_with_Devils",
+        "url": "https://storage.kanzaki.ru/ANIME___/Dance_with_Devils/"
+    },
+    {
+        "title": "Kiznaiver",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kiznaiver/"
+    },
+    {
+        "title": "Gatchaman_Crowds",
+        "url": "https://storage.kanzaki.ru/ANIME___/Gatchaman_Crowds/"
+    },
+    {
+        "title": "B_Gata_H_Kei",
+        "url": "https://storage.kanzaki.ru/ANIME___/B_Gata_H_Kei/"
+    },
+    {
+        "title": "Robotics;Notes",
+        "url": "https://storage.kanzaki.ru/ANIME___/Robotics;Notes/"
+    },
+    {
+        "title": "Sengoku_Basara",
+        "url": "https://storage.kanzaki.ru/ANIME___/Sengoku_Basara/"
+    },
+    {
+        "title": "Shakunetsu_no_Takkyuu_Musume",
+        "url": "https://storage.kanzaki.ru/ANIME___/Shakunetsu_no_Takkyuu_Musume/"
+    },
+    {
+        "title": "Ichiban_Ushiro_no_Daimaou",
+        "url": "https://storage.kanzaki.ru/ANIME___/Ichiban_Ushiro_no_Daimaou/"
+    },
+    {
+        "title": "Sore_ga_Seiyuu!",
+        "url": "https://storage.kanzaki.ru/ANIME___/Sore_ga_Seiyuu!/"
+    },
+    {
+        "title": "Mangirl!",
+        "url": "https://storage.kanzaki.ru/ANIME___/Mangirl!/"
+    },
+    {
+        "title": "Naruto",
+        "url": "https://storage.kanzaki.ru/ANIME___/Naruto/"
+    },
+    {
+        "title": "Ouran_High_School_Host_Club",
+        "url": "https://storage.kanzaki.ru/ANIME___/Ouran_High_School_Host_Club/"
+    },
+    {
+        "title": "Ishida_to_Asakura",
+        "url": "https://storage.kanzaki.ru/ANIME___/Ishida_to_Asakura/"
+    },
+    {
+        "title": "xMonogatari",
+        "url": "https://storage.kanzaki.ru/ANIME___/xMonogatari/"
+    },
+    {
+        "title": "Hidamari_Sketch",
+        "url": "https://storage.kanzaki.ru/ANIME___/Hidamari_Sketch/"
+    },
+    {
+        "title": "Shakugan_no_Shana",
+        "url": "https://storage.kanzaki.ru/ANIME___/Shakugan_no_Shana/"
+    },
+    {
+        "title": "Kore_wa_Zombie_Desu_ka",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kore_wa_Zombie_Desu_ka/"
+    },
+    {
+        "title": "Kurenai_Sanshirou_(Judo_Boy)",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kurenai_Sanshirou_(Judo_Boy)/"
+    },
+    {
+        "title": "Mushishi",
+        "url": "https://storage.kanzaki.ru/ANIME___/Mushishi/"
+    },
+    {
+        "title": "Love_Kome_-_We_Love_Rice",
+        "url": "https://storage.kanzaki.ru/ANIME___/Love_Kome_-_We_Love_Rice/"
+    },
+    {
+        "title": "Baby_Steps",
+        "url": "https://storage.kanzaki.ru/ANIME___/Baby_Steps/"
+    },
+    {
+        "title": "Sengoku_Choujuu_Giga",
+        "url": "https://storage.kanzaki.ru/ANIME___/Sengoku_Choujuu_Giga/"
+    },
+    {
+        "title": "Kaizoku_Sentai_Gokaiger",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kaizoku_Sentai_Gokaiger/"
+    },
+    {
+        "title": "Shiba_Inuko-san",
+        "url": "https://storage.kanzaki.ru/ANIME___/Shiba_Inuko-san/"
+    },
+    {
+        "title": "Ore_No_Kanojo_To_Osananajimi_Ga_Shuraba_Sugiru",
+        "url": "https://storage.kanzaki.ru/ANIME___/Ore_No_Kanojo_To_Osananajimi_Ga_Shuraba_Sugiru/"
+    },
+    {
+        "title": "Arslan_Senki",
+        "url": "https://storage.kanzaki.ru/ANIME___/Arslan_Senki/"
+    },
+    {
+        "title": "Gin_no_Saji",
+        "url": "https://storage.kanzaki.ru/ANIME___/Gin_no_Saji/"
+    },
+    {
+        "title": "Bagi",
+        "url": "https://storage.kanzaki.ru/ANIME___/Bagi/"
+    },
+    {
+        "title": "Dog_Days",
+        "url": "https://storage.kanzaki.ru/ANIME___/Dog_Days/"
+    },
+    {
+        "title": "Heavy_Object",
+        "url": "https://storage.kanzaki.ru/ANIME___/Heavy_Object/"
+    },
+    {
+        "title": "Sasameki_Koto",
+        "url": "https://storage.kanzaki.ru/ANIME___/Sasameki_Koto/"
+    },
+    {
+        "title": "Toriko",
+        "url": "https://storage.kanzaki.ru/ANIME___/Toriko/"
+    },
+    {
+        "title": "Kill_Me_Baby",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kill_Me_Baby/"
+    },
+    {
+        "title": "Concrete_Revolutio",
+        "url": "https://storage.kanzaki.ru/ANIME___/Concrete_Revolutio/"
+    },
+    {
+        "title": "Kaze_to_Ki_no_Uta_~Seinaru_ka_na~",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kaze_to_Ki_no_Uta_~Seinaru_ka_na~/"
+    },
+    {
+        "title": "D.Gray-man_Hallow",
+        "url": "https://storage.kanzaki.ru/ANIME___/D.Gray-man_Hallow/"
+    },
+    {
+        "title": "Ranpo_Kitan_-_Game_of_Laplace",
+        "url": "https://storage.kanzaki.ru/ANIME___/Ranpo_Kitan_-_Game_of_Laplace/"
+    },
+    {
+        "title": "Bloodivores",
+        "url": "https://storage.kanzaki.ru/ANIME___/Bloodivores/"
+    },
+    {
+        "title": "Kuzu_no_Honkai",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kuzu_no_Honkai/"
+    },
+    {
+        "title": "Trinity_Seven",
+        "url": "https://storage.kanzaki.ru/ANIME___/Trinity_Seven/"
+    },
+    {
+        "title": "Chu-Bra!!",
+        "url": "https://storage.kanzaki.ru/ANIME___/Chu-Bra!!/"
+    },
+    {
+        "title": "Mayo_Chiki!",
+        "url": "https://storage.kanzaki.ru/ANIME___/Mayo_Chiki!/"
+    },
+    {
+        "title": "Kemono_Friends",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kemono_Friends/"
+    },
+    {
+        "title": "Hamatora",
+        "url": "https://storage.kanzaki.ru/ANIME___/Hamatora/"
+    },
+    {
+        "title": "Taboo_Tattoo",
+        "url": "https://storage.kanzaki.ru/ANIME___/Taboo_Tattoo/"
+    },
+    {
+        "title": "Rewrite",
+        "url": "https://storage.kanzaki.ru/ANIME___/Rewrite/"
+    },
+    {
+        "title": "Nanbaka",
+        "url": "https://storage.kanzaki.ru/ANIME___/Nanbaka/"
+    },
+    {
+        "title": "Soukyuu_no_Fafner",
+        "url": "https://storage.kanzaki.ru/ANIME___/Soukyuu_no_Fafner/"
+    },
+    {
+        "title": "Seikaisuru_Kaido",
+        "url": "https://storage.kanzaki.ru/ANIME___/Seikaisuru_Kaido/"
+    },
+    {
+        "title": "Arata_Kangatari",
+        "url": "https://storage.kanzaki.ru/ANIME___/Arata_Kangatari/"
+    },
+    {
+        "title": "Akame_ga_Kill!",
+        "url": "https://storage.kanzaki.ru/ANIME___/Akame_ga_Kill!/"
+    },
+    {
+        "title": "Panty_&_Stocking_with_Garterbelt",
+        "url": "https://storage.kanzaki.ru/ANIME___/Panty_&_Stocking_with_Garterbelt/"
+    },
+    {
+        "title": "Inu_x_Boku_SS",
+        "url": "https://storage.kanzaki.ru/ANIME___/Inu_x_Boku_SS/"
+    },
+    {
+        "title": "Sword_Art_Online",
+        "url": "https://storage.kanzaki.ru/ANIME___/Sword_Art_Online/"
+    },
+    {
+        "title": "Binbougami_ga",
+        "url": "https://storage.kanzaki.ru/ANIME___/Binbougami_ga/"
+    },
+    {
+        "title": "Shuumatsu_no_Izetta",
+        "url": "https://storage.kanzaki.ru/ANIME___/Shuumatsu_no_Izetta/"
+    },
+    {
+        "title": "3-Nen_D-Gumi_Glass_no_Kamen",
+        "url": "https://storage.kanzaki.ru/ANIME___/3-Nen_D-Gumi_Glass_no_Kamen/"
+    },
+    {
+        "title": "Cheer_Danshi!!",
+        "url": "https://storage.kanzaki.ru/ANIME___/Cheer_Danshi!!/"
+    },
+    {
+        "title": "Cosmo_Police_Justy",
+        "url": "https://storage.kanzaki.ru/ANIME___/Cosmo_Police_Justy/"
+    },
+    {
+        "title": "K-on",
+        "url": "https://storage.kanzaki.ru/ANIME___/K-on/"
+    },
+    {
+        "title": "Kabaneri_of_the_Iron_Fortress",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kabaneri_of_the_Iron_Fortress/"
+    },
+    {
+        "title": "Psycho-Pass",
+        "url": "https://storage.kanzaki.ru/ANIME___/Psycho-Pass/"
+    },
+    {
+        "title": "Tribe_Cool_Crew",
+        "url": "https://storage.kanzaki.ru/ANIME___/Tribe_Cool_Crew/"
+    },
+    {
+        "title": "Masamune-kun_no_Revenge",
+        "url": "https://storage.kanzaki.ru/ANIME___/Masamune-kun_no_Revenge/"
+    },
+    {
+        "title": "Chousoku_Henkei_Gyrozetter",
+        "url": "https://storage.kanzaki.ru/ANIME___/Chousoku_Henkei_Gyrozetter/"
+    },
+    {
+        "title": "Chaos_Dragon",
+        "url": "https://storage.kanzaki.ru/ANIME___/Chaos_Dragon/"
+    },
+    {
+        "title": "Sekiei_Ayakashi_Mangatan",
+        "url": "https://storage.kanzaki.ru/ANIME___/Sekiei_Ayakashi_Mangatan/"
+    },
+    {
+        "title": "Shokugeki_no_Soma",
+        "url": "https://storage.kanzaki.ru/ANIME___/Shokugeki_no_Soma/"
+    },
+    {
+        "title": "Phantasy_Star_Online",
+        "url": "https://storage.kanzaki.ru/ANIME___/Phantasy_Star_Online/"
+    },
+    {
+        "title": "Shinryaku!_Ika_Musume",
+        "url": "https://storage.kanzaki.ru/ANIME___/Shinryaku!_Ika_Musume/"
+    },
+    {
+        "title": "Fuuka",
+        "url": "https://storage.kanzaki.ru/ANIME___/Fuuka/"
+    },
+    {
+        "title": "Galilei_Donna",
+        "url": "https://storage.kanzaki.ru/ANIME___/Galilei_Donna/"
+    },
+    {
+        "title": "Garo_-_The_Crimson_Moon",
+        "url": "https://storage.kanzaki.ru/ANIME___/Garo_-_The_Crimson_Moon/"
+    },
+    {
+        "title": "Gangsta",
+        "url": "https://storage.kanzaki.ru/ANIME___/Gangsta/"
+    },
+    {
+        "title": "Miss_Monochrome",
+        "url": "https://storage.kanzaki.ru/ANIME___/Miss_Monochrome/"
+    },
+    {
+        "title": "Les_Miserables_Shoujo_Cosette",
+        "url": "https://storage.kanzaki.ru/ANIME___/Les_Miserables_Shoujo_Cosette/"
+    },
+    {
+        "title": "Venus_Project",
+        "url": "https://storage.kanzaki.ru/ANIME___/Venus_Project/"
+    },
+    {
+        "title": "Majin_Bone",
+        "url": "https://storage.kanzaki.ru/ANIME___/Majin_Bone/"
+    },
+    {
+        "title": "Sakurako-san_no_Ashimoto_ni_wa_Shitai_ga_Umatteiru",
+        "url": "https://storage.kanzaki.ru/ANIME___/Sakurako-san_no_Ashimoto_ni_wa_Shitai_ga_Umatteiru"
+    },
+    {
+        "title": "Amanchu!",
+        "url": "https://storage.kanzaki.ru/ANIME___/Amanchu!/"
+    },
+    {
+        "title": "Ao_no_Kanata_no_Four_Rhythm",
+        "url": "https://storage.kanzaki.ru/ANIME___/Ao_no_Kanata_no_Four_Rhythm/"
+    },
+    {
+        "title": "Area_no_Kishi",
+        "url": "https://storage.kanzaki.ru/ANIME___/Area_no_Kishi/"
+    },
+    {
+        "title": "Himouto!_Umaru-chan",
+        "url": "https://storage.kanzaki.ru/ANIME___/Himouto!_Umaru-chan/"
+    },
+    {
+        "title": "Julie_the_Wild_Rose",
+        "url": "https://storage.kanzaki.ru/ANIME___/Julie_the_Wild_Rose/"
+    },
+    {
+        "title": "New_Game!",
+        "url": "https://storage.kanzaki.ru/ANIME___/New_Game!/"
+    },
+    {
+        "title": "One_Room",
+        "url": "https://storage.kanzaki.ru/ANIME___/One_Room/"
+    },
+    {
+        "title": "Rakudai_Kishi_no_Cavalry",
+        "url": "https://storage.kanzaki.ru/ANIME___/Rakudai_Kishi_no_Cavalry/"
+    },
+    {
+        "title": "91_Days",
+        "url": "https://storage.kanzaki.ru/ANIME___/91_Days/"
+    },
+    {
+        "title": "Houkago_no_Pleiades",
+        "url": "https://storage.kanzaki.ru/ANIME___/Houkago_no_Pleiades/"
+    },
+    {
+        "title": "Minami_Kamakura_Koukou_Joshi_Jitensha-Bu",
+        "url": "https://storage.kanzaki.ru/ANIME___/Minami_Kamakura_Koukou_Joshi_Jitensha-Bu/"
+    },
+    {
+        "title": "Full_Metal_Panic!",
+        "url": "https://storage.kanzaki.ru/ANIME___/Full_Metal_Panic!/"
+    },
+    {
+        "title": "Shiki",
+        "url": "https://storage.kanzaki.ru/ANIME___/Shiki/"
+    },
+    {
+        "title": "Nurse_Witch_Komugi-chan",
+        "url": "https://storage.kanzaki.ru/ANIME___/Nurse_Witch_Komugi-chan/"
+    },
+    {
+        "title": "Shinmai_Maou_no_Testament",
+        "url": "https://storage.kanzaki.ru/ANIME___/Shinmai_Maou_no_Testament/"
+    },
+    {
+        "title": "Fairy_Tail",
+        "url": "https://storage.kanzaki.ru/ANIME___/Fairy_Tail/"
+    },
+    {
+        "title": "Lupin_III",
+        "url": "https://storage.kanzaki.ru/ANIME___/Lupin_III/"
+    },
+    {
+        "title": "Ame-iro_Cocoa",
+        "url": "https://storage.kanzaki.ru/ANIME___/Ame-iro_Cocoa/"
+    },
+    {
+        "title": "Puzzle_and_Dragons_Cross",
+        "url": "https://storage.kanzaki.ru/ANIME___/Puzzle_and_Dragons_Cross/"
+    },
+    {
+        "title": "Anyamal_Tantei_Kiruminzoo",
+        "url": "https://storage.kanzaki.ru/ANIME___/Anyamal_Tantei_Kiruminzoo/"
+    },
+    {
+        "title": "Machine-Doll_wa_Kizutsukanai",
+        "url": "https://storage.kanzaki.ru/ANIME___/Machine-Doll_wa_Kizutsukanai/"
+    },
+    {
+        "title": "Gakkou_Gurashi!",
+        "url": "https://storage.kanzaki.ru/ANIME___/Gakkou_Gurashi!/"
+    },
+    {
+        "title": "Gate_-_Jieitai_Kanochi_nite,_Kaku_Tatakaeri",
+        "url": "https://storage.kanzaki.ru/ANIME___/Gate_-_Jieitai_Kanochi_nite,_Kaku_Tatakaeri/"
+    },
+    {
+        "title": "Hitori_no_Shita_-_The_Outcast",
+        "url": "https://storage.kanzaki.ru/ANIME___/Hitori_no_Shita_-_The_Outcast/"
+    },
+    {
+        "title": "Shouwa_Genroku_Rakugo_Shinjuu",
+        "url": "https://storage.kanzaki.ru/ANIME___/Shouwa_Genroku_Rakugo_Shinjuu/"
+    },
+    {
+        "title": "Ani_Tore!",
+        "url": "https://storage.kanzaki.ru/ANIME___/Ani_Tore!/"
+    },
+    {
+        "title": "One_Piece",
+        "url": "https://storage.kanzaki.ru/ANIME___/One_Piece/"
+    },
+    {
+        "title": "Soul_Buster",
+        "url": "https://storage.kanzaki.ru/ANIME___/Soul_Buster/"
+    },
+    {
+        "title": "Seiren",
+        "url": "https://storage.kanzaki.ru/ANIME___/Seiren/"
+    },
+    {
+        "title": "Charlotte",
+        "url": "https://storage.kanzaki.ru/ANIME___/Charlotte/"
+    },
+    {
+        "title": "Asobi_ni_Iku_Yo!",
+        "url": "https://storage.kanzaki.ru/ANIME___/Asobi_ni_Iku_Yo!/"
+    },
+    {
+        "title": "High_School!_Kimengumi",
+        "url": "https://storage.kanzaki.ru/ANIME___/High_School!_Kimengumi/"
+    },
+    {
+        "title": "Monster_Musume_no_Iru_Nichijou",
+        "url": "https://storage.kanzaki.ru/ANIME___/Monster_Musume_no_Iru_Nichijou/"
+    },
+    {
+        "title": "Broken_Blade",
+        "url": "https://storage.kanzaki.ru/ANIME___/Broken_Blade/"
+    },
+    {
+        "title": "Steins;Gate",
+        "url": "https://storage.kanzaki.ru/ANIME___/Steins;Gate/"
+    },
+    {
+        "title": "Kubikiri_Cycle_-_Aoiro_Savant_to_Zaregototsukai",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kubikiri_Cycle_-_Aoiro_Savant_to_Zaregototsukai/"
+    },
+    {
+        "title": "Million_Doll",
+        "url": "https://storage.kanzaki.ru/ANIME___/Million_Doll/"
+    },
+    {
+        "title": "Marginal#4_KISS_Kara_Tsukuru_Big_Bang",
+        "url": "https://storage.kanzaki.ru/ANIME___/Marginal#4_KISS_Kara_Tsukuru_Big_Bang/"
+    },
+    {
+        "title": "30_-_sai_no_Hoken_Taiiku",
+        "url": "https://storage.kanzaki.ru/ANIME___/30_-_sai_no_Hoken_Taiiku/"
+    },
+    {
+        "title": "Mahou_Tsukai_ni_Taisetsu_na_Koto_~_Someday's_Dr..>",
+        "url": "https://storage.kanzaki.ru/ANIME___/Mahou_Tsukai_ni_Taisetsu_na_Koto_~_Someday's_Dr..>"
+    },
+    {
+        "title": "Kanon",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kanon/"
+    },
+    {
+        "title": "Subete_ga_F_ni_Naru",
+        "url": "https://storage.kanzaki.ru/ANIME___/Subete_ga_F_ni_Naru/"
+    },
+    {
+        "title": "Hello!!_Kiniro_Mosaic",
+        "url": "https://storage.kanzaki.ru/ANIME___/Hello!!_Kiniro_Mosaic/"
+    },
+    {
+        "title": "Mouretsu_Space_Pirates",
+        "url": "https://storage.kanzaki.ru/ANIME___/Mouretsu_Space_Pirates/"
+    },
+    {
+        "title": "Oushitsu_Kyoushi_Haine",
+        "url": "https://storage.kanzaki.ru/ANIME___/Oushitsu_Kyoushi_Haine/"
+    },
+    {
+        "title": "Dance_in_the_Vampire_Bund",
+        "url": "https://storage.kanzaki.ru/ANIME___/Dance_in_the_Vampire_Bund/"
+    },
+    {
+        "title": "Soul_Eater",
+        "url": "https://storage.kanzaki.ru/ANIME___/Soul_Eater/"
+    },
+    {
+        "title": "Urara_Meirochou",
+        "url": "https://storage.kanzaki.ru/ANIME___/Urara_Meirochou/"
+    },
+    {
+        "title": "RDG_-_Red_Data_Girl",
+        "url": "https://storage.kanzaki.ru/ANIME___/RDG_-_Red_Data_Girl/"
+    },
+    {
+        "title": "Tenkyou_no_Alderamin",
+        "url": "https://storage.kanzaki.ru/ANIME___/Tenkyou_no_Alderamin/"
+    },
+    {
+        "title": "BUBBLEGUM_Crisis",
+        "url": "https://storage.kanzaki.ru/ANIME___/BUBBLEGUM_Crisis/"
+    },
+    {
+        "title": "Brave_10",
+        "url": "https://storage.kanzaki.ru/ANIME___/Brave_10/"
+    },
+    {
+        "title": "Air",
+        "url": "https://storage.kanzaki.ru/ANIME___/Air/"
+    },
+    {
+        "title": "Fullmetal_Alchemist_Brotherhood_(2009)",
+        "url": "https://storage.kanzaki.ru/ANIME___/Fullmetal_Alchemist_Brotherhood_(2009)/"
+    },
+    {
+        "title": "Magi",
+        "url": "https://storage.kanzaki.ru/ANIME___/Magi/"
+    },
+    {
+        "title": "Perrine",
+        "url": "https://storage.kanzaki.ru/ANIME___/Perrine/"
+    },
+    {
+        "title": "ReLIFE",
+        "url": "https://storage.kanzaki.ru/ANIME___/ReLIFE/"
+    },
+    {
+        "title": "Joukamachi_no_Dandelion",
+        "url": "https://storage.kanzaki.ru/ANIME___/Joukamachi_no_Dandelion/"
+    },
+    {
+        "title": "Rokka_no_Yuusha",
+        "url": "https://storage.kanzaki.ru/ANIME___/Rokka_no_Yuusha/"
+    },
+    {
+        "title": "Bernard_Jou_Iwaku",
+        "url": "https://storage.kanzaki.ru/ANIME___/Bernard_Jou_Iwaku/"
+    },
+    {
+        "title": "Tantei_Team_KZ_Jiken_Note",
+        "url": "https://storage.kanzaki.ru/ANIME___/Tantei_Team_KZ_Jiken_Note/"
+    },
+    {
+        "title": "Kaitou_Tenshi_Twin_Angel",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kaitou_Tenshi_Twin_Angel/"
+    },
+    {
+        "title": "Udon_no_Kuni_no_Kiniro_Kemari",
+        "url": "https://storage.kanzaki.ru/ANIME___/Udon_no_Kuni_no_Kiniro_Kemari/"
+    },
+    {
+        "title": "ef",
+        "url": "https://storage.kanzaki.ru/ANIME___/ef/"
+    },
+    {
+        "title": "AMNESIA",
+        "url": "https://storage.kanzaki.ru/ANIME___/AMNESIA/"
+    },
+    {
+        "title": "Great_Mazinger",
+        "url": "https://storage.kanzaki.ru/ANIME___/Great_Mazinger/"
+    },
+    {
+        "title": "Lime-iro_Senkitan",
+        "url": "https://storage.kanzaki.ru/ANIME___/Lime-iro_Senkitan/"
+    },
+    {
+        "title": "Another",
+        "url": "https://storage.kanzaki.ru/ANIME___/Another/"
+    },
+    {
+        "title": "Kono_Subarashii_Sekai_ni_Shukufuku_wo!",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kono_Subarashii_Sekai_ni_Shukufuku_wo!/"
+    },
+    {
+        "title": "Deadman_Wonderland",
+        "url": "https://storage.kanzaki.ru/ANIME___/Deadman_Wonderland/"
+    },
+    {
+        "title": "Bug_tte_Honey",
+        "url": "https://storage.kanzaki.ru/ANIME___/Bug_tte_Honey/"
+    },
+    {
+        "title": "OverLord",
+        "url": "https://storage.kanzaki.ru/ANIME___/OverLord/"
+    },
+    {
+        "title": "Nobunaga_no_Shinobi",
+        "url": "https://storage.kanzaki.ru/ANIME___/Nobunaga_no_Shinobi/"
+    },
+    {
+        "title": "Akagami_no_Shirayukihime",
+        "url": "https://storage.kanzaki.ru/ANIME___/Akagami_no_Shirayukihime/"
+    },
+    {
+        "title": "Full_Moon_Wo_Sagashite",
+        "url": "https://storage.kanzaki.ru/ANIME___/Full_Moon_Wo_Sagashite/"
+    },
+    {
+        "title": "Tantei_Gakuen_Q_(Detective_Academy_Q)",
+        "url": "https://storage.kanzaki.ru/ANIME___/Tantei_Gakuen_Q_(Detective_Academy_Q)/"
+    },
+    {
+        "title": "Freezing",
+        "url": "https://storage.kanzaki.ru/ANIME___/Freezing/"
+    },
+    {
+        "title": "Aoi_Bungaku",
+        "url": "https://storage.kanzaki.ru/ANIME___/Aoi_Bungaku/"
+    },
+    {
+        "title": "Shin_Koihime_Musou",
+        "url": "https://storage.kanzaki.ru/ANIME___/Shin_Koihime_Musou/"
+    },
+    {
+        "title": "Kakumeiki_Valvrave",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kakumeiki_Valvrave/"
+    },
+    {
+        "title": "Boruto_-_Naruto_Next_Generations",
+        "url": "https://storage.kanzaki.ru/ANIME___/Boruto_-_Naruto_Next_Generations/"
+    },
+    {
+        "title": "Kekkai_Sensen",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kekkai_Sensen/"
+    },
+    {
+        "title": "Kiddy_Grade",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kiddy_Grade/"
+    },
+    {
+        "title": "JK_Meshi!",
+        "url": "https://storage.kanzaki.ru/ANIME___/JK_Meshi!/"
+    },
+    {
+        "title": "Ask_Dr._Rin!",
+        "url": "https://storage.kanzaki.ru/ANIME___/Ask_Dr._Rin!/"
+    },
+    {
+        "title": "Hyakko",
+        "url": "https://storage.kanzaki.ru/ANIME___/Hyakko/"
+    },
+    {
+        "title": "Luck_&_Logic",
+        "url": "https://storage.kanzaki.ru/ANIME___/Luck_&_Logic/"
+    },
+    {
+        "title": "DanMachi_Gaiden_-_Sword_Oratoria",
+        "url": "https://storage.kanzaki.ru/ANIME___/DanMachi_Gaiden_-_Sword_Oratoria/"
+    },
+    {
+        "title": "Saijaku_Muhai_no_Bahamut",
+        "url": "https://storage.kanzaki.ru/ANIME___/Saijaku_Muhai_no_Bahamut/"
+    },
+    {
+        "title": "2011-2020",
+        "url": "http://103.145.232.246/Data/movies/animation/2011-2020/"
+    },
+    {
+        "title": "Danchigai",
+        "url": "https://storage.kanzaki.ru/ANIME___/Danchigai/"
+    },
+    {
+        "title": "Chaos_Head",
+        "url": "https://storage.kanzaki.ru/ANIME___/Chaos_Head/"
+    },
+    {
+        "title": "Wakako_Zake",
+        "url": "https://storage.kanzaki.ru/ANIME___/Wakako_Zake/"
+    },
+    {
+        "title": "All_Out!!",
+        "url": "https://storage.kanzaki.ru/ANIME___/All_Out!!/"
+    },
+    {
+        "title": "Fireball",
+        "url": "https://storage.kanzaki.ru/ANIME___/Fireball/"
+    },
+    {
+        "title": "Koe_de_Oshigoto",
+        "url": "https://storage.kanzaki.ru/ANIME___/Koe_de_Oshigoto/"
+    },
+    {
+        "title": "Occultic;Nine",
+        "url": "https://storage.kanzaki.ru/ANIME___/Occultic;Nine/"
+    },
+    {
+        "title": "Angelic_Layer",
+        "url": "https://storage.kanzaki.ru/ANIME___/Angelic_Layer/"
+    },
+    {
+        "title": "Kamisama_Dolls",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kamisama_Dolls/"
+    },
+    {
+        "title": "Frame_Arms_Girl",
+        "url": "https://storage.kanzaki.ru/ANIME___/Frame_Arms_Girl/"
+    },
+    {
+        "title": "Nora",
+        "url": "https://storage.kanzaki.ru/ANIME___/Nora/"
+    },
+    {
+        "title": "Chaos_Child",
+        "url": "https://storage.kanzaki.ru/ANIME___/Chaos_Child/"
+    },
+    {
+        "title": "Shounen_Ashibe_Go!_Go!_Goma-chan",
+        "url": "https://storage.kanzaki.ru/ANIME___/Shounen_Ashibe_Go!_Go!_Goma-chan/"
+    },
+    {
+        "title": "Sankarea",
+        "url": "https://storage.kanzaki.ru/ANIME___/Sankarea/"
+    },
+    {
+        "title": "Kiss_x_Sis",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kiss_x_Sis/"
+    },
+    {
+        "title": "Queen's_Blade",
+        "url": "https://storage.kanzaki.ru/ANIME___/Queen's_Blade/"
+    },
+    {
+        "title": "Fushigi_na_Somera-chan",
+        "url": "https://storage.kanzaki.ru/ANIME___/Fushigi_na_Somera-chan/"
+    },
+    {
+        "title": "Shokupan_Mimi",
+        "url": "https://storage.kanzaki.ru/ANIME___/Shokupan_Mimi/"
+    },
+    {
+        "title": "Nozotokine",
+        "url": "https://storage.kanzaki.ru/ANIME___/Nozotokine/"
+    },
+    {
+        "title": "Show_by_Rock",
+        "url": "https://storage.kanzaki.ru/ANIME___/Show_by_Rock/"
+    },
+    {
+        "title": "Room_Mate",
+        "url": "https://storage.kanzaki.ru/ANIME___/Room_Mate/"
+    },
+    {
+        "title": "BECK_-_Mongolian_Chop_Squad",
+        "url": "https://storage.kanzaki.ru/ANIME___/BECK_-_Mongolian_Chop_Squad/"
+    },
+    {
+        "title": "Watashi_go_Motete_Dousunda",
+        "url": "https://storage.kanzaki.ru/ANIME___/Watashi_go_Motete_Dousunda/"
+    },
+    {
+        "title": "Guilty_Crown",
+        "url": "https://storage.kanzaki.ru/ANIME___/Guilty_Crown/"
+    },
+    {
+        "title": "Vividred_Operation",
+        "url": "https://storage.kanzaki.ru/ANIME___/Vividred_Operation/"
+    },
+    {
+        "title": "Hokuto_no_Ken",
+        "url": "https://storage.kanzaki.ru/ANIME___/Hokuto_no_Ken/"
+    },
+    {
+        "title": "Barakamon",
+        "url": "https://storage.kanzaki.ru/ANIME___/Barakamon/"
+    },
+    {
+        "title": "Hand_Shakers",
+        "url": "https://storage.kanzaki.ru/ANIME___/Hand_Shakers/"
+    },
+    {
+        "title": "C_-_The_Money_of_Soul_and_Possibility_Control",
+        "url": "https://storage.kanzaki.ru/ANIME___/C_-_The_Money_of_Soul_and_Possibility_Control/"
+    },
+    {
+        "title": "Non_Non_Biyori",
+        "url": "https://storage.kanzaki.ru/ANIME___/Non_Non_Biyori/"
+    },
+    {
+        "title": "PES_-_Peace_Eco_Smile",
+        "url": "https://storage.kanzaki.ru/ANIME___/PES_-_Peace_Eco_Smile/"
+    },
+    {
+        "title": "Shadow_Skill",
+        "url": "https://storage.kanzaki.ru/ANIME___/Shadow_Skill/"
+    },
+    {
+        "title": "Tokyo_Underground",
+        "url": "https://storage.kanzaki.ru/ANIME___/Tokyo_Underground/"
+    },
+    {
+        "title": "Kimi_to_Boku",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kimi_to_Boku/"
+    },
+    {
+        "title": "Crusher_Joe",
+        "url": "https://storage.kanzaki.ru/ANIME___/Crusher_Joe/"
+    },
+    {
+        "title": "Capeta",
+        "url": "https://storage.kanzaki.ru/ANIME___/Capeta/"
+    },
+    {
+        "title": "Demi-chan_wa_Kataritai",
+        "url": "https://storage.kanzaki.ru/ANIME___/Demi-chan_wa_Kataritai/"
+    },
+    {
+        "title": "Negima",
+        "url": "https://storage.kanzaki.ru/ANIME___/Negima/"
+    },
+    {
+        "title": "High_School_of_the_Dead_(Gakuen_Mokushiroku)",
+        "url": "https://storage.kanzaki.ru/ANIME___/High_School_of_the_Dead_(Gakuen_Mokushiroku)/"
+    },
+    {
+        "title": "Kaichou_wa_Maid-sama!",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kaichou_wa_Maid-sama!/"
+    },
+    {
+        "title": "Sacred_Seven",
+        "url": "https://storage.kanzaki.ru/ANIME___/Sacred_Seven/"
+    },
+    {
+        "title": "Eve_no_Jikan",
+        "url": "https://storage.kanzaki.ru/ANIME___/Eve_no_Jikan/"
+    },
+    {
+        "title": "Spice_and_Wolf",
+        "url": "https://storage.kanzaki.ru/ANIME___/Spice_and_Wolf/"
+    },
+    {
+        "title": "Onee-chan_ga_Kita",
+        "url": "https://storage.kanzaki.ru/ANIME___/Onee-chan_ga_Kita/"
+    },
+    {
+        "title": "100%_Pascal-sensei",
+        "url": "https://storage.kanzaki.ru/ANIME___/100%_Pascal-sensei/"
+    },
+    {
+        "title": "Saiki_Kusuo_no_Psi-nan",
+        "url": "https://storage.kanzaki.ru/ANIME___/Saiki_Kusuo_no_Psi-nan/"
+    },
+    {
+        "title": "Claymore",
+        "url": "https://storage.kanzaki.ru/ANIME___/Claymore/"
+    },
+    {
+        "title": "Otome_Youkai_Zakuro",
+        "url": "https://storage.kanzaki.ru/ANIME___/Otome_Youkai_Zakuro/"
+    },
+    {
+        "title": "Nodame_Cantabile",
+        "url": "https://storage.kanzaki.ru/ANIME___/Nodame_Cantabile/"
+    },
+    {
+        "title": "Sakigake_Cromartie_High_School",
+        "url": "https://storage.kanzaki.ru/ANIME___/Sakigake_Cromartie_High_School/"
+    },
+    {
+        "title": "Haruchika",
+        "url": "https://storage.kanzaki.ru/ANIME___/Haruchika/"
+    },
+    {
+        "title": "Aoki_Hagane_No_Arpeggio",
+        "url": "https://storage.kanzaki.ru/ANIME___/Aoki_Hagane_No_Arpeggio/"
+    },
+    {
+        "title": "Rio_-_Rainbow_Gate",
+        "url": "https://storage.kanzaki.ru/ANIME___/Rio_-_Rainbow_Gate/"
+    },
+    {
+        "title": "Hagane_Orchestra",
+        "url": "https://storage.kanzaki.ru/ANIME___/Hagane_Orchestra/"
+    },
+    {
+        "title": "Manyuu_Hiken-chou",
+        "url": "https://storage.kanzaki.ru/ANIME___/Manyuu_Hiken-chou/"
+    },
+    {
+        "title": "Time_Bokan_24",
+        "url": "https://storage.kanzaki.ru/ANIME___/Time_Bokan_24/"
+    },
+    {
+        "title": "Slow_Step",
+        "url": "https://storage.kanzaki.ru/ANIME___/Slow_Step/"
+    },
+    {
+        "title": "Durarara!!",
+        "url": "https://storage.kanzaki.ru/ANIME___/Durarara!!/"
+    },
+    {
+        "title": "Bleach",
+        "url": "https://storage.kanzaki.ru/ANIME___/Bleach/"
+    },
+    {
+        "title": "Hundred",
+        "url": "https://storage.kanzaki.ru/ANIME___/Hundred/"
+    },
+    {
+        "title": "Nogizaka_Haruka_no_Himitsu",
+        "url": "https://storage.kanzaki.ru/ANIME___/Nogizaka_Haruka_no_Himitsu/"
+    },
+    {
+        "title": "Trickster",
+        "url": "https://storage.kanzaki.ru/ANIME___/Trickster/"
+    },
+    {
+        "title": "Brave_Witches",
+        "url": "https://storage.kanzaki.ru/ANIME___/Brave_Witches/"
+    },
+    {
+        "title": "Musaigen_no_Phantom_World",
+        "url": "https://storage.kanzaki.ru/ANIME___/Musaigen_no_Phantom_World/"
+    },
+    {
+        "title": "Maoyuu_Maou_Yuusha",
+        "url": "https://storage.kanzaki.ru/ANIME___/Maoyuu_Maou_Yuusha/"
+    },
+    {
+        "title": "No_6",
+        "url": "https://storage.kanzaki.ru/ANIME___/No_6/"
+    },
+    {
+        "title": "Valkyrie_Drive_-_Mermaid",
+        "url": "https://storage.kanzaki.ru/ANIME___/Valkyrie_Drive_-_Mermaid/"
+    },
+    {
+        "title": "Piace_-_Watashi_no_Italian",
+        "url": "https://storage.kanzaki.ru/ANIME___/Piace_-_Watashi_no_Italian/"
+    },
+    {
+        "title": "Akiba's_Trip_The_Animation",
+        "url": "https://storage.kanzaki.ru/ANIME___/Akiba's_Trip_The_Animation/"
+    },
+    {
+        "title": "Ushio_to_Tora",
+        "url": "https://storage.kanzaki.ru/ANIME___/Ushio_to_Tora/"
+    },
+    {
+        "title": "ISUCA",
+        "url": "https://storage.kanzaki.ru/ANIME___/ISUCA/"
+    },
+    {
+        "title": "Yuusha_ni_Narenakatta_Ore_wa_Shibushibu_Shuusho..>",
+        "url": "https://storage.kanzaki.ru/ANIME___/Yuusha_ni_Narenakatta_Ore_wa_Shibushibu_Shuusho..>"
+    },
+    {
+        "title": "Sakigake!!_Otokojuku",
+        "url": "https://storage.kanzaki.ru/ANIME___/Sakigake!!_Otokojuku/"
+    },
+    {
+        "title": "Comet_Lucifer",
+        "url": "https://storage.kanzaki.ru/ANIME___/Comet_Lucifer/"
+    },
+    {
+        "title": "Date_A_Live",
+        "url": "https://storage.kanzaki.ru/ANIME___/Date_A_Live/"
+    },
+    {
+        "title": "Chiruran_-_Nibun_no_Ichi",
+        "url": "https://storage.kanzaki.ru/ANIME___/Chiruran_-_Nibun_no_Ichi/"
+    },
+    {
+        "title": "Aoharu_x_Kikanjuu",
+        "url": "https://storage.kanzaki.ru/ANIME___/Aoharu_x_Kikanjuu/"
+    },
+    {
+        "title": "Night_Wizard",
+        "url": "https://storage.kanzaki.ru/ANIME___/Night_Wizard/"
+    },
+    {
+        "title": "Gakuen_Handsome",
+        "url": "https://storage.kanzaki.ru/ANIME___/Gakuen_Handsome/"
+    },
+    {
+        "title": "Ryokunohara_Meikyuu",
+        "url": "https://storage.kanzaki.ru/ANIME___/Ryokunohara_Meikyuu/"
+    },
+    {
+        "title": "Bikini_Warriors",
+        "url": "https://storage.kanzaki.ru/ANIME___/Bikini_Warriors/"
+    },
+    {
+        "title": "Kill_la_Kill",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kill_la_Kill/"
+    },
+    {
+        "title": "Jitsu_wa_Watashi_wa",
+        "url": "https://storage.kanzaki.ru/ANIME___/Jitsu_wa_Watashi_wa/"
+    },
+    {
+        "title": "Birdy_the_Mighty_Decode",
+        "url": "https://storage.kanzaki.ru/ANIME___/Birdy_the_Mighty_Decode/"
+    },
+    {
+        "title": "Buttobi_CPU",
+        "url": "https://storage.kanzaki.ru/ANIME___/Buttobi_CPU/"
+    },
+    {
+        "title": "Aquarian_Logos",
+        "url": "https://storage.kanzaki.ru/ANIME___/Aquarian_Logos/"
+    },
+    {
+        "title": "Girlish_Number",
+        "url": "https://storage.kanzaki.ru/ANIME___/Girlish_Number/"
+    },
+    {
+        "title": "Yamada-kun_to_7-nin_no_Majo",
+        "url": "https://storage.kanzaki.ru/ANIME___/Yamada-kun_to_7-nin_no_Majo/"
+    },
+    {
+        "title": "Junjou_Romantica",
+        "url": "https://storage.kanzaki.ru/ANIME___/Junjou_Romantica/"
+    },
+    {
+        "title": "Ninja_Slayer",
+        "url": "https://storage.kanzaki.ru/ANIME___/Ninja_Slayer/"
+    },
+    {
+        "title": "Onii-chan_no_Koto_nanka_Zenzen_Suki_Janain_Daka..>",
+        "url": "https://storage.kanzaki.ru/ANIME___/Onii-chan_no_Koto_nanka_Zenzen_Suki_Janain_Daka..>"
+    },
+    {
+        "title": "Spiritpact",
+        "url": "https://storage.kanzaki.ru/ANIME___/Spiritpact/"
+    },
+    {
+        "title": "Mai-HiME",
+        "url": "https://storage.kanzaki.ru/ANIME___/Mai-HiME/"
+    },
+    {
+        "title": "Yuusha_Ou_GaoGaiGar",
+        "url": "https://storage.kanzaki.ru/ANIME___/Yuusha_Ou_GaoGaiGar/"
+    },
+    {
+        "title": "Koukaku_no_Regios",
+        "url": "https://storage.kanzaki.ru/ANIME___/Koukaku_no_Regios/"
+    },
+    {
+        "title": "Re-Creators",
+        "url": "https://storage.kanzaki.ru/ANIME___/Re-Creators/"
+    },
+    {
+        "title": "Sousei_no_Onmyouji_(Twin_Star_Exorcists)",
+        "url": "https://storage.kanzaki.ru/ANIME___/Sousei_no_Onmyouji_(Twin_Star_Exorcists)/"
+    },
+    {
+        "title": "Wooser_no_Sono_Higurashi",
+        "url": "https://storage.kanzaki.ru/ANIME___/Wooser_no_Sono_Higurashi/"
+    },
+    {
+        "title": "Uchouten_Kazoku",
+        "url": "https://storage.kanzaki.ru/ANIME___/Uchouten_Kazoku/"
+    },
+    {
+        "title": "Gochuumon_wa_Usagi_Desu_ka",
+        "url": "https://storage.kanzaki.ru/ANIME___/Gochuumon_wa_Usagi_Desu_ka/"
+    },
+    {
+        "title": "Hyper_Police",
+        "url": "https://storage.kanzaki.ru/ANIME___/Hyper_Police/"
+    },
+    {
+        "title": "Copihan",
+        "url": "https://storage.kanzaki.ru/ANIME___/Copihan/"
+    },
+    {
+        "title": "Diabolik_Lovers",
+        "url": "https://storage.kanzaki.ru/ANIME___/Diabolik_Lovers/"
+    },
+    {
+        "title": "Oshiete!_Galko-chan",
+        "url": "https://storage.kanzaki.ru/ANIME___/Oshiete!_Galko-chan/"
+    },
+    {
+        "title": "Cheating_Craft",
+        "url": "https://storage.kanzaki.ru/ANIME___/Cheating_Craft/"
+    },
+    {
+        "title": "Suzy's_Zoo",
+        "url": "https://storage.kanzaki.ru/ANIME___/Suzy's_Zoo/"
+    },
+    {
+        "title": "ACCA_13-ku_Kansatsu-ka",
+        "url": "https://storage.kanzaki.ru/ANIME___/ACCA_13-ku_Kansatsu-ka/"
+    },
+    {
+        "title": "Mikagura_Gakuen_Kumikyoku",
+        "url": "https://storage.kanzaki.ru/ANIME___/Mikagura_Gakuen_Kumikyoku/"
+    },
+    {
+        "title": "Solty_Rei",
+        "url": "https://storage.kanzaki.ru/ANIME___/Solty_Rei/"
+    },
+    {
+        "title": "Sekai_no_Yami_Zukan",
+        "url": "https://storage.kanzaki.ru/ANIME___/Sekai_no_Yami_Zukan/"
+    },
+    {
+        "title": "Mahou_Shoujo_Ikusei_Keikaku",
+        "url": "https://storage.kanzaki.ru/ANIME___/Mahou_Shoujo_Ikusei_Keikaku/"
+    },
+    {
+        "title": "Chihayafuru",
+        "url": "https://storage.kanzaki.ru/ANIME___/Chihayafuru/"
+    },
+    {
+        "title": "Ladies_versus_Butlers!",
+        "url": "https://storage.kanzaki.ru/ANIME___/Ladies_versus_Butlers!/"
+    },
+    {
+        "title": "Schwarzesmarken",
+        "url": "https://storage.kanzaki.ru/ANIME___/Schwarzesmarken/"
+    },
+    {
+        "title": "Natsume_Yuujinchou",
+        "url": "https://storage.kanzaki.ru/ANIME___/Natsume_Yuujinchou/"
+    },
+    {
+        "title": "Basilisk",
+        "url": "https://storage.kanzaki.ru/ANIME___/Basilisk/"
+    },
+    {
+        "title": "KissDum",
+        "url": "https://storage.kanzaki.ru/ANIME___/KissDum/"
+    },
+    {
+        "title": "Busou_Shoujo_Machiavellianism",
+        "url": "https://storage.kanzaki.ru/ANIME___/Busou_Shoujo_Machiavellianism/"
+    },
+    {
+        "title": "Love_Live!_School_Idol_Project",
+        "url": "https://storage.kanzaki.ru/ANIME___/Love_Live!_School_Idol_Project/"
+    },
+    {
+        "title": "Mahou_Shoujo_Nante_Mou_Ii_Desukara",
+        "url": "https://storage.kanzaki.ru/ANIME___/Mahou_Shoujo_Nante_Mou_Ii_Desukara/"
+    },
+    {
+        "title": "Itoshi_no_Muco",
+        "url": "https://storage.kanzaki.ru/ANIME___/Itoshi_no_Muco/"
+    },
+    {
+        "title": "Denpa_Onna_to_Seishun_Otoko",
+        "url": "https://storage.kanzaki.ru/ANIME___/Denpa_Onna_to_Seishun_Otoko/"
+    },
+    {
+        "title": "Death_Parade",
+        "url": "https://storage.kanzaki.ru/ANIME___/Death_Parade/"
+    },
+    {
+        "title": "Hipira-kun",
+        "url": "https://storage.kanzaki.ru/ANIME___/Hipira-kun/"
+    },
+    {
+        "title": "Kurogane_no_Linebarrels_(Linebarrels_of_Iron)",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kurogane_no_Linebarrels_(Linebarrels_of_Iron)/"
+    },
+    {
+        "title": "Koro-sensei_Quest!",
+        "url": "https://storage.kanzaki.ru/ANIME___/Koro-sensei_Quest!/"
+    },
+    {
+        "title": "Ojisan_to_Marshmallow",
+        "url": "https://storage.kanzaki.ru/ANIME___/Ojisan_to_Marshmallow/"
+    },
+    {
+        "title": "Tabi_Machi_Late_Show",
+        "url": "https://storage.kanzaki.ru/ANIME___/Tabi_Machi_Late_Show/"
+    },
+    {
+        "title": "Punch_Line",
+        "url": "https://storage.kanzaki.ru/ANIME___/Punch_Line/"
+    },
+    {
+        "title": "Shinsekai_Yori",
+        "url": "https://storage.kanzaki.ru/ANIME___/Shinsekai_Yori/"
+    },
+    {
+        "title": "Little_Witch_Academia",
+        "url": "https://storage.kanzaki.ru/ANIME___/Little_Witch_Academia/"
+    },
+    {
+        "title": "Eureka_Seven",
+        "url": "https://storage.kanzaki.ru/ANIME___/Eureka_Seven/"
+    },
+    {
+        "title": "Ai_Mai_Mi",
+        "url": "https://storage.kanzaki.ru/ANIME___/Ai_Mai_Mi/"
+    },
+    {
+        "title": "Inazuma_Eleven",
+        "url": "https://storage.kanzaki.ru/ANIME___/Inazuma_Eleven/"
+    },
+    {
+        "title": "Cuticle_Tantei_Inaba",
+        "url": "https://storage.kanzaki.ru/ANIME___/Cuticle_Tantei_Inaba/"
+    },
+    {
+        "title": "Ah_My_Goddess",
+        "url": "https://storage.kanzaki.ru/ANIME___/Ah_My_Goddess/"
+    },
+    {
+        "title": "Lostorage_incited_WIXOSS",
+        "url": "https://storage.kanzaki.ru/ANIME___/Lostorage_incited_WIXOSS/"
+    },
+    {
+        "title": "Nabari_no_Ou",
+        "url": "https://storage.kanzaki.ru/ANIME___/Nabari_no_Ou/"
+    },
+    {
+        "title": "Baton_The_Animation",
+        "url": "https://storage.kanzaki.ru/ANIME___/Baton_The_Animation/"
+    },
+    {
+        "title": "SCHOOLGIRL_STRIKERS_Animation_Channel",
+        "url": "https://storage.kanzaki.ru/ANIME___/SCHOOLGIRL_STRIKERS_Animation_Channel/"
+    },
+    {
+        "title": "Toradora!",
+        "url": "https://storage.kanzaki.ru/ANIME___/Toradora!/"
+    },
+    {
+        "title": "Kaitou_Reinya",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kaitou_Reinya/"
+    },
+    {
+        "title": "Magical_Girl_Raising_Project",
+        "url": "https://storage.kanzaki.ru/ANIME___/Magical_Girl_Raising_Project/"
+    },
+    {
+        "title": "Alice_to_Zouroku",
+        "url": "https://storage.kanzaki.ru/ANIME___/Alice_to_Zouroku/"
+    },
+    {
+        "title": "Atashinchi",
+        "url": "https://storage.kanzaki.ru/ANIME___/Atashinchi/"
+    },
+    {
+        "title": "Tales_of_Zestiria",
+        "url": "https://storage.kanzaki.ru/ANIME___/Tales_of_Zestiria/"
+    },
+    {
+        "title": "Kobato",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kobato/"
+    },
+    {
+        "title": "Welcome_to_NHK",
+        "url": "https://storage.kanzaki.ru/ANIME___/Welcome_to_NHK/"
+    },
+    {
+        "title": "Fukumenkei_Noise",
+        "url": "https://storage.kanzaki.ru/ANIME___/Fukumenkei_Noise/"
+    },
+    {
+        "title": "Bokura_wa_Minna_Kawaisou",
+        "url": "https://storage.kanzaki.ru/ANIME___/Bokura_wa_Minna_Kawaisou/"
+    },
+    {
+        "title": "Lucky_Star",
+        "url": "https://storage.kanzaki.ru/ANIME___/Lucky_Star/"
+    },
+    {
+        "title": "Koukaku_no_Pandora",
+        "url": "https://storage.kanzaki.ru/ANIME___/Koukaku_no_Pandora/"
+    },
+    {
+        "title": "Prince_of_Stride_-_Alternative",
+        "url": "https://storage.kanzaki.ru/ANIME___/Prince_of_Stride_-_Alternative/"
+    },
+    {
+        "title": "Angel_Beats!",
+        "url": "https://storage.kanzaki.ru/ANIME___/Angel_Beats!/"
+    },
+    {
+        "title": "Clockwork_Planet",
+        "url": "https://storage.kanzaki.ru/ANIME___/Clockwork_Planet/"
+    },
+    {
+        "title": "Ikoku_Meiro_no_Crois\u00e9e_The_Animation",
+        "url": "https://storage.kanzaki.ru/ANIME___/Ikoku_Meiro_no_Crois\u00e9e_The_Animation/"
+    },
+    {
+        "title": "Bonobono",
+        "url": "https://storage.kanzaki.ru/ANIME___/Bonobono/"
+    },
+    {
+        "title": "Dimension_W",
+        "url": "https://storage.kanzaki.ru/ANIME___/Dimension_W/"
+    },
+    {
+        "title": "Dungeon_ni_Deai_wo_Motomeru_no_wa_Machigatteiru..>",
+        "url": "https://storage.kanzaki.ru/ANIME___/Dungeon_ni_Deai_wo_Motomeru_no_wa_Machigatteiru..>"
+    },
+    {
+        "title": "PhotoKano",
+        "url": "https://storage.kanzaki.ru/ANIME___/PhotoKano/"
+    },
+    {
+        "title": "Tiger_Mask_W",
+        "url": "https://storage.kanzaki.ru/ANIME___/Tiger_Mask_W/"
+    },
+    {
+        "title": "Bubuki_Buranki",
+        "url": "https://storage.kanzaki.ru/ANIME___/Bubuki_Buranki/"
+    },
+    {
+        "title": "Saint_Seiya",
+        "url": "https://storage.kanzaki.ru/ANIME___/Saint_Seiya/"
+    },
+    {
+        "title": "Toaru_Hikuushi_e_no_Koiuta",
+        "url": "https://storage.kanzaki.ru/ANIME___/Toaru_Hikuushi_e_no_Koiuta/"
+    },
+    {
+        "title": "Canaan",
+        "url": "https://storage.kanzaki.ru/ANIME___/Canaan/"
+    },
+    {
+        "title": "Noein",
+        "url": "https://storage.kanzaki.ru/ANIME___/Noein/"
+    },
+    {
+        "title": "Hen_Zemi",
+        "url": "https://storage.kanzaki.ru/ANIME___/Hen_Zemi/"
+    },
+    {
+        "title": "Kagaku_Ninja-Tai_Gatchaman",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kagaku_Ninja-Tai_Gatchaman/"
+    },
+    {
+        "title": "Hetalia_Axis_Powers",
+        "url": "https://storage.kanzaki.ru/ANIME___/Hetalia_Axis_Powers/"
+    },
+    {
+        "title": "Hoshizora_e_Kakaru_Hashi",
+        "url": "https://storage.kanzaki.ru/ANIME___/Hoshizora_e_Kakaru_Hashi/"
+    },
+    {
+        "title": "YuriYuri",
+        "url": "https://storage.kanzaki.ru/ANIME___/YuriYuri/"
+    },
+    {
+        "title": "Soushin_Shoujo_Matoi",
+        "url": "https://storage.kanzaki.ru/ANIME___/Soushin_Shoujo_Matoi/"
+    },
+    {
+        "title": "Antique_Bakery",
+        "url": "https://storage.kanzaki.ru/ANIME___/Antique_Bakery/"
+    },
+    {
+        "title": "Black_Lagoon",
+        "url": "https://storage.kanzaki.ru/ANIME___/Black_Lagoon/"
+    },
+    {
+        "title": "Kagihime_Eikyuu_Alice_Rondo",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kagihime_Eikyuu_Alice_Rondo/"
+    },
+    {
+        "title": "Bang_Dream!",
+        "url": "https://storage.kanzaki.ru/ANIME___/Bang_Dream!/"
+    },
+    {
+        "title": "Chain_Chronicle_-_Haecceitas_no_Hikari",
+        "url": "https://storage.kanzaki.ru/ANIME___/Chain_Chronicle_-_Haecceitas_no_Hikari/"
+    },
+    {
+        "title": "Softenni",
+        "url": "https://storage.kanzaki.ru/ANIME___/Softenni/"
+    },
+    {
+        "title": "Urayasu_Tekkin_Kazoku_(Super_Radical_Gag_Family)",
+        "url": "https://storage.kanzaki.ru/ANIME___/Urayasu_Tekkin_Kazoku_(Super_Radical_Gag_Family)/"
+    },
+    {
+        "title": "Peeping_Life",
+        "url": "https://storage.kanzaki.ru/ANIME___/Peeping_Life/"
+    },
+    {
+        "title": "Gakusen_Toshi_Asterisk",
+        "url": "https://storage.kanzaki.ru/ANIME___/Gakusen_Toshi_Asterisk/"
+    },
+    {
+        "title": "Ryuu_Seiki",
+        "url": "https://storage.kanzaki.ru/ANIME___/Ryuu_Seiki/"
+    },
+    {
+        "title": "Bungaku_Shoujo_Memoire",
+        "url": "https://storage.kanzaki.ru/ANIME___/Bungaku_Shoujo_Memoire/"
+    },
+    {
+        "title": "Sakamichi_no_Apollon",
+        "url": "https://storage.kanzaki.ru/ANIME___/Sakamichi_no_Apollon/"
+    },
+    {
+        "title": "Asura_Cryin",
+        "url": "https://storage.kanzaki.ru/ANIME___/Asura_Cryin/"
+    },
+    {
+        "title": "Ring_ni_Kakero",
+        "url": "https://storage.kanzaki.ru/ANIME___/Ring_ni_Kakero/"
+    },
+    {
+        "title": "Kaitou_Joker",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kaitou_Joker/"
+    },
+    {
+        "title": "Kaze_no_Stigma",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kaze_no_Stigma/"
+    },
+    {
+        "title": "Rosario_+_Vampire",
+        "url": "https://storage.kanzaki.ru/ANIME___/Rosario_+_Vampire/"
+    },
+    {
+        "title": "Planetes",
+        "url": "https://storage.kanzaki.ru/ANIME___/Planetes/"
+    },
+    {
+        "title": "Rozen_Maiden",
+        "url": "https://storage.kanzaki.ru/ANIME___/Rozen_Maiden/"
+    },
+    {
+        "title": "Samurai_Champloo",
+        "url": "https://storage.kanzaki.ru/ANIME___/Samurai_Champloo/"
+    },
+    {
+        "title": "Rinne_no_Lagrange",
+        "url": "https://storage.kanzaki.ru/ANIME___/Rinne_no_Lagrange/"
+    },
+    {
+        "title": "Sakura_Quest",
+        "url": "https://storage.kanzaki.ru/ANIME___/Sakura_Quest/"
+    },
+    {
+        "title": "Speed_Grapher",
+        "url": "https://storage.kanzaki.ru/ANIME___/Speed_Grapher/"
+    },
+    {
+        "title": "Video_Girl_Ai",
+        "url": "https://storage.kanzaki.ru/ANIME___/Video_Girl_Ai/"
+    },
+    {
+        "title": "Makura_no_Danshi",
+        "url": "https://storage.kanzaki.ru/ANIME___/Makura_no_Danshi/"
+    },
+    {
+        "title": "Highschool_DxD",
+        "url": "https://storage.kanzaki.ru/ANIME___/Highschool_DxD/"
+    },
+    {
+        "title": "Rance_-_Sabaku_no_Guardian",
+        "url": "https://storage.kanzaki.ru/ANIME___/Rance_-_Sabaku_no_Guardian/"
+    },
+    {
+        "title": "Onii-chan_Dakedo_Ai_Sae_Areba_Kankeinai_yo_ne",
+        "url": "https://storage.kanzaki.ru/ANIME___/Onii-chan_Dakedo_Ai_Sae_Areba_Kankeinai_yo_ne/"
+    },
+    {
+        "title": "Haikyuu!!",
+        "url": "https://storage.kanzaki.ru/ANIME___/Haikyuu!!/"
+    },
+    {
+        "title": "Kyouran_Kazoku_Nikki",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kyouran_Kazoku_Nikki/"
+    },
+    {
+        "title": "Medaka_Box",
+        "url": "https://storage.kanzaki.ru/ANIME___/Medaka_Box/"
+    },
+    {
+        "title": "SKET_Dance",
+        "url": "https://storage.kanzaki.ru/ANIME___/SKET_Dance/"
+    },
+    {
+        "title": "Maji_de_Watashi_ni_Koishinasai!!",
+        "url": "https://storage.kanzaki.ru/ANIME___/Maji_de_Watashi_ni_Koishinasai!!/"
+    },
+    {
+        "title": "Kowarekake_no_Orgel",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kowarekake_no_Orgel/"
+    },
+    {
+        "title": "Prison_School",
+        "url": "https://storage.kanzaki.ru/ANIME___/Prison_School/"
+    },
+    {
+        "title": "Diamond_no_Ace",
+        "url": "https://storage.kanzaki.ru/ANIME___/Diamond_no_Ace/"
+    },
+    {
+        "title": "Highschool_of_the_Dead",
+        "url": "https://storage.kanzaki.ru/ANIME___/Highschool_of_the_Dead/"
+    },
+    {
+        "title": "TO_BE_HERO",
+        "url": "https://storage.kanzaki.ru/ANIME___/TO_BE_HERO/"
+    },
+    {
+        "title": "High_School_Star_Musical",
+        "url": "https://storage.kanzaki.ru/ANIME___/High_School_Star_Musical/"
+    },
+    {
+        "title": "Sekkou_Boys",
+        "url": "https://storage.kanzaki.ru/ANIME___/Sekkou_Boys/"
+    },
+    {
+        "title": "Macross_Delta",
+        "url": "https://storage.kanzaki.ru/ANIME___/Macross_Delta/"
+    },
+    {
+        "title": "Air_Gear",
+        "url": "https://storage.kanzaki.ru/ANIME___/Air_Gear/"
+    },
+    {
+        "title": "Dagashi_Kashi",
+        "url": "https://storage.kanzaki.ru/ANIME___/Dagashi_Kashi/"
+    },
+    {
+        "title": "Basquash!",
+        "url": "https://storage.kanzaki.ru/ANIME___/Basquash!/"
+    },
+    {
+        "title": "iDOLM@STER",
+        "url": "https://storage.kanzaki.ru/ANIME___/iDOLM@STER/"
+    },
+    {
+        "title": "Ore_no_Imouto_ga_Konna_ni_Kawaii_Wake_ga_Nai",
+        "url": "https://storage.kanzaki.ru/ANIME___/Ore_no_Imouto_ga_Konna_ni_Kawaii_Wake_ga_Nai/"
+    },
+    {
+        "title": "Endride",
+        "url": "https://storage.kanzaki.ru/ANIME___/Endride/"
+    },
+    {
+        "title": "Infinite_Stratos",
+        "url": "https://storage.kanzaki.ru/ANIME___/Infinite_Stratos/"
+    },
+    {
+        "title": "Senjou_no_Valkyria",
+        "url": "https://storage.kanzaki.ru/ANIME___/Senjou_no_Valkyria/"
+    },
+    {
+        "title": "Akatsuki_no_Yona",
+        "url": "https://storage.kanzaki.ru/ANIME___/Akatsuki_no_Yona/"
+    },
+    {
+        "title": "Prince_of_Tennis",
+        "url": "https://storage.kanzaki.ru/ANIME___/Prince_of_Tennis/"
+    },
+    {
+        "title": "Plastic_Memories",
+        "url": "https://storage.kanzaki.ru/ANIME___/Plastic_Memories/"
+    },
+    {
+        "title": "Bungou_Stray_Dogs",
+        "url": "https://storage.kanzaki.ru/ANIME___/Bungou_Stray_Dogs/"
+    },
+    {
+        "title": "Eromanga-sensei",
+        "url": "https://storage.kanzaki.ru/ANIME___/Eromanga-sensei/"
+    },
+    {
+        "title": "Lance_N'_Masques",
+        "url": "https://storage.kanzaki.ru/ANIME___/Lance_N'_Masques/"
+    },
+    {
+        "title": "Magic-Kyun!_Renaissance",
+        "url": "https://storage.kanzaki.ru/ANIME___/Magic-Kyun!_Renaissance/"
+    },
+    {
+        "title": "AKB0048",
+        "url": "https://storage.kanzaki.ru/ANIME___/AKB0048/"
+    },
+    {
+        "title": "Nyanbo!",
+        "url": "https://storage.kanzaki.ru/ANIME___/Nyanbo!/"
+    },
+    {
+        "title": "La_storia_della_Arcana_Famiglia",
+        "url": "https://storage.kanzaki.ru/ANIME___/La_storia_della_Arcana_Famiglia/"
+    },
+    {
+        "title": "Cartagra_~Tsukigurui_no_Yamai~",
+        "url": "https://storage.kanzaki.ru/ANIME___/Cartagra_~Tsukigurui_no_Yamai~/"
+    },
+    {
+        "title": "Dragon_Dentist",
+        "url": "https://storage.kanzaki.ru/ANIME___/Dragon_Dentist/"
+    },
+    {
+        "title": "Onsen_Yousei_Hakone-chan",
+        "url": "https://storage.kanzaki.ru/ANIME___/Onsen_Yousei_Hakone-chan/"
+    },
+    {
+        "title": "GJ_-_bu",
+        "url": "https://storage.kanzaki.ru/ANIME___/GJ_-_bu/"
+    },
+    {
+        "title": "Dream_Festival!",
+        "url": "https://storage.kanzaki.ru/ANIME___/Dream_Festival!/"
+    },
+    {
+        "title": "Ace_Attorney",
+        "url": "https://storage.kanzaki.ru/ANIME___/Ace_Attorney/"
+    },
+    {
+        "title": "Amaama_to_Inazuma",
+        "url": "https://storage.kanzaki.ru/ANIME___/Amaama_to_Inazuma/"
+    },
+    {
+        "title": "Classroom_Crisis",
+        "url": "https://storage.kanzaki.ru/ANIME___/Classroom_Crisis/"
+    },
+    {
+        "title": "Keijo",
+        "url": "https://storage.kanzaki.ru/ANIME___/Keijo/"
+    },
+    {
+        "title": "JoJo's_Bizarre_Adventure",
+        "url": "https://storage.kanzaki.ru/ANIME___/JoJo's_Bizarre_Adventure/"
+    },
+    {
+        "title": "Denpa_Kyoushi",
+        "url": "https://storage.kanzaki.ru/ANIME___/Denpa_Kyoushi/"
+    },
+    {
+        "title": "Tsuki_ga_Kirei",
+        "url": "https://storage.kanzaki.ru/ANIME___/Tsuki_ga_Kirei/"
+    },
+    {
+        "title": "Osomatsu-san",
+        "url": "https://storage.kanzaki.ru/ANIME___/Osomatsu-san/"
+    },
+    {
+        "title": "GHOST_in_the_SHELL",
+        "url": "https://storage.kanzaki.ru/ANIME___/GHOST_in_the_SHELL/"
+    },
+    {
+        "title": "Mushishi_Zoku_Shou",
+        "url": "https://storage.kanzaki.ru/ANIME___/Mushishi_Zoku_Shou/"
+    },
+    {
+        "title": "Sagrada_Reset",
+        "url": "https://storage.kanzaki.ru/ANIME___/Sagrada_Reset/"
+    },
+    {
+        "title": "Yowamushi_Pedal",
+        "url": "https://storage.kanzaki.ru/ANIME___/Yowamushi_Pedal/"
+    },
+    {
+        "title": "Monster_Hunter_Stories_-_RIDE_ON",
+        "url": "https://storage.kanzaki.ru/ANIME___/Monster_Hunter_Stories_-_RIDE_ON/"
+    },
+    {
+        "title": "Buddy_Complex",
+        "url": "https://storage.kanzaki.ru/ANIME___/Buddy_Complex/"
+    },
+    {
+        "title": "Seirei_Tsukai_no_Blade_Dance",
+        "url": "https://storage.kanzaki.ru/ANIME___/Seirei_Tsukai_no_Blade_Dance/"
+    },
+    {
+        "title": "Midori_no_Hibi",
+        "url": "https://storage.kanzaki.ru/ANIME___/Midori_no_Hibi/"
+    },
+    {
+        "title": "DAYS",
+        "url": "https://storage.kanzaki.ru/ANIME___/DAYS/"
+    },
+    {
+        "title": "Uchuu_Kyoudai_(Space_Brothers)",
+        "url": "https://storage.kanzaki.ru/ANIME___/Uchuu_Kyoudai_(Space_Brothers)/"
+    },
+    {
+        "title": "Ao_Oni_The_Animation",
+        "url": "https://storage.kanzaki.ru/ANIME___/Ao_Oni_The_Animation/"
+    },
+    {
+        "title": "Blood+",
+        "url": "https://storage.kanzaki.ru/ANIME___/Blood+/"
+    },
+    {
+        "title": "Mawaru_Penguindrum",
+        "url": "https://storage.kanzaki.ru/ANIME___/Mawaru_Penguindrum/"
+    },
+    {
+        "title": "Nagi_no_Asukara",
+        "url": "https://storage.kanzaki.ru/ANIME___/Nagi_no_Asukara/"
+    },
+    {
+        "title": "Golden_Time",
+        "url": "https://storage.kanzaki.ru/ANIME___/Golden_Time/"
+    },
+    {
+        "title": "Plastic_Nee-san",
+        "url": "https://storage.kanzaki.ru/ANIME___/Plastic_Nee-san/"
+    },
+    {
+        "title": "Captain_Tsubasa_-_Road_To_2002",
+        "url": "https://storage.kanzaki.ru/ANIME___/Captain_Tsubasa_-_Road_To_2002/"
+    },
+    {
+        "title": "Sekirei",
+        "url": "https://storage.kanzaki.ru/ANIME___/Sekirei/"
+    },
+    {
+        "title": "Grisaia_no_Rakuen",
+        "url": "https://storage.kanzaki.ru/ANIME___/Grisaia_no_Rakuen/"
+    },
+    {
+        "title": "Kodai_Ouja_Kyouryuu_King",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kodai_Ouja_Kyouryuu_King/"
+    },
+    {
+        "title": "Upotte",
+        "url": "https://storage.kanzaki.ru/ANIME___/Upotte/"
+    },
+    {
+        "title": "Ace_of_Diamond",
+        "url": "https://storage.kanzaki.ru/ANIME___/Ace_of_Diamond/"
+    },
+    {
+        "title": "Tokyo_ESP",
+        "url": "https://storage.kanzaki.ru/ANIME___/Tokyo_ESP/"
+    },
+    {
+        "title": "Flip_Flappers",
+        "url": "https://storage.kanzaki.ru/ANIME___/Flip_Flappers/"
+    },
+    {
+        "title": "Natsuiro_Kiseki",
+        "url": "https://storage.kanzaki.ru/ANIME___/Natsuiro_Kiseki/"
+    },
+    {
+        "title": "School_Rumble",
+        "url": "https://storage.kanzaki.ru/ANIME___/School_Rumble/"
+    },
+    {
+        "title": "Hidan_no_Aria",
+        "url": "https://storage.kanzaki.ru/ANIME___/Hidan_no_Aria/"
+    },
+    {
+        "title": "Nyanko_Days",
+        "url": "https://storage.kanzaki.ru/ANIME___/Nyanko_Days/"
+    },
+    {
+        "title": "Shomin_Sample",
+        "url": "https://storage.kanzaki.ru/ANIME___/Shomin_Sample/"
+    },
+    {
+        "title": "Kyoukai_no_Rinne",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kyoukai_no_Rinne/"
+    },
+    {
+        "title": "Grandblue_Fantasy_The_Animation",
+        "url": "https://storage.kanzaki.ru/ANIME___/Grandblue_Fantasy_The_Animation/"
+    },
+    {
+        "title": "2009",
+        "url": "http://103.145.232.246/Data/movies/animation/2009/"
+    },
+    {
+        "title": "Hyouka",
+        "url": "https://storage.kanzaki.ru/ANIME___/Hyouka/"
+    },
+    {
+        "title": "Kokoro's_Basketball",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kokoro's_Basketball/"
+    },
+    {
+        "title": "Dantalian_no_Shoka",
+        "url": "https://storage.kanzaki.ru/ANIME___/Dantalian_no_Shoka/"
+    },
+    {
+        "title": "Hinako_Note",
+        "url": "https://storage.kanzaki.ru/ANIME___/Hinako_Note/"
+    },
+    {
+        "title": "11eyes",
+        "url": "https://storage.kanzaki.ru/ANIME___/11eyes/"
+    },
+    {
+        "title": "Kiddy_Girl-and",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kiddy_Girl-and/"
+    },
+    {
+        "title": "Fate_Series",
+        "url": "https://storage.kanzaki.ru/ANIME___/Fate_Series/"
+    },
+    {
+        "title": "Ano_Natsu_De_Matteru",
+        "url": "https://storage.kanzaki.ru/ANIME___/Ano_Natsu_De_Matteru/"
+    },
+    {
+        "title": "Utawarerumono",
+        "url": "https://storage.kanzaki.ru/ANIME___/Utawarerumono/"
+    },
+    {
+        "title": "Itsuka_Tenma_no_Kuro_usagi",
+        "url": "https://storage.kanzaki.ru/ANIME___/Itsuka_Tenma_no_Kuro_usagi/"
+    },
+    {
+        "title": "Robot_Girls_Z",
+        "url": "https://storage.kanzaki.ru/ANIME___/Robot_Girls_Z/"
+    },
+    {
+        "title": "Elfen_Lied",
+        "url": "https://storage.kanzaki.ru/ANIME___/Elfen_Lied/"
+    },
+    {
+        "title": "Detective_Conan",
+        "url": "https://storage.kanzaki.ru/ANIME___/Detective_Conan/"
+    },
+    {
+        "title": "Akagi",
+        "url": "https://storage.kanzaki.ru/ANIME___/Akagi/"
+    },
+    {
+        "title": "Hunter_x_Hunter",
+        "url": "https://storage.kanzaki.ru/ANIME___/Hunter_x_Hunter/"
+    },
+    {
+        "title": "Free!",
+        "url": "https://storage.kanzaki.ru/ANIME___/Free!/"
+    },
+    {
+        "title": "Pokemon",
+        "url": "https://storage.kanzaki.ru/ANIME___/Pokemon/"
+    },
+    {
+        "title": "Tasogare_Otome_x_Amnesia",
+        "url": "https://storage.kanzaki.ru/ANIME___/Tasogare_Otome_x_Amnesia/"
+    },
+    {
+        "title": "Fortune_Arterial",
+        "url": "https://storage.kanzaki.ru/ANIME___/Fortune_Arterial/"
+    },
+    {
+        "title": "3-gatsu_no_Lion",
+        "url": "https://storage.kanzaki.ru/ANIME___/3-gatsu_no_Lion/"
+    },
+    {
+        "title": "Kamichu!",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kamichu!/"
+    },
+    {
+        "title": "Juuichinin_Iru!",
+        "url": "https://storage.kanzaki.ru/ANIME___/Juuichinin_Iru!/"
+    },
+    {
+        "title": "Bishojo_Yuugi_Unit_Crane_Game_Girls_Galaxy",
+        "url": "https://storage.kanzaki.ru/ANIME___/Bishojo_Yuugi_Unit_Crane_Game_Girls_Galaxy/"
+    },
+    {
+        "title": "Yuuki_Yuuna_wa_Yuusha_de_Aru",
+        "url": "https://storage.kanzaki.ru/ANIME___/Yuuki_Yuuna_wa_Yuusha_de_Aru/"
+    },
+    {
+        "title": "Black_Jack",
+        "url": "https://storage.kanzaki.ru/ANIME___/Black_Jack/"
+    },
+    {
+        "title": "PriPri_Chii-chan!!",
+        "url": "https://storage.kanzaki.ru/ANIME___/PriPri_Chii-chan!!/"
+    },
+    {
+        "title": "Absolute_Duo",
+        "url": "https://storage.kanzaki.ru/ANIME___/Absolute_Duo/"
+    },
+    {
+        "title": "elDLIVE",
+        "url": "https://storage.kanzaki.ru/ANIME___/elDLIVE/"
+    },
+    {
+        "title": "Acchi_Kocchi",
+        "url": "https://storage.kanzaki.ru/ANIME___/Acchi_Kocchi/"
+    },
+    {
+        "title": "Divine_Gate",
+        "url": "https://storage.kanzaki.ru/ANIME___/Divine_Gate/"
+    },
+    {
+        "title": "GOD_EATER",
+        "url": "https://storage.kanzaki.ru/ANIME___/GOD_EATER/"
+    },
+    {
+        "title": "Kino_no_Tabi",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kino_no_Tabi/"
+    },
+    {
+        "title": "Mob_Psycho_100",
+        "url": "https://storage.kanzaki.ru/ANIME___/Mob_Psycho_100/"
+    },
+    {
+        "title": "Onegai_Teacher",
+        "url": "https://storage.kanzaki.ru/ANIME___/Onegai_Teacher/"
+    },
+    {
+        "title": "Accel_World",
+        "url": "https://storage.kanzaki.ru/ANIME___/Accel_World/"
+    },
+    {
+        "title": "Blassreiter",
+        "url": "https://storage.kanzaki.ru/ANIME___/Blassreiter/"
+    },
+    {
+        "title": "Kimi_ni_Todoke",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kimi_ni_Todoke/"
+    },
+    {
+        "title": "Berserk",
+        "url": "https://storage.kanzaki.ru/ANIME___/Berserk/"
+    },
+    {
+        "title": "Super_Lovers",
+        "url": "https://storage.kanzaki.ru/ANIME___/Super_Lovers/"
+    },
+    {
+        "title": "Clannad",
+        "url": "https://storage.kanzaki.ru/ANIME___/Clannad/"
+    },
+    {
+        "title": "K",
+        "url": "https://storage.kanzaki.ru/ANIME___/K/"
+    },
+    {
+        "title": "Anne_Happy",
+        "url": "https://storage.kanzaki.ru/ANIME___/Anne_Happy/"
+    },
+    {
+        "title": "Iron_Man",
+        "url": "https://storage.kanzaki.ru/ANIME___/Iron_Man/"
+    },
+    {
+        "title": "Gantz",
+        "url": "https://storage.kanzaki.ru/ANIME___/Gantz/"
+    },
+    {
+        "title": "Kabukibu!",
+        "url": "https://storage.kanzaki.ru/ANIME___/Kabukibu!/"
+    },
+    {
+        "title": "Active_Raid",
+        "url": "https://storage.kanzaki.ru/ANIME___/Active_Raid/"
+    },
+    {
+        "title": "Mitsudomoe",
+        "url": "https://storage.kanzaki.ru/ANIME___/Mitsudomoe/"
+    },
+    {
+        "title": "Tsuritama",
+        "url": "https://storage.kanzaki.ru/ANIME___/Tsuritama/"
+    },
+    {
+        "title": "Darker_than_Black",
+        "url": "https://storage.kanzaki.ru/ANIME___/Darker_than_Black/"
+    },
+    {
+        "title": "Handa-kun",
+        "url": "https://storage.kanzaki.ru/ANIME___/Handa-kun/"
+    },
+    {
+        "title": "Manyuu_Hikenchou",
+        "url": "https://storage.kanzaki.ru/ANIME___/Manyuu_Hikenchou/"
+    },
+    {
+        "title": "Sister_Princess",
+        "url": "https://storage.kanzaki.ru/ANIME___/Sister_Princess/"
+    },
+    {
+        "title": "BTOOOM!",
+        "url": "https://storage.kanzaki.ru/ANIME___/BTOOOM!/"
+    },
+    {
+        "title": "Komori-san_wa_Kotowarenai!",
+        "url": "https://storage.kanzaki.ru/ANIME___/Komori-san_wa_Kotowarenai!/"
+    }
+];
+    </script>
+    <script>
+        // Globals
+let movieList = [];
+
+// DOM Elements
+let searchInput;
+let resultsContainer;
+let viewToggle;
+let movieModal;
+let modalTitle;
+let modalDownloadLink;
+let closeModal;
+
+function renderResults(movies) {
+    resultsContainer.innerHTML = '';
+
+    if (movies.length === 0) {
+        resultsContainer.innerHTML = '<p class="text-center text-gray-500 col-span-full">No movies found matching your search.</p>';
+        return;
+    }
+
+    movies.forEach(movie => {
+        const movieCard = document.createElement('div');
+        movieCard.className = 'movie-card bg-white rounded-lg shadow-md p-4 cursor-pointer hover:shadow-lg transition-shadow';
+        movieCard.dataset.url = movie.url;
+
+        movieCard.innerHTML = `
+            <h3 class="font-bold text-lg text-gray-800 truncate">${movie.title}</h3>
+        `;
+
+        movieCard.addEventListener('click', () => showModal(movie.title, movie.url));
+        resultsContainer.appendChild(movieCard);
+    });
+}
+
+function handleSearch() {
+    const searchTerm = searchInput.value.toLowerCase();
+    const filteredMovies = movieList.filter(movie =>
+        movie.title.toLowerCase().includes(searchTerm)
+    );
+    renderResults(filteredMovies);
+}
+
+function toggleView() {
+    if (viewToggle.checked) {
+        resultsContainer.classList.add('grid-view');
+        resultsContainer.classList.remove('list-view');
+    } else {
+        resultsContainer.classList.add('list-view');
+        resultsContainer.classList.remove('grid-view');
+    }
+}
+
+function showModal(title, downloadLink) {
+    modalTitle.textContent = title;
+    modalDownloadLink.href = downloadLink;
+    movieModal.classList.remove('hidden');
+}
+
+function hideModal() {
+    movieModal.classList.add('hidden');
+}
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Assign DOM elements
+    searchInput = document.getElementById('searchInput');
+    resultsContainer = document.getElementById('resultsContainer');
+    viewToggle = document.getElementById('viewToggle');
+    movieModal = document.getElementById('movieModal');
+    modalTitle = document.getElementById('modalTitle');
+    modalDownloadLink = document.getElementById('modalDownloadLink');
+    closeModal = document.getElementById('closeModal');
+
+    // Add event listeners
+    searchInput.addEventListener('keyup', handleSearch);
+    viewToggle.addEventListener('change', toggleView);
+    closeModal.addEventListener('click', hideModal);
+    movieModal.addEventListener('click', (e) => {
+        if (e.target === movieModal) {
+            hideModal();
+        }
+    });
+
+    // Load movie data
+    movieList = movieData;
+
+    // Set initial view
+    toggleView();
+
+    // Initial render
+    renderResults(movieList);
+});
+    </script>
 </body>
 
 </html>
