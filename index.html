@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Educational Resources - Free Study Materials for Students</title>
+    <title>Movie Search</title>
 
     <!-- GOOGLE FONTS -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,177 +20,94 @@
     <!-- TAILWIND CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <meta property="og:image" content="https://apilage.lk/banner_3.png">
-    <meta name="twitter:image" content="https://apilage.lk/banner_3.png">
-    <meta name="description"
-        content="Access free educational resources for students affected by recent floods. Browse materials by grade or subject and download instantly.">
-
     <style>
         * {
             font-family: 'Inter', sans-serif;
         }
 
-        /* Custom Styles for a more polished UI */
-        body {
-            background-color: #f8fafc; /* Softer gray background */
+        /* Custom Toggle Switch Style */
+        .dot {
+            transition: transform 0.3s ease;
+        }
+        #viewToggle:checked ~ .relative .block {
+             background-color: #3b82f6;
+        }
+        #viewToggle:checked ~ .relative .dot {
+            transform: translateX(1.5rem);
         }
 
-        #google_translate_element {
-            position: fixed;
-            top: 1rem;
-            right: 1rem;
-            z-index: 1000;
-            background: white;
-            padding: 0.25rem 0.5rem;
-            border-radius: 0.5rem;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            font-size: 0.875rem;
+        /* View styles */
+        #resultsContainer.grid-view {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
         }
 
-        .goog-te-gadget img {
-            display: none;
+        #resultsContainer.list-view {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem; /* 12px */
         }
 
-        .header-card {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-        }
-
-        .filter-btn {
-            transition: all 0.2s ease-in-out;
-            border: 1px solid transparent;
-        }
-
-        .filter-btn.active {
-            background-color: #3b82f6; /* Professional blue */
-            color: white;
-            border-color: #3b82f6;
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
-            transform: translateY(-2px);
-        }
-
-        .filter-btn:not(.active):hover {
-            background-color: #f3f4f6;
-            border-color: #d1d5db;
+        #resultsContainer.list-view .movie-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem; /* 16px */
         }
     </style>
 </head>
 
-<body class="p-4 md:p-6">
-    <!-- Header -->
-    <header class="bg-white rounded-xl header-card sticky top-4 z-50">
-        <div class="container mx-auto px-4 py-3">
-            <div class="flex items-center justify-between">
-                <a href="/" class="flex items-center gap-3">
-                    <div class="bg-blue-600 p-3 rounded-lg">
-                        <i class="fas fa-book-open text-2xl text-white"></i>
+<body class="bg-gray-100 p-4 md:p-8">
+
+    <div class="container mx-auto max-w-5xl">
+
+        <h1 class="text-3xl md:text-4xl font-bold text-gray-800 text-center mb-8">Movie Search</h1>
+
+        <!-- Search and View Toggle -->
+        <div class="flex flex-col md:flex-row items-center justify-between mb-8 bg-white p-4 rounded-xl shadow-sm">
+            <div class="relative flex-grow w-full">
+                <input type="text" id="searchInput" placeholder="Search for movies or anime..."
+                    class="w-full px-4 py-3 pl-12 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none text-base">
+                <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg"></i>
+            </div>
+            <div class="md:ml-6 mt-4 md:mt-0 flex items-center">
+                <span class="text-gray-600 mr-3 font-medium">List View</span>
+                <label for="viewToggle" class="flex items-center cursor-pointer">
+                    <div class="relative">
+                        <input type="checkbox" id="viewToggle" class="sr-only">
+                        <div class="block bg-gray-300 w-14 h-8 rounded-full">
+                            <div class="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full"></div>
+                        </div>
                     </div>
-                    <div>
-                        <h1 class="text-xl md:text-2xl font-bold text-gray-800">Educational Resources</h1>
-                        <p class="text-xs md:text-sm text-gray-500">Support for flood-affected students</p>
-                    </div>
-                </a>
-                <a href="/"
-                    class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 md:px-5 py-2 rounded-lg transition-colors text-sm md:text-base font-medium">
-                    <i class="fas fa-home mr-2 opacity-70"></i>Home
-                </a>
+                </label>
+                 <span class="text-gray-600 ml-3 font-medium">Grid View</span>
             </div>
         </div>
-    </header>
 
-    <div class="container mx-auto max-w-7xl px-4 py-6 md:py-8">
-        <!-- Breadcrumb -->
-        <div id="breadcrumb" class="mb-6 flex items-center gap-2 text-sm text-gray-500 flex-wrap">
-            <a href="#" onclick="showGrades(); return false;" class="hover:text-blue-600 transition-colors">
-                <i class="fas fa-home mr-1.5"></i>All Grades
+        <!-- Results Container -->
+        <div id="resultsContainer">
+            <!-- Movie results will be injected here -->
+        </div>
+
+    </div>
+
+    <!-- Modal -->
+    <div id="movieModal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 relative">
+            <button id="closeModal" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition-colors">
+                <i class="fas fa-times text-2xl"></i>
+            </button>
+            <h2 id="modalTitle" class="text-xl font-bold text-gray-800 mb-6">Movie Title</h2>
+            <a id="modalDownloadLink" href="#" target="_blank"
+                class="w-full text-center bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold text-lg">
+                <i class="fas fa-download mr-2"></i>Download
             </a>
         </div>
-
-        <!-- Search & Filter Bar -->
-        <div class="bg-white rounded-xl shadow-sm p-4 md:p-6 mb-8">
-            <div class="flex flex-col md:flex-row items-stretch md:items-center gap-4">
-                <div class="flex-1">
-                     <h2 class="text-lg font-semibold text-gray-700 mb-3">Browse Resources</h2>
-                    <div class="relative">
-                        <input type="text" id="searchInput" placeholder="Search for notes, past papers, etc."
-                            onkeyup="searchMaterials(this.value)"
-                            class="w-full px-4 py-3 pl-11 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none text-sm md:text-base">
-                        <i
-                            class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                    </div>
-                </div>
-                <div class="md:ml-4">
-                     <h2 class="text-lg font-semibold text-gray-700 mb-3">Filter by Type</h2>
-                    <div id="filterContainer" class="flex flex-wrap gap-2">
-                        <button class="filter-btn px-4 py-2 rounded-lg bg-gray-100 text-gray-800 font-medium" data-filter="" onclick="filterByType('')">All Types</button>
-                        <button class="filter-btn px-4 py-2 rounded-lg bg-gray-100 text-gray-800 font-medium" data-filter="notes" onclick="filterByType('notes')">Notes</button>
-                        <button class="filter-btn px-4 py-2 rounded-lg bg-gray-100 text-gray-800 font-medium" data-filter="past_papers" onclick="filterByType('past_papers')">Past Papers</button>
-                        <button class="filter-btn px-4 py-2 rounded-lg bg-gray-100 text-gray-800 font-medium" data-filter="worksheets" onclick="filterByType('worksheets')">Worksheets</button>
-                        <button class="filter-btn px-4 py-2 rounded-lg bg-gray-100 text-gray-800 font-medium" data-filter="videos" onclick="filterByType('videos')">Videos</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Content Area -->
-        <div id="contentArea">
-            <!-- Dynamic content will be loaded here -->
-        </div>
-
-        <!-- Loading State -->
-        <div id="loadingState" class="text-center py-12">
-            <div class="inline-block">
-                <i class="fas fa-spinner fa-spin text-5xl text-blue-500 mb-4"></i>
-                <p class="text-gray-600 text-lg font-medium">Loading resources...</p>
-            </div>
-        </div>
     </div>
 
-    <!-- Download Modal -->
-    <div id="downloadModal"
-        class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div class="sticky top-0 bg-white p-5 border-b border-gray-200 flex items-center justify-between">
-                <h3 class="text-xl font-bold text-gray-800">Download Material</h3>
-                <button onclick="closeDownloadModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
-                    <i class="fas fa-times text-2xl"></i>
-                </button>
-            </div>
-            <div id="modalContent" class="p-6">
-                <!-- Modal content loaded here -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Footer -->
-    <footer class="border-t border-gray-200 mt-12">
-        <div class="container mx-auto max-w-7xl px-4 py-6">
-            <div class="text-center text-sm text-gray-500">
-                <p>
-                    <i class="fas fa-heart text-red-500 mr-1"></i>
-                    Providing free educational resources to support students.
-                </p>
-                <p class="mt-2 text-xs">
-                    © 2025 Flood Support Portal. All materials are for educational purposes.
-                </p>
-            </div>
-        </div>
-    </footer>
-
-    <!-- Google Translate Widget -->
-    <div id="google_translate_element"></div>
-    <script type="text/javascript">
-        function googleTranslateElementInit() {
-            new google.translate.TranslateElement({
-                pageLanguage: 'en',
-                includedLanguages: 'ta,si',
-                layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
-                autoDisplay: false
-            }, 'google_translate_element');
-        }
-    </script>
-    <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
-
-    <script src="js/educational_resources.js?V=15.04.12.2025"></script>
+    <script src="js/movies.js"></script>
+    <script src="js/movie_search.js"></script>
 </body>
 
 </html>
