@@ -338,10 +338,10 @@ def perform_search(raw_query, category_filter):
 
         if category_filter and category_filter != "All":
             # Assuming 'category_filter' maps to media 'type', e.g., 'Movies' or 'TV Series'
-            sql_parts.append("AND media.type = ?")
+            sql_parts.append("AND m.type = ?")
             params.append(category_filter)
         if 'year' in filters:
-            sql_parts.append("AND media.year = ?")
+            sql_parts.append("AND m.year = ?")
             params.append(filters['year'])
 
         # Note: Quality filter is removed as we search on media, not individual files.
