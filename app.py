@@ -32,7 +32,17 @@ SOURCES = [
     {"category": "Movies", "name": "Korean", "url": "http://103.145.232.246/Data/movies/korean/"},
     {"category": "Movies", "name": "Hollywood", "url": "http://103.145.232.246/Data/movies/Hollywood/"},
     {"category": "Animation", "name": "Animation 1", "url": "http://103.145.232.246/Data/movies/animation/"},
-    {"category": "Animation", "name": "Animation 2", "url": "https://edge12.105.ir.cdn.ir/hosein/Animation/"}
+    {"category": "Animation", "name": "Animation 2", "url": "https://edge12.105.ir.cdn.ir/hosein/Animation/"},
+    {"category": "Anime", "name": "Inukami Anime", "url": "https://storage.inukami.ru/ANIME___/"},
+    {"category": "Movies", "name": "Papion Media", "url": "http://ir2.papionvod.ir/Media/"},
+    {"category": "TV Series", "name": "3RVer DL3", "url": "https://dl3.3rver.org/"},
+    {"category": "Mixed", "name": "DYM1 Collection", "url": "https://dym1.site/"},
+    {"category": "Anime", "name": "Calm Snow Media", "url": "https://calm-snow-9de3.evohmodz.workers.dev/0:/Media/"},
+    {"category": "Movies", "name": "Ace Net Public", "url": "http://ace-net.net/stream/Movies/PublicMovies/"},
+    {"category": "TV Series", "name": "High-Speed TV Packs", "url": "http://72.21.17.51:15588/TV/"},
+    {"category": "Animation", "name": "Edge Animation Extra", "url": "https://edge12.105.ir.cdn.ir/hosein/ExtraAnimation/"},
+    {"category": "Movies", "name": "Global Hollywood Mirror", "url": "http://103.145.232.246/Data/movies/ExtraHollywood/"},
+    {"category": "Mixed", "name": "Large Media Archive", "url": "https://large-archive.example.com/Media/"}
 ]
 
 HEADERS = {
