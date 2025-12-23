@@ -1,0 +1,44 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎬 Media Search Engine</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <h1 class="logo">🎬 Media Search</h1>
+            <nav class="navigation">
+                <h2>Categories</h2>
+                <ul>
+                    <li><a href="#" class="category-link active" data-category="all">All</a></li>
+                    <li><a href="#" class="category-link" data-category="Movies">Movies</a></li>
+                    <li><a href="#" class="category-link" data-category="TV Series">TV Series</a></li>
+                    <li><a href="#" class="category-link" data-category="Anime">Anime</a></li>
+                </ul>
+            </nav>
+        </aside>
+        <main class="main-content">
+            <header class="search-header">
+                <div class="search-bar">
+                    <i data-lucide="search"></i>
+                    <input type="search" id="search-input" placeholder="Search for movies, series, anime...">
+                </div>
+            </header>
+            <section id="results-grid" class="results-grid">
+                <!-- Search results will be dynamically inserted here -->
+                <div class="placeholder">
+                    <i data-lucide="film"></i>
+                    <p>Your search results will appear here.</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
