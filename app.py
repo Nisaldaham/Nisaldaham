@@ -42,6 +42,10 @@ HTML_TEMPLATE = """
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide-react@0.477.0/dist/umd/lucide-react.min.js"></script>
+    <script>
+        // Compatibility shim for different Lucide UMD versions
+        window.LucideReact = window.LucideReact || window.lucide;
+    </script>
     <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
     <link rel="manifest" href="/manifest.json">
@@ -151,10 +155,22 @@ HTML_TEMPLATE = """
             const [showPinEntry, setShowPinEntry] = useState(null);
             const [toasts, setToasts] = useState([]);
             const [celebrations, setCelebrations] = useState([]);
+            const [logs, setLogs] = useState([]);
 
             const connections = useRef({});
             const dataChannels = useRef({});
             const receiveBuffers = useRef({});
+
+            // Ref to solve stale closures in WebRTC callbacks
+            const stateRef = useRef({ peers, transfers });
+            useEffect(() => {
+                stateRef.current = { peers, transfers };
+            }, [peers, transfers]);
+
+            const addLog = (msg) => {
+                console.log(`[AirShare] ${msg}`);
+                setLogs(prev => [`${new Date().toLocaleTimeString()} - ${msg}`, ...prev].slice(0, 50));
+            };
 
             // Load Config & History
             useEffect(() => {
@@ -221,6 +237,7 @@ HTML_TEMPLATE = """
                     const pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
                     pc.onicecandidate = e => e.candidate && sendSignal(peerId, 'ice', e.candidate);
                     pc.onconnectionstatechange = () => {
+                        addLog(`Connection state with ${peerId}: ${pc.connectionState}`);
                         if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
                             showToast("Connection lost with peer");
                             delete connections.current[peerId];
@@ -228,6 +245,7 @@ HTML_TEMPLATE = """
                         }
                     };
                     pc.ondatachannel = e => {
+                        addLog(`Data channel opened by ${peerId}`);
                         const dc = e.channel;
                         dc.binaryType = 'arraybuffer';
                         dc.onmessage = msg => handleData(peerId, msg.data);
@@ -331,45 +349,85 @@ HTML_TEMPLATE = """
 
             const handleData = (peerId, data) => {
                 if (typeof data === 'string') {
-                    const msg = JSON.parse(data);
-                    if (msg.type === 'meta') {
-                        receiveBuffers.current[peerId] = {
-                            name: msg.name, size: msg.size, mime: msg.mime,
-                            chunks: [], received: 0, startTime: Date.now()
-                        };
-                        setTransfers(prev => ({...prev, [peerId]: { status: 'receiving', progress: 0, speed: 0 }}));
-                    } else if (msg.type === 'done') {
-                        setTransfers(prev => ({...prev, [peerId]: { status: 'complete', progress: 100 }}));
-                        setCelebrations(prev => [...prev, { id: Date.now(), peerId }]);
-                        setTimeout(() => setCelebrations(prev => prev.filter(c => c.peerId !== peerId)), 1000);
-                        notify("Transfer Complete", "Files received successfully.");
+                    try {
+                        const msg = JSON.parse(data);
+                        if (msg.type === 'meta') {
+                            addLog(`Receiving meta for ${msg.name} (${msg.size} bytes)`);
+                            receiveBuffers.current[peerId] = {
+                                name: msg.name, size: msg.size, mime: msg.mime,
+                                chunks: [], received: 0, startTime: Date.now()
+                            };
+                            setTransfers(prev => ({...prev, [peerId]: { status: 'receiving', progress: 0, speed: 0 }}));
+                        } else if (msg.type === 'done') {
+                            addLog(`Transfer done from ${peerId}`);
+                            setTransfers(prev => ({...prev, [peerId]: { status: 'complete', progress: 100 }}));
+                            setCelebrations(prev => [...prev, { id: Date.now(), peerId }]);
+                            setTimeout(() => setCelebrations(prev => prev.filter(c => c.peerId !== peerId)), 1000);
+                            notify("Transfer Complete", "Files received successfully.");
+                        }
+                    } catch (e) {
+                        addLog(`Error parsing string data: ${e.message}`);
                     }
                 } else {
                     const buf = receiveBuffers.current[peerId];
+                    if (!buf) {
+                        addLog(`Received binary data but no buffer for ${peerId}`);
+                        return;
+                    }
                     buf.chunks.push(data);
                     buf.received += data.byteLength;
 
                     const elapsed = (Date.now() - buf.startTime) / 1000;
-                    const speed = buf.received / elapsed / (1024 * 1024);
+                    const speed = buf.received / (elapsed || 0.1) / (1024 * 1024);
 
-                    setTransfers(prev => ({...prev, [peerId]: {
-                        ...prev[peerId],
-                        progress: Math.round((buf.received/buf.size)*100),
-                        speed: speed.toFixed(1)
-                    }}));
+                    // Throttled UI update for progress
+                    if (buf.received % (64 * 1024) === 0 || buf.received >= buf.size) {
+                        setTransfers(prev => ({...prev, [peerId]: {
+                            ...prev[peerId],
+                            progress: Math.round((buf.received/buf.size)*100),
+                            speed: speed.toFixed(1)
+                        }}));
+                    }
 
                     if (buf.received >= buf.size) {
-                        const blob = new Blob(buf.chunks, { type: buf.mime });
-                        const url = URL.createObjectURL(blob);
+                        addLog(`File ${buf.name} received completely. Creating blob...`);
+                        try {
+                            const blob = new Blob(buf.chunks, { type: buf.mime });
+                            const url = URL.createObjectURL(blob);
 
-                        db.history.add({
-                            name: buf.name, size: buf.size, type: buf.mime,
-                            timestamp: Date.now(), sender: peers.find(p => p.uid === peerId)?.name || 'Unknown',
-                            status: 'received', blobUrl: url
-                        }).then(loadHistory);
+                            const senderName = stateRef.current.peers.find(p => p.uid === peerId)?.name || 'Unknown Device';
 
-                        const a = document.createElement('a');
-                        a.href = url; a.download = buf.name; a.click();
+                            const historyItem = {
+                                name: buf.name, size: buf.size, type: buf.mime,
+                                timestamp: Date.now(), sender: senderName,
+                                status: 'received', blobUrl: url
+                            };
+
+                            db.history.add(historyItem).then(() => {
+                                addLog(`Saved ${buf.name} to history`);
+                                loadHistory();
+                            }).catch(err => {
+                                addLog(`IndexedDB Error: ${err.message}. Retrying with minimal metadata...`);
+                                // Retry without blobUrl if it's too large for some DB implementations
+                                db.history.add({...historyItem, blobUrl: null}).then(loadHistory);
+                            });
+
+                            // Create a more robust download link
+                            const a = document.createElement('a');
+                            a.style.display = 'none';
+                            a.href = url;
+                            a.download = buf.name;
+                            document.body.appendChild(a);
+                            setTimeout(() => {
+                                a.click();
+                                addLog(`Triggered download for ${buf.name}`);
+                                setTimeout(() => {
+                                    document.body.removeChild(a);
+                                }, 100);
+                            }, 50);
+                        } catch (e) {
+                            addLog(`Error finalizing file: ${e.message}`);
+                        }
                     }
                 }
             };
@@ -724,6 +782,16 @@ HTML_TEMPLATE = """
                                                 />
                                             </div>
                                         )}
+                                    </div>
+
+                                    <div className="glass-panel p-6 rounded-3xl">
+                                        <label className="block text-xs font-bold uppercase opacity-40 mb-3 tracking-widest">Debug Logs</label>
+                                        <div className="h-48 overflow-y-auto bg-black/20 rounded-xl p-3 font-mono text-[10px] text-indigo-300 no-scrollbar">
+                                            {logs.length === 0 ? "No logs yet..." : logs.map((log, i) => (
+                                                <div key={i} className="mb-1 border-b border-white/5 pb-1">{log}</div>
+                                            ))}
+                                        </div>
+                                        <button onClick={() => setLogs([])} className="mt-2 text-[10px] uppercase font-bold opacity-40 hover:opacity-100 transition-opacity">Clear Logs</button>
                                     </div>
 
                                     <div className="text-center opacity-20 text-[10px] font-bold tracking-[0.2em] uppercase">
