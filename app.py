@@ -976,6 +976,17 @@ def signal():
 
 if __name__ == '__main__':
     # Bind to 0.0.0.0 so other devices on Wi-Fi can connect
-    print(f"AirShare Py running at https://{LOCAL_IP}:{PORT}")
-    ssl_context = ('cert.pem', 'key.pem') if os.path.exists('cert.pem') else None
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    cert_path = os.path.join(base_dir, 'cert.pem')
+    key_path = os.path.join(base_dir, 'key.pem')
+
+    if os.path.exists(cert_path) and os.path.exists(key_path):
+        ssl_context = (cert_path, key_path)
+        print(f"AirShare Py running at https://{LOCAL_IP}:{PORT}")
+    else:
+        ssl_context = None
+        print(f"AirShare Py running at http://{LOCAL_IP}:{PORT}")
+        print("WARNING: SSL certificates not found. WebRTC and PWA features will not work on mobile devices.")
+        print("Please ensure cert.pem and key.pem are in the same directory as app.py")
+
     app.run(host='0.0.0.0', port=PORT, debug=True, ssl_context=ssl_context)
