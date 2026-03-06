@@ -39,8 +39,6 @@ def cleanup_uploads():
             print(f"Cleanup error: {e}")
         time.sleep(300) # Run every 5 minutes
 
-threading.Thread(target=cleanup_uploads, daemon=True).start()
-
 def get_local_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
@@ -482,17 +480,18 @@ HTML_TEMPLATE = """
                         </div>
                     </header>
 
-                    <main className="flex-1 relative flex flex-col items-center justify-center p-8 overflow-hidden">
+                    <main className="flex-1 relative flex flex-col items-center justify-between p-4 md:p-8 overflow-hidden">
                         {activeTab === 'radar' && (
                             <>
-                                <div className="relative w-full max-w-2xl aspect-square flex items-center justify-center">
-                                    <div className="radar-ring w-48 h-48"></div>
-                                    <div className="radar-ring w-96 h-96"></div>
-                                    <div className="radar-ring w-[32rem] h-[32rem]"></div>
-                                    <div className="relative z-10 glass-panel p-8 rounded-full border-indigo-500/50 border-2 shadow-2xl shadow-indigo-500/20">
-                                         {myDevice.type === 'pc' ? <Monitor size={48} className="text-indigo-400"/> : <Smartphone size={48} className="text-indigo-400"/>}
-                                    </div>
-                                    {peers.map((p, i) => {
+                                <div className="flex-1 flex items-center justify-center w-full min-h-0 relative">
+                                    <div className="relative w-full max-w-md lg:max-w-xl aspect-square flex items-center justify-center">
+                                        <div className="radar-ring w-32 h-32 md:w-48 md:h-48"></div>
+                                        <div className="radar-ring w-64 h-64 md:w-96 md:h-96"></div>
+                                        <div className="radar-ring w-96 h-96 md:w-[32rem] md:h-[32rem]"></div>
+                                        <div className="relative z-10 glass-panel p-6 md:p-8 rounded-full border-indigo-500/50 border-2 shadow-2xl shadow-indigo-500/20">
+                                             {myDevice.type === 'pc' ? <Monitor size={48} className="text-indigo-400"/> : <Smartphone size={48} className="text-indigo-400"/>}
+                                        </div>
+                                        {peers.map((p, i) => {
                                         const angle = (i * (360 / Math.max(peers.length, 1))) * (Math.PI / 180);
                                         const radius = 180;
                                         const x = Math.cos(angle) * radius;
@@ -527,17 +526,21 @@ HTML_TEMPLATE = """
                                                 </div>
                                             </div>
                                         );
-                                    })}
+                                        })}
+                                    </div>
                                 </div>
-                                <div className={`mt-auto w-full max-w-md glass-panel p-8 rounded-[2.5rem] transition-all duration-300 relative overflow-hidden group ${dragActive ? 'scale-105 border-indigo-500 ring-4 ring-indigo-500/20' : ''}`}>
+                                <div className={`w-full max-w-md glass-panel p-6 md:p-8 rounded-[2.5rem] transition-all duration-300 relative overflow-hidden group ${dragActive ? 'scale-105 border-indigo-500 ring-4 ring-indigo-500/20' : ''}`}>
                                     {selectedFiles.length === 0 ? (
-                                        <div className="text-center">
-                                            <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-indigo-500/20 transition-colors">
+                                        <div className="text-center relative">
+                                            <div className="w-12 h-12 md:w-16 md:h-16 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-indigo-500/20 transition-colors">
                                                 <UploadCloud className="text-indigo-400" />
                                             </div>
                                             <div className="text-lg font-bold mb-1">Ready to share?</div>
-                                            <div className="text-sm opacity-50">Drag files here or click to browse</div>
-                                            <input type="file" multiple className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => setSelectedFiles(Array.from(e.target.files).map(f => ({file: f, id: Math.random()}))) } />
+                                            <div className="text-sm opacity-50 mb-4">Drag files here or</div>
+                                            <div className="relative inline-block">
+                                                <button className="bg-indigo-600 hover:bg-indigo-500 px-6 py-2 rounded-xl text-sm font-bold transition-all shadow-lg shadow-indigo-500/20">Select Files</button>
+                                                <input type="file" multiple className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" onChange={e => setSelectedFiles(Array.from(e.target.files).map(f => ({file: f, id: Math.random()}))) } />
+                                            </div>
                                         </div>
                                     ) : (
                                         <div className="flex flex-col gap-3">
@@ -804,5 +807,8 @@ def download_file(file_id):
     return send_from_directory(UPLOAD_FOLDER, file_meta["internal_path"], as_attachment=True, download_name=file_meta["filename"])
 
 if __name__ == '__main__':
+    # Start cleanup thread
+    threading.Thread(target=cleanup_uploads, daemon=True).start()
+
     print(f"AirShare Py running at http://{LOCAL_IP}:{PORT}")
     app.run(host='0.0.0.0', port=PORT, debug=True)
