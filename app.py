@@ -83,28 +83,54 @@ HTML_TEMPLATE = """
     </script>
     <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#1e1b4b">
     <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/lucide-react/lucide/main/icons/zap.png">
     <style>
+        :root {
+            --accent-primary: #6366f1;
+            --accent-glow: rgba(99, 102, 241, 0.4);
+            --bg-gradient: radial-gradient(circle at 50% 50%, #1e1b4b 0%, #0f172a 100%);
+            --text-color: #ffffff;
+            --panel-bg: rgba(255, 255, 255, 0.05);
+            --panel-border: rgba(255, 255, 255, 0.1);
+        }
+
+        body.theme-neon {
+            --accent-primary: #00ffcc;
+            --accent-glow: rgba(0, 255, 204, 0.4);
+            --bg-gradient: radial-gradient(circle at 50% 50%, #00120f 0%, #000000 100%);
+        }
+
+        body.theme-light {
+            --accent-primary: #3b82f6;
+            --accent-glow: rgba(59, 130, 246, 0.2);
+            --bg-gradient: radial-gradient(circle at 50% 50%, #f0f9ff 0%, #e0f2fe 100%);
+            --text-color: #1e293b;
+            --panel-bg: rgba(255, 255, 255, 0.7);
+            --panel-border: rgba(0, 0, 0, 0.05);
+        }
+
         @keyframes radar {
             0% { transform: scale(0.2); opacity: 1; }
             100% { transform: scale(3.5); opacity: 0; }
         }
         .radar-ring {
-            position: absolute; border-radius: 50%; border: 1px solid rgba(255, 255, 255, 0.4);
-            box-shadow: 0 0 20px rgba(255, 255, 255, 0.1) inset; animation: radar 4s linear infinite;
+            position: absolute; border-radius: 50%; border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.05) inset; animation: radar 4s linear infinite;
         }
+        .theme-light .radar-ring { border-color: rgba(0, 0, 0, 0.1); }
         .radar-ring:nth-child(1) { animation-delay: 0s; }
         .radar-ring:nth-child(2) { animation-delay: 1.33s; }
         .radar-ring:nth-child(3) { animation-delay: 2.66s; }
 
         .glass-panel {
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--panel-bg);
             backdrop-filter: blur(24px);
             -webkit-backdrop-filter: blur(24px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--panel-border);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
         }
         .glass-button {
             background: rgba(255, 255, 255, 0.1);
@@ -112,16 +138,18 @@ HTML_TEMPLATE = """
             border: 1px solid rgba(255, 255, 255, 0.2);
             transition: all 0.3s ease;
         }
+        .theme-light .glass-button { background: rgba(0, 0, 0, 0.05); border-color: rgba(0, 0, 0, 0.1); }
         .glass-button:hover {
             background: rgba(255, 255, 255, 0.2);
             border: 1px solid rgba(255, 255, 255, 0.4);
         }
 
         body {
-            background: radial-gradient(circle at 50% 50%, #1e1b4b 0%, #0f172a 100%);
+            background: var(--bg-gradient);
             min-height: 100vh;
-            color: white;
+            color: var(--text-color);
             overflow: hidden;
+            transition: background 0.5s ease, color 0.5s ease;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
@@ -139,8 +167,26 @@ HTML_TEMPLATE = """
             100% { transform: scale(2); opacity: 0; }
         }
         .celebration-ring {
-            position: absolute; border: 2px solid #6366f1; border-radius: 50%;
+            position: absolute; border: 2px solid var(--accent-primary); border-radius: 50%;
             animation: celebrate 0.8s ease-out forwards;
+        }
+
+        @keyframes pulse-beam {
+            0% { stroke-dashoffset: 100; opacity: 0.2; }
+            50% { opacity: 0.8; }
+            100% { stroke-dashoffset: 0; opacity: 0.2; }
+        }
+        .energy-beam {
+            stroke: var(--accent-primary);
+            stroke-width: 2;
+            stroke-dasharray: 10 5;
+            filter: drop-shadow(0 0 8px var(--accent-glow));
+            animation: pulse-beam 2s linear infinite;
+        }
+
+        .drop-glow {
+            box-shadow: 0 0 30px var(--accent-glow);
+            border-color: var(--accent-primary) !important;
         }
     </style>
 </head>
@@ -159,6 +205,22 @@ HTML_TEMPLATE = """
         const ImageIcon = LucideImage;
 
         const MY_ID = Math.random().toString(36).substr(2, 9);
+
+        function FilePreview({ file }) {
+            const [url, setUrl] = useState(null);
+            useEffect(() => {
+                if (file.type.startsWith('image/')) {
+                    const u = URL.createObjectURL(file);
+                    setUrl(u);
+                    return () => URL.revokeObjectURL(u);
+                }
+            }, [file]);
+
+            if (url) return <img src={url} className="w-full h-full object-cover" />;
+            if (file.type.startsWith('video/')) return <Video size={16} className="text-[var(--accent-primary)]" />;
+            if (file.type.startsWith('audio/')) return <Music size={16} className="text-[var(--accent-primary)]" />;
+            return <File size={16} className="text-[var(--accent-primary)]" />;
+        }
 
         // Setup Database
         const db = new Dexie("AirShareDB");
@@ -189,6 +251,7 @@ HTML_TEMPLATE = """
             const [toasts, setToasts] = useState([]);
             const [celebrations, setCelebrations] = useState([]);
             const [logs, setLogs] = useState([]);
+            const [theme, setTheme] = useState(localStorage.getItem('theme') || 'default');
 
             const stateRef = useRef({ peers, transfers, selectedFiles });
             useEffect(() => {
@@ -204,6 +267,11 @@ HTML_TEMPLATE = """
                 fetch('/api/config').then(res => res.json()).then(setLocalConfig);
                 loadHistory();
             }, []);
+
+            useEffect(() => {
+                document.body.className = theme === 'default' ? '' : `theme-${theme}`;
+                localStorage.setItem('theme', theme);
+            }, [theme]);
 
             const loadHistory = async () => {
                 const items = await db.history.orderBy('timestamp').reverse().toArray();
@@ -344,6 +412,14 @@ HTML_TEMPLATE = """
                 setTransfers(prev => ({...prev, [peerId]: { status: 'complete', progress: 100 }}));
                 setCelebrations(prev => [...prev, { id: Date.now(), peerId }]);
                 setTimeout(() => setCelebrations(prev => prev.filter(c => c.peerId !== peerId)), 1000);
+
+                confetti({
+                    particleCount: 150,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: theme === 'neon' ? ['#00ffcc', '#ffffff'] : ['#6366f1', '#ffffff']
+                });
+
                 setSelectedFiles([]);
                 loadHistory();
                 notify("Transfer Complete", "Files sent successfully.");
@@ -411,7 +487,15 @@ HTML_TEMPLATE = """
                 return (
                     <svg width={size} height={size} className="absolute -inset-2">
                         <circle className="text-white/10" strokeWidth="4" stroke="currentColor" fill="transparent" r={radius} cx={size/2} cy={size/2} />
-                        <circle className="text-indigo-500 circular-progress" strokeWidth="4" strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round" stroke="currentColor" fill="transparent" r={radius} cx={size/2} cy={size/2} />
+                        <circle className="text-[var(--accent-primary)] circular-progress" strokeWidth="4" strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round" stroke="currentColor" fill="transparent" r={radius} cx={size/2} cy={size/2} />
+                    </svg>
+                );
+            };
+
+            const EnergyBeam = ({ x, y }) => {
+                return (
+                    <svg className="absolute inset-0 w-full h-full pointer-events-none z-0">
+                        <line x1="50%" y1="50%" x2={`calc(50% + ${x}px)`} y2={`calc(50% + ${y}px)`} className="energy-beam" />
                     </svg>
                 );
             };
@@ -488,8 +572,8 @@ HTML_TEMPLATE = """
                                         <div className="radar-ring w-32 h-32 md:w-48 md:h-48"></div>
                                         <div className="radar-ring w-64 h-64 md:w-96 md:h-96"></div>
                                         <div className="radar-ring w-96 h-96 md:w-[32rem] md:h-[32rem]"></div>
-                                        <div className="relative z-10 glass-panel p-6 md:p-8 rounded-full border-indigo-500/50 border-2 shadow-2xl shadow-indigo-500/20">
-                                             {myDevice.type === 'pc' ? <Monitor size={48} className="text-indigo-400"/> : <Smartphone size={48} className="text-indigo-400"/>}
+                                        <div className="relative z-10 glass-panel p-6 md:p-8 rounded-full border-[var(--accent-primary)] border-2 shadow-2xl shadow-indigo-500/20">
+                                             {myDevice.type === 'pc' ? <Monitor size={48} className="text-[var(--accent-primary)]"/> : <Smartphone size={48} className="text-[var(--accent-primary)]"/>}
                                         </div>
                                         {peers.map((p, i) => {
                                         const angle = (i * (360 / Math.max(peers.length, 1))) * (Math.PI / 180);
@@ -497,20 +581,23 @@ HTML_TEMPLATE = """
                                         const x = Math.cos(angle) * radius;
                                         const y = Math.sin(angle) * radius;
                                         const transfer = transfers[p.uid];
+                                        const isActive = transfer?.status === 'sending' || transfer?.status === 'receiving';
                                         const isPeerSelected = selectedPeers.includes(p.uid);
                                         return (
-                                            <div key={p.uid} className="absolute cursor-pointer group transition-all duration-500" style={{transform: `translate(${x}px, ${y}px)`}} onClick={() => {
+                                            <React.Fragment key={p.uid}>
+                                            {isActive && <EnergyBeam x={x} y={y} />}
+                                            <div className="absolute cursor-pointer group transition-all duration-500" style={{transform: `translate(${x}px, ${y}px)`}} onClick={() => {
                                                 if (selectedPeers.includes(p.uid)) { setSelectedPeers(prev => prev.filter(id => id !== p.uid)); }
                                                 else { setSelectedPeers(prev => [...prev, p.uid]); }
                                             }}>
-                                                <div className={`p-5 rounded-full glass-panel border-2 transition-all duration-300 group-hover:scale-110 relative ${isPeerSelected ? 'border-indigo-400 shadow-[0_0_20px_rgba(99,102,241,0.4)]' : 'border-white/10'} ${transfer?.status === 'sending' ? 'animate-pulse' : ''}`}>
+                                                <div className={`p-5 rounded-full glass-panel border-2 transition-all duration-300 group-hover:scale-110 relative ${isPeerSelected ? 'border-[var(--accent-primary)] shadow-[0_0_20px_var(--accent-glow)]' : 'border-white/10'} ${transfer?.status === 'sending' ? 'animate-pulse' : ''}`}>
                                                     {transfer?.progress > 0 && transfer.progress < 100 && <CircularProgress progress={transfer.progress} size={84} />}
-                                                    {p.type === 'pc' ? <Monitor className={isPeerSelected ? 'text-indigo-400' : ''} /> : <Smartphone className={isPeerSelected ? 'text-indigo-400' : ''} />}
+                                                    {p.type === 'pc' ? <Monitor className={isPeerSelected ? 'text-[var(--accent-primary)]' : ''} /> : <Smartphone className={isPeerSelected ? 'text-[var(--accent-primary)]' : ''} />}
                                                     {isPeerSelected && <div className="absolute -top-1 -right-1 bg-indigo-500 rounded-full p-1"><Check size={10} /></div>}
                                                     {celebrations.some(c => c.peerId === p.uid) && <div className="celebration-ring inset-0" />}
                                                 </div>
                                                 <div className="absolute top-20 left-1/2 -translate-x-1/2 whitespace-nowrap flex flex-col items-center gap-1">
-                                                    <div className={`bg-black/40 backdrop-blur-md px-3 py-1 rounded-full text-xs font-medium border ${isPeerSelected ? 'border-indigo-500 text-indigo-400' : 'border-white/10'}`}>
+                                                    <div className={`bg-black/40 backdrop-blur-md px-3 py-1 rounded-full text-xs font-medium border ${isPeerSelected ? 'border-[var(--accent-primary)] text-[var(--accent-primary)]' : 'border-white/10'}`}>
                                                         {p.name} {transfer?.speed && `· ${transfer.speed}MB/s`}
                                                     </div>
                                                     {transfer?.status === 'sending' && transfer.total > 1 && (
@@ -525,11 +612,12 @@ HTML_TEMPLATE = """
                                                     )}
                                                 </div>
                                             </div>
+                                            </React.Fragment>
                                         );
                                         })}
                                     </div>
                                 </div>
-                                <div className={`w-full max-w-md glass-panel p-6 md:p-8 rounded-[2.5rem] transition-all duration-300 relative overflow-hidden group ${dragActive ? 'scale-105 border-indigo-500 ring-4 ring-indigo-500/20' : ''}`}>
+                                <div className={`w-full max-w-md glass-panel p-6 md:p-8 rounded-[2.5rem] transition-all duration-300 relative overflow-hidden group ${dragActive ? 'scale-105 drop-glow ring-4 ring-indigo-500/20' : ''}`}>
                                     {selectedFiles.length === 0 ? (
                                         <div className="text-center relative">
                                             <div className="w-12 h-12 md:w-16 md:h-16 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-indigo-500/20 transition-colors">
@@ -551,8 +639,8 @@ HTML_TEMPLATE = """
                                             <div className="max-h-48 overflow-y-auto no-scrollbar flex flex-col gap-2">
                                                 {selectedFiles.map(f => (
                                                     <div key={f.id} className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/5">
-                                                        <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center flex-shrink-0">
-                                                            {f.file.type.startsWith('image/') ? <ImageIcon size={16} className="text-indigo-400"/> : f.file.type.startsWith('video/') ? <Video size={16} className="text-indigo-400"/> : <File size={16} className="text-indigo-400"/>}
+                                                        <div className="w-10 h-10 rounded-lg bg-indigo-500/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                                            <FilePreview file={f.file} />
                                                         </div>
                                                         <div className="flex-1 min-w-0">
                                                             <div className="text-sm font-medium truncate">{f.file.name}</div>
@@ -632,8 +720,16 @@ HTML_TEMPLATE = """
                                             </div>
                                         )}
                                     </div>
+                                    <div className="glass-panel p-6 rounded-3xl">
+                                        <label className="block text-xs font-bold uppercase opacity-40 mb-3 tracking-widest">Theme</label>
+                                        <div className="flex gap-2">
+                                            {['default', 'neon', 'light'].map(t => (
+                                                <button key={t} className={`flex-1 py-3 rounded-xl text-xs font-bold capitalize transition-all ${theme === t ? 'bg-indigo-600 shadow-lg' : 'bg-white/5 hover:bg-white/10'}`} onClick={() => setTheme(t)}>{t}</button>
+                                            ))}
+                                        </div>
+                                    </div>
                                     <div className="glass-panel p-6 rounded-3xl flex items-center gap-4 border-indigo-500/30">
-                                        <Info className="text-indigo-400" />
+                                        <Info className="text-[var(--accent-primary)]" />
                                         <div className="text-xs opacity-60">HTTP Mode: Browser security may limit some PWA features.</div>
                                     </div>
                                 </div>
