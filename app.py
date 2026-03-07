@@ -173,16 +173,15 @@ HTML_TEMPLATE = """
         }
 
         @keyframes pulse-beam {
-            0% { stroke-dashoffset: 100; opacity: 0.2; }
-            50% { opacity: 0.8; }
-            100% { stroke-dashoffset: 0; opacity: 0.2; }
+            0% { stroke-dashoffset: 200; opacity: 0.3; stroke-width: 1; }
+            50% { opacity: 1; stroke-width: 3; }
+            100% { stroke-dashoffset: 0; opacity: 0.3; stroke-width: 1; }
         }
         .energy-beam {
             stroke: var(--accent-primary);
-            stroke-width: 2;
-            stroke-dasharray: 10 5;
-            filter: drop-shadow(0 0 8px var(--accent-glow));
-            animation: pulse-beam 2s linear infinite;
+            stroke-dasharray: 15 10;
+            filter: drop-shadow(0 0 12px var(--accent-glow));
+            animation: pulse-beam 1.5s linear infinite;
         }
 
         .drop-glow {
@@ -200,7 +199,9 @@ HTML_TEMPLATE = """
             Monitor, Smartphone, Laptop, File, Check, X,
             UploadCloud, Shield, Zap, Image: LucideImage,
             Video, Music, History: LucideHistory, Settings, QrCode,
-            Download, Trash2, ShieldCheck, Lock, Info, Pause, Play
+            Download, Trash2, ShieldCheck, Lock, Info, Pause, Play,
+            MoreVertical, User, Star, Battery, BatteryCharging, BatteryLow, BatteryMedium, BatteryWarning,
+            Copy, ExternalLink
         } = LucideReact;
 
         const ImageIcon = LucideImage;
@@ -208,36 +209,57 @@ HTML_TEMPLATE = """
         const MY_ID = Math.random().toString(36).substr(2, 9);
         const CHUNK_SIZE = 1024 * 1024; // 1MB chunks
 
-        function FilePreview({ file }) {
+        function FilePreview({ file, full = false }) {
             const [url, setUrl] = useState(null);
             useEffect(() => {
-                if (file.type.startsWith('image/')) {
+                if (file.type.startsWith('image/') || file.type.startsWith('video/') || file.type.startsWith('audio/')) {
                     const u = URL.createObjectURL(file);
                     setUrl(u);
                     return () => URL.revokeObjectURL(u);
                 }
             }, [file]);
 
-            if (url) return <img src={url} className="w-full h-full object-cover" />;
-            if (file.type.startsWith('video/')) return <Video size={16} className="text-[var(--accent-primary)]" />;
-            if (file.type.startsWith('audio/')) return <Music size={16} className="text-[var(--accent-primary)]" />;
-            return <File size={16} className="text-[var(--accent-primary)]" />;
+            if (file.type.startsWith('image/') && url) return <img src={url} className={`w-full h-full object-cover ${full ? 'rounded-2xl' : ''}`} />;
+            if (file.type.startsWith('video/') && url) return <video src={url} controls={full} className={`w-full h-full object-cover ${full ? 'rounded-2xl' : ''}`} />;
+            if (file.type.startsWith('audio/') && url) return <div className="w-full h-full flex flex-col items-center justify-center bg-white/5"><Music size={full ? 48 : 24} className="mb-2 text-indigo-400" /><audio src={url} controls={full} className="w-full" /></div>;
+
+            return (
+                <div className="w-full h-full flex flex-col items-center justify-center bg-white/5">
+                    <File size={full ? 48 : 24} className="text-indigo-400" />
+                    {full && <div className="mt-4 text-sm font-bold opacity-60 uppercase">{file.name.split('.').pop()} FILE</div>}
+                </div>
+            );
         }
 
         // Setup Database
         const db = new Dexie("AirShareDB");
-        db.version(2).stores({
-            history: '++id, name, size, type, timestamp, sender, status, fileId'
+        db.version(3).stores({
+            history: '++id, name, size, type, timestamp, sender, status, fileId',
+            peers: 'uid, nickname, isTrusted'
         });
 
         function App() {
             const [myDevice, setMyDevice] = useState(() => {
                 const ua = navigator.userAgent;
-                let type = /iPhone|iPad|iPod/i.test(ua) ? 'iphone' : /Android/i.test(ua) ? 'smartphone' : 'pc';
-                return { uid: MY_ID, name: localStorage.getItem('deviceName') || (type === 'pc' ? 'Host PC' : 'Mobile Device'), type };
+                let os = 'Unknown';
+                if (/Windows/i.test(ua)) os = 'Windows';
+                else if (/Macintosh/i.test(ua)) os = 'macOS';
+                else if (/iPhone|iPad|iPod/i.test(ua)) os = 'iOS';
+                else if (/Android/i.test(ua)) os = 'Android';
+                else if (/Linux/i.test(ua)) os = 'Linux';
+
+                let type = (os === 'iOS' || os === 'Android') ? 'mobile' : 'pc';
+                return {
+                    uid: MY_ID,
+                    name: localStorage.getItem('deviceName') || `${os} ${type === 'pc' ? 'PC' : 'Mobile'}`,
+                    type,
+                    os,
+                    battery: null
+                };
             });
 
             const [peers, setPeers] = useState([]);
+            const [peerCustomizations, setPeerCustomizations] = useState({});
             const [selectedFiles, setSelectedFiles] = useState([]);
             const [selectedPeers, setSelectedPeers] = useState([]);
             const [transfers, setTransfers] = useState({});
@@ -249,6 +271,8 @@ HTML_TEMPLATE = """
             const [history, setHistory] = useState([]);
             const [showQR, setShowQR] = useState(false);
             const [localConfig, setLocalConfig] = useState({ ip: '...', port: 5000 });
+            const [selectedPreview, setSelectedPreview] = useState(null);
+            const [selectedPeerDetails, setSelectedPeerDetails] = useState(null);
             const [securityMode, setSecurityMode] = useState(localStorage.getItem('securityMode') || 'approval');
             const [pin, setPin] = useState(localStorage.getItem('securityPin') || '1234');
             const [showPinEntry, setShowPinEntry] = useState(null);
@@ -270,6 +294,24 @@ HTML_TEMPLATE = """
             useEffect(() => {
                 fetch('/api/config').then(res => res.json()).then(setLocalConfig);
                 loadHistory();
+
+                // Battery Status API
+                if ('getBattery' in navigator) {
+                    navigator.getBattery().then(battery => {
+                        const updateBattery = () => {
+                            setMyDevice(prev => ({
+                                ...prev,
+                                battery: {
+                                    level: Math.round(battery.level * 100),
+                                    charging: battery.charging
+                                }
+                            }));
+                        };
+                        updateBattery();
+                        battery.addEventListener('levelchange', updateBattery);
+                        battery.addEventListener('chargingchange', updateBattery);
+                    });
+                }
 
                 const handleBeforeUnload = (e) => {
                     const hasActiveTransfers = Object.values(stateRef.current.transfers).some(t => t.status === 'sending' || t.status === 'receiving');
@@ -307,6 +349,17 @@ HTML_TEMPLATE = """
                 setHistory(items);
             };
 
+            const loadPeerCustomizations = async () => {
+                const items = await db.peers.toArray();
+                const mapping = {};
+                items.forEach(p => mapping[p.uid] = p);
+                setPeerCustomizations(mapping);
+            };
+
+            useEffect(() => {
+                loadPeerCustomizations();
+            }, []);
+
             const syncState = async () => {
                 try {
                     const res = await fetch('/api/sync', {
@@ -336,6 +389,12 @@ HTML_TEMPLATE = """
             const handleSignal = async (signal) => {
                 const { type, payload, sender, senderDevice } = signal;
                 if (type === 'transfer_request') {
+                    const custom = peerCustomizations[sender];
+                    if (custom?.isTrusted) {
+                        sendSignal(sender, 'transfer_accepted', {});
+                        return;
+                    }
+
                     if (securityMode === 'pin') {
                         setShowPinEntry({ sender, senderDevice, files: payload.files });
                     } else {
@@ -515,6 +574,23 @@ HTML_TEMPLATE = """
                 return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
             };
 
+            const BatteryIcon = ({ battery, size = 16, className = "" }) => {
+                if (!battery) return null;
+                const { level, charging } = battery;
+                let Icon = Battery;
+                if (charging) Icon = BatteryCharging;
+                else if (level < 20) Icon = BatteryWarning;
+                else if (level < 40) Icon = BatteryLow;
+                else if (level < 70) Icon = BatteryMedium;
+
+                return (
+                    <div className={`flex items-center gap-1 ${className}`}>
+                        <span className="text-[10px] font-bold">{level}%</span>
+                        <Icon size={size} className={level < 20 && !charging ? 'text-red-500' : ''} />
+                    </div>
+                );
+            };
+
             const CircularProgress = ({ progress, size = 60 }) => {
                 const radius = (size / 2) - 4;
                 const circumference = radius * 2 * Math.PI;
@@ -524,6 +600,45 @@ HTML_TEMPLATE = """
                         <circle className="text-white/10" strokeWidth="4" stroke="currentColor" fill="transparent" r={radius} cx={size/2} cy={size/2} />
                         <circle className="text-[var(--accent-primary)] circular-progress" strokeWidth="4" strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round" stroke="currentColor" fill="transparent" r={radius} cx={size/2} cy={size/2} />
                     </svg>
+                );
+            };
+
+            const PeerDetailsModal = ({ peer, custom, onClose }) => {
+                const [nickname, setNickname] = useState(custom?.nickname || '');
+                const [isTrusted, setIsTrusted] = useState(custom?.isTrusted || false);
+
+                const save = async () => {
+                    await db.peers.put({ uid: peer.uid, nickname, isTrusted });
+                    loadPeerCustomizations();
+                    onClose();
+                };
+
+                return (
+                    <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[110]" onClick={onClose}>
+                        <div className="glass-panel p-8 rounded-[2.5rem] w-full max-w-xs" onClick={e => e.stopPropagation()}>
+                            <div className="flex justify-center mb-6">
+                                <div className="p-6 bg-white/5 rounded-full relative">
+                                    {peer.type === 'pc' ? <Monitor size={48} /> : <Smartphone size={48} />}
+                                    {isTrusted && <Star className="absolute top-0 right-0 text-yellow-400 fill-yellow-400" size={20} />}
+                                </div>
+                            </div>
+                            <h2 className="text-xl font-bold text-center mb-6">Manage Peer</h2>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-[10px] font-bold uppercase opacity-40 mb-2 ml-1">Nickname</label>
+                                    <input type="text" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-indigo-500" value={nickname} onChange={e => setNickname(e.target.value)} placeholder={peer.name} />
+                                </div>
+                                <button className={`w-full py-4 rounded-xl flex items-center justify-center gap-3 transition-all ${isTrusted ? 'bg-yellow-500/20 text-yellow-500 border border-yellow-500/50' : 'bg-white/5 border border-white/10'}`} onClick={() => setIsTrusted(!isTrusted)}>
+                                    <Star size={20} className={isTrusted ? 'fill-yellow-500' : ''} />
+                                    <span className="font-bold">{isTrusted ? 'Trusted Device' : 'Trust Device'}</span>
+                                </button>
+                                <div className="pt-4 flex gap-3">
+                                    <button className="flex-1 py-3 rounded-xl bg-white/5 font-bold" onClick={onClose}>Cancel</button>
+                                    <button className="flex-1 py-3 rounded-xl bg-indigo-600 font-bold" onClick={save}>Save</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 );
             };
 
@@ -554,20 +669,39 @@ HTML_TEMPLATE = """
 
             const QRCodeModal = () => {
                 const canvasRef = useRef();
+                const url = `http://${localConfig.ip}:${localConfig.port}`;
+
                 useEffect(() => {
                     if (canvasRef.current) {
-                        QRCode.toCanvas(canvasRef.current, `http://${localConfig.ip}:${localConfig.port}`, { width: 200, margin: 2 });
+                        QRCode.toCanvas(canvasRef.current, url, { width: 200, margin: 2, color: { dark: '#1e1b4b', light: '#ffffff' } });
                     }
                 }, []);
+
+                const copyUrl = () => {
+                    navigator.clipboard.writeText(url);
+                    showToast("Link copied to clipboard!");
+                };
+
                 return (
                     <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[100]" onClick={() => setShowQR(false)}>
-                        <div className="glass-panel p-8 rounded-[2rem] text-center max-w-xs" onClick={e => e.stopPropagation()}>
-                            <h2 className="text-xl font-bold mb-4">Connect Device</h2>
-                            <p className="text-sm opacity-60 mb-6">Scan to join the network</p>
-                            <div className="bg-white p-4 rounded-2xl inline-block mb-6">
+                        <div className="glass-panel p-8 rounded-[2.5rem] text-center max-w-sm w-full mx-4" onClick={e => e.stopPropagation()}>
+                            <div className="flex justify-between items-center mb-6">
+                                <h2 className="text-xl font-bold">Connect Device</h2>
+                                <button onClick={() => setShowQR(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors"><X size={20}/></button>
+                            </div>
+                            <p className="text-sm opacity-60 mb-8">Scan to join the network or share the link manually</p>
+                            <div className="bg-white p-6 rounded-[2rem] inline-block mb-8 shadow-2xl shadow-indigo-500/20">
                                 <canvas ref={canvasRef}></canvas>
                             </div>
-                            <div className="text-xs font-mono opacity-50">http://{localConfig.ip}:{localConfig.port}</div>
+                            <div className="flex flex-col gap-3">
+                                <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex items-center justify-between">
+                                    <div className="flex items-center gap-3 overflow-hidden">
+                                        <ExternalLink size={18} className="text-indigo-400 flex-shrink-0" />
+                                        <span className="text-xs font-mono truncate opacity-60">{url}</span>
+                                    </div>
+                                    <button onClick={copyUrl} className="p-2 hover:bg-white/10 rounded-xl transition-colors text-indigo-400"><Copy size={18} /></button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 );
@@ -624,8 +758,11 @@ HTML_TEMPLATE = """
                                         <div className="radar-ring w-32 h-32 md:w-48 md:h-48"></div>
                                         <div className="radar-ring w-64 h-64 md:w-96 md:h-96"></div>
                                         <div className="radar-ring w-96 h-96 md:w-[32rem] md:h-[32rem]"></div>
-                                        <div className="relative z-10 glass-panel p-6 md:p-8 rounded-full border-[var(--accent-primary)] border-2 shadow-2xl shadow-indigo-500/20">
+                                        <div className="relative z-10 glass-panel p-6 md:p-8 rounded-full border-[var(--accent-primary)] border-2 shadow-2xl shadow-indigo-500/20 group">
                                              {myDevice.type === 'pc' ? <Monitor size={48} className="text-[var(--accent-primary)]"/> : <Smartphone size={48} className="text-[var(--accent-primary)]"/>}
+                                             <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                 <BatteryIcon battery={myDevice.battery} size={12} />
+                                             </div>
                                         </div>
                                         {peers.map((p, i) => {
                                         const angle = (i * (360 / Math.max(peers.length, 1))) * (Math.PI / 180);
@@ -648,6 +785,14 @@ HTML_TEMPLATE = """
                                                 <div className={`p-5 rounded-full glass-panel border-2 transition-all duration-300 group-hover:scale-110 relative ${isPeerSelected ? 'border-[var(--accent-primary)] shadow-[0_0_20px_var(--accent-glow)]' : 'border-white/10'} ${transfer?.status === 'sending' && !isPaused ? 'animate-pulse' : ''}`}>
                                                     {transfer?.progress > 0 && transfer.progress < 100 && <CircularProgress progress={transfer.progress} size={84} />}
                                                     {p.type === 'pc' ? <Monitor className={isPeerSelected ? 'text-[var(--accent-primary)]' : ''} /> : <Smartphone className={isPeerSelected ? 'text-[var(--accent-primary)]' : ''} />}
+
+                                                    {p.battery && (
+                                                        <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded-full border border-white/10 scale-75">
+                                                            <BatteryIcon battery={p.battery} size={10} />
+                                                        </div>
+                                                    )}
+
+                                                    {peerCustomizations[p.uid]?.isTrusted && <div className="absolute -top-1 -left-1 bg-yellow-500 rounded-full p-1 shadow-[0_0_10px_rgba(234,179,8,0.5)]"><Star size={10} className="fill-white text-white" /></div>}
                                                     {isPeerSelected && <div className="absolute -top-1 -right-1 bg-indigo-500 rounded-full p-1"><Check size={10} /></div>}
                                                     {celebrations.some(c => c.peerId === p.uid) && <div className="celebration-ring inset-0" />}
 
@@ -665,11 +810,14 @@ HTML_TEMPLATE = """
                                                     )}
                                                 </div>
                                                 <div className="absolute top-20 left-1/2 -translate-x-1/2 whitespace-nowrap flex flex-col items-center gap-1">
-                                                    <div className={`bg-black/40 backdrop-blur-md px-3 py-1 rounded-full text-xs font-medium border ${isPeerSelected ? 'border-[var(--accent-primary)] text-[var(--accent-primary)]' : 'border-white/10'}`}>
+                                                    <div className={`bg-black/40 backdrop-blur-md pl-3 pr-1 py-1 rounded-full text-xs font-medium border flex items-center gap-2 ${isPeerSelected ? 'border-[var(--accent-primary)] text-[var(--accent-primary)]' : 'border-white/10'}`}>
                                                         <div className="flex items-center">
-                                                            {p.name} {transfer?.speed && `· ${transfer.speed}MB/s`}
+                                                            {peerCustomizations[p.uid]?.nickname || p.name} {transfer?.speed && `· ${transfer.speed}MB/s`}
                                                             {transfer?.speedHistory && <Sparkline data={transfer.speedHistory} />}
                                                         </div>
+                                                        <button onClick={(e) => { e.stopPropagation(); setSelectedPeerDetails(p); }} className="p-1 hover:bg-white/10 rounded-full transition-colors">
+                                                            <MoreVertical size={14} />
+                                                        </button>
                                                     </div>
                                                     {transfer?.status === 'sending' && transfer.total > 1 && (
                                                         <div className="text-[10px] bg-indigo-600/50 px-2 py-0.5 rounded-full border border-indigo-400/30">
@@ -731,7 +879,7 @@ HTML_TEMPLATE = """
                                             </div>
                                             <div className="max-h-48 overflow-y-auto no-scrollbar flex flex-col gap-2">
                                                 {selectedFiles.map(f => (
-                                                    <div key={f.id} className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/5">
+                                                    <div key={f.id} className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/5 cursor-pointer hover:bg-white/10 transition-colors" onClick={() => setSelectedPreview(f.file)}>
                                                         <div className="w-10 h-10 rounded-lg bg-indigo-500/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
                                                             <FilePreview file={f.file} />
                                                         </div>
@@ -841,6 +989,26 @@ HTML_TEMPLATE = """
 
                     {showQR && <QRCodeModal />}
                     {showPinEntry && <PinModal />}
+                    {selectedPreview && (
+                        <div className="fixed inset-0 bg-black/90 backdrop-blur-xl flex items-center justify-center z-[150]" onClick={() => setSelectedPreview(null)}>
+                            <div className="w-full max-w-lg aspect-video glass-panel p-4 rounded-[2.5rem]" onClick={e => e.stopPropagation()}>
+                                <div className="flex justify-between items-center mb-4 px-2">
+                                    <h3 className="font-bold truncate max-w-[200px]">{selectedPreview.name}</h3>
+                                    <button onClick={() => setSelectedPreview(null)} className="p-2 hover:bg-white/10 rounded-full transition-colors"><X size={20}/></button>
+                                </div>
+                                <div className="w-full h-[calc(100%-3rem)] rounded-2xl overflow-hidden bg-black/20">
+                                    <FilePreview file={selectedPreview} full={true} />
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    {selectedPeerDetails && (
+                        <PeerDetailsModal
+                            peer={selectedPeerDetails}
+                            custom={peerCustomizations[selectedPeerDetails.uid]}
+                            onClose={() => setSelectedPeerDetails(null)}
+                        />
+                    )}
                     {incomingRequests.map(req => (
                         <div key={req.id} className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[100]">
                             <div className="glass-panel p-10 rounded-[2.5rem] max-w-xs w-full text-center">
