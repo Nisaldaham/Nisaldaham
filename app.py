@@ -116,6 +116,7 @@ HTML_TEMPLATE = """
             box-shadow: 0 0 20px rgba(255, 255, 255, 0.05) inset; animation: radar 4s linear infinite;
         }
         .theme-light .radar-ring { border-color: rgba(0, 0, 0, 0.1); }
+        .theme-light .ambient-glow { box-shadow: 0 0 15px rgba(59, 130, 246, 0.1); }
         .radar-ring:nth-child(1) { animation-delay: 0s; }
         .radar-ring:nth-child(2) { animation-delay: 1.33s; }
         .radar-ring:nth-child(3) { animation-delay: 2.66s; }
@@ -191,6 +192,13 @@ HTML_TEMPLATE = """
         .drop-glow {
             box-shadow: 0 0 30px var(--accent-glow);
             border-color: var(--accent-primary) !important;
+        }
+        @keyframes ambient-glow {
+            0%, 100% { box-shadow: 0 0 15px var(--accent-glow); border-color: var(--panel-border); }
+            50% { box-shadow: 0 0 30px var(--accent-glow); border-color: var(--accent-primary); }
+        }
+        .ambient-glow {
+            animation: ambient-glow 3s ease-in-out infinite;
         }
     </style>
 </head>
@@ -647,10 +655,16 @@ HTML_TEMPLATE = """
                                                 <React.Fragment key={p.uid}>
                                                     {isActive && <EnergyBeam x={x} y={y} />}
                                                     <div className="absolute cursor-pointer group transition-all duration-500" style={{transform: `translate(${x}px, ${y}px)`}} onClick={() => { if (isActive) return; if (selectedPeers.includes(p.uid)) setSelectedPeers(prev => prev.filter(id => id !== p.uid)); else setSelectedPeers(prev => [...prev, p.uid]); }}>
-                                                        <div className={`p-5 rounded-full glass-panel border-2 transition-all duration-300 group-hover:scale-110 relative ${isPeerSelected ? 'border-[var(--accent-primary)] shadow-[0_0_20px_var(--accent-glow)]' : 'border-white/10'} ${transfer?.status === 'sending' && !isPaused ? 'animate-pulse' : ''}`}>
+                                                        <div className={`p-5 rounded-full glass-panel border-2 transition-all duration-300 group-hover:scale-110 relative ambient-glow ${isPeerSelected ? 'border-[var(--accent-primary)] shadow-[0_0_20px_var(--accent-glow)]' : 'border-white/10'} ${transfer?.status === 'sending' && !isPaused ? 'animate-pulse' : ''}`}>
                                                             {transfer?.progress > 0 && transfer.progress < 100 && <CircularProgress progress={transfer.progress} size={84} />}
-                                                            {p.type === 'pc' ? <Monitor className={isPeerSelected ? 'text-[var(--accent-primary)]' : ''} /> : <Smartphone className={isPeerSelected ? 'text-[var(--accent-primary)]' : ''} />}
-                                                            {p.battery && <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded-full border border-white/10 scale-75 flex gap-1"><BatteryIcon battery={p.battery} size={10} /><SignalIcon rtt={p.rtt} size={10} /></div>}
+                                                            {p.os === 'macOS' ? <Laptop className={isPeerSelected ? 'text-[var(--accent-primary)]' : ''} /> : p.type === 'pc' ? <Monitor className={isPeerSelected ? 'text-[var(--accent-primary)]' : ''} /> : <Smartphone className={isPeerSelected ? 'text-[var(--accent-primary)]' : ''} />}
+                                                            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 flex flex-col items-center gap-0.5">
+                                                                <div className="bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded-full border border-white/10 scale-[0.6] flex gap-1 whitespace-nowrap">
+                                                                    <span className="font-bold text-[var(--accent-primary)]">{p.os}</span>
+                                                                    {p.battery && <BatteryIcon battery={p.battery} size={10} />}
+                                                                    <SignalIcon rtt={p.rtt} size={10} />
+                                                                </div>
+                                                            </div>
                                                             {peerCustomizations[p.uid]?.isTrusted && <div className="absolute -top-1 -left-1 bg-yellow-500 rounded-full p-1 shadow-[0_0_10px_rgba(234,179,8,0.5)]"><Star size={10} className="fill-white text-white" /></div>}
                                                             {isPeerSelected && <div className="absolute -top-1 -right-1 bg-indigo-500 rounded-full p-1"><Check size={10} /></div>}
                                                             {celebrations.some(c => c.peerId === p.uid) && <div className="celebration-ring inset-0" />}
@@ -697,11 +711,19 @@ HTML_TEMPLATE = """
                                     ) : (
                                         <div className="flex flex-col gap-3">
                                             <div className="flex justify-between items-center mb-2"><div className="text-xs font-bold uppercase tracking-widest opacity-40">Queue ({selectedFiles.length})</div><button onClick={() => setSelectedFiles([])} className="text-xs text-red-400 hover:underline">Clear</button></div>
-                                            <div className="max-h-48 overflow-y-auto no-scrollbar flex flex-col gap-2">
+                                            <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar -mx-2 px-2">
                                                 {selectedFiles.map(f => (
-                                                    <div key={f.id} className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/5 cursor-pointer hover:bg-white/10 transition-colors" onClick={() => setSelectedPreview(f.file)}>
-                                                        <div className="w-10 h-10 rounded-lg bg-indigo-500/20 flex items-center justify-center flex-shrink-0 overflow-hidden"><FilePreview file={f.file} /></div>
-                                                        <div className="flex-1 min-w-0"><div className="text-sm font-medium truncate">{f.file.name}</div><div className="text-[10px] opacity-40 uppercase">{formatSize(f.file.size)}</div></div>
+                                                    <div key={f.id} className="flex-shrink-0 w-32 md:w-40 bg-white/5 rounded-[1.5rem] border border-white/10 overflow-hidden group/card cursor-pointer hover:border-indigo-500/50 transition-all" onClick={() => setSelectedPreview(f.file)}>
+                                                        <div className="aspect-[4/3] relative bg-black/20 overflow-hidden">
+                                                            <FilePreview file={f.file} />
+                                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/card:opacity-100 transition-opacity flex items-center justify-center">
+                                                                <button onClick={(e) => { e.stopPropagation(); setSelectedFiles(prev => prev.filter(item => item.id !== f.id)); }} className="bg-red-500 p-1.5 rounded-full hover:scale-110 transition-transform"><X size={14}/></button>
+                                                            </div>
+                                                        </div>
+                                                        <div className="p-3">
+                                                            <div className="text-[10px] font-medium truncate mb-0.5">{f.file.name}</div>
+                                                            <div className="text-[8px] opacity-40 font-bold uppercase tracking-wider">{formatSize(f.file.size)}</div>
+                                                        </div>
                                                     </div>
                                                 ))}
                                             </div>
