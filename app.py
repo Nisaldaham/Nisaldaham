@@ -659,10 +659,10 @@ HTML_TEMPLATE = """
                                                             {transfer?.progress > 0 && transfer.progress < 100 && <CircularProgress progress={transfer.progress} size={84} />}
                                                             {p.os === 'macOS' ? <Laptop className={isPeerSelected ? 'text-[var(--accent-primary)]' : ''} /> : p.type === 'pc' ? <Monitor className={isPeerSelected ? 'text-[var(--accent-primary)]' : ''} /> : <Smartphone className={isPeerSelected ? 'text-[var(--accent-primary)]' : ''} />}
                                                             <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 flex flex-col items-center gap-0.5">
-                                                                <div className="bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded-full border border-white/10 scale-[0.6] flex gap-1 whitespace-nowrap">
-                                                                    <span className="font-bold text-[var(--accent-primary)]">{p.os}</span>
-                                                                    {p.battery && <BatteryIcon battery={p.battery} size={10} />}
-                                                                    <SignalIcon rtt={p.rtt} size={10} />
+                                                                <div className="bg-black/60 backdrop-blur-md px-2 py-1 rounded-full border border-white/10 scale-[0.85] flex items-center gap-1.5 whitespace-nowrap shadow-lg">
+                                                                    <span className="font-bold text-[var(--accent-primary)] text-[10px]">{p.os}</span>
+                                                                    {p.battery && <BatteryIcon battery={p.battery} size={14} />}
+                                                                    <SignalIcon rtt={p.rtt} size={14} />
                                                                 </div>
                                                             </div>
                                                             {peerCustomizations[p.uid]?.isTrusted && <div className="absolute -top-1 -left-1 bg-yellow-500 rounded-full p-1 shadow-[0_0_10px_rgba(234,179,8,0.5)]"><Star size={10} className="fill-white text-white" /></div>}
