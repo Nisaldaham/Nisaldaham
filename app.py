@@ -82,6 +82,7 @@ HTML_TEMPLATE = """
         window.LucideReact = window.LucideReact || window.lucide;
     </script>
     <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <link rel="manifest" href="/manifest.json">
@@ -199,12 +200,13 @@ HTML_TEMPLATE = """
             Monitor, Smartphone, Laptop, File, Check, X,
             UploadCloud, Shield, Zap, Image: LucideImage,
             Video, Music, History: LucideHistory, Settings, QrCode,
-            Download, Trash2, ShieldCheck, Lock, Info
+            Download, Trash2, ShieldCheck, Lock, Info, Pause, Play
         } = LucideReact;
 
         const ImageIcon = LucideImage;
 
         const MY_ID = Math.random().toString(36).substr(2, 9);
+        const CHUNK_SIZE = 1024 * 1024; // 1MB chunks
 
         function FilePreview({ file }) {
             const [url, setUrl] = useState(null);
@@ -239,6 +241,8 @@ HTML_TEMPLATE = """
             const [selectedFiles, setSelectedFiles] = useState([]);
             const [selectedPeers, setSelectedPeers] = useState([]);
             const [transfers, setTransfers] = useState({});
+            const [pausedPeers, setPausedPeers] = useState([]);
+            const [cancelledPeers, setCancelledPeers] = useState([]);
             const [incomingRequests, setIncomingRequests] = useState([]);
             const [dragActive, setDragActive] = useState(false);
             const [activeTab, setActiveTab] = useState('radar');
@@ -253,10 +257,10 @@ HTML_TEMPLATE = """
             const [logs, setLogs] = useState([]);
             const [theme, setTheme] = useState(localStorage.getItem('theme') || 'default');
 
-            const stateRef = useRef({ peers, transfers, selectedFiles });
+            const stateRef = useRef({ peers, transfers, selectedFiles, pausedPeers, cancelledPeers });
             useEffect(() => {
-                stateRef.current = { peers, transfers, selectedFiles };
-            }, [peers, transfers, selectedFiles]);
+                stateRef.current = { peers, transfers, selectedFiles, pausedPeers, cancelledPeers };
+            }, [peers, transfers, selectedFiles, pausedPeers, cancelledPeers]);
 
             const addLog = (msg) => {
                 console.log(`[AirShare] ${msg}`);
@@ -266,6 +270,31 @@ HTML_TEMPLATE = """
             useEffect(() => {
                 fetch('/api/config').then(res => res.json()).then(setLocalConfig);
                 loadHistory();
+
+                const handleBeforeUnload = (e) => {
+                    const hasActiveTransfers = Object.values(stateRef.current.transfers).some(t => t.status === 'sending' || t.status === 'receiving');
+                    if (hasActiveTransfers) {
+                        e.preventDefault();
+                        e.returnValue = '';
+                    }
+                };
+                window.addEventListener('beforeunload', handleBeforeUnload);
+
+                // Wake Lock API
+                let wakeLock = null;
+                const requestWakeLock = async () => {
+                    try {
+                        if ('wakeLock' in navigator) {
+                            wakeLock = await navigator.wakeLock.request('screen');
+                        }
+                    } catch (err) { console.warn("Wake lock failed", err); }
+                };
+                requestWakeLock();
+
+                return () => {
+                    window.removeEventListener('beforeunload', handleBeforeUnload);
+                    if (wakeLock) wakeLock.release();
+                };
             }, []);
 
             useEffect(() => {
@@ -326,87 +355,93 @@ HTML_TEMPLATE = """
                 if (filesToSend.length === 0) return;
 
                 const totalSize = filesToSend.reduce((acc, f) => acc + f.file.size, 0);
-                const fileProgresses = {}; // Map of file id -> bytes loaded
-                const fileSpeeds = {};     // Map of file id -> current speed
+                let totalLoaded = 0;
+                let startTime = Date.now();
 
                 setTransfers(prev => ({...prev, [peerId]: {
                     status: 'sending', progress: 0, speed: 0,
-                    currentFile: `Uploading ${filesToSend.length} files...`,
+                    currentFile: 'Starting...',
                     total: filesToSend.length, current: 0
                 }}));
 
-                const uploadPromises = filesToSend.map(async (fObj, index) => {
+                for (let i = 0; i < filesToSend.length; i++) {
+                    const fObj = filesToSend[i];
                     const file = fObj.file;
-                    const fileId = fObj.id;
+                    const fileId = "f-" + Math.random().toString(36).substr(2, 9);
+                    const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
 
-                    const formData = new FormData();
-                    formData.append('file', file);
-                    formData.append('sender', MY_ID);
-                    formData.append('target', peerId);
+                    setTransfers(prev => ({...prev, [peerId]: {
+                        ...prev[peerId], current: i + 1, currentFile: file.name
+                    }}));
 
-                    const xhr = new XMLHttpRequest();
-                    xhr.open('POST', '/api/upload', true);
+                    for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
+                        // Check for cancellation
+                        if (stateRef.current.cancelledPeers?.includes(peerId)) {
+                            fetch('/api/cancel_upload', {
+                                method: 'POST',
+                                headers: {'Content-Type': 'application/json'},
+                                body: JSON.stringify({ file_id: fileId, filename: file.name })
+                            });
+                            setTransfers(prev => {
+                                const newTransfers = {...prev};
+                                delete newTransfers[peerId];
+                                return newTransfers;
+                            });
+                            setCancelledPeers(prev => prev.filter(id => id !== peerId));
+                            showToast("Transfer cancelled");
+                            return;
+                        }
 
-                    let startTime = Date.now();
+                        // Check for pause
+                        while (stateRef.current.pausedPeers?.includes(peerId)) {
+                            await new Promise(r => setTimeout(r, 500));
+                            if (stateRef.current.cancelledPeers?.includes(peerId)) break;
+                        }
 
-                    xhr.upload.onprogress = (e) => {
-                        if (e.lengthComputable) {
-                            fileProgresses[fileId] = e.loaded;
+                        const start = chunkIndex * CHUNK_SIZE;
+                        const end = Math.min(start + CHUNK_SIZE, file.size);
+                        const chunk = file.slice(start, end);
+                        const formData = new FormData();
+                        formData.append('file', chunk);
+                        formData.append('file_id', fileId);
+                        formData.append('chunk_index', chunkIndex);
+                        formData.append('total_chunks', totalChunks);
+                        formData.append('filename', file.name);
+
+                        try {
+                            const res = await fetch('/api/upload', { method: 'POST', body: formData });
+                            const result = await res.json();
+
+                            if (result.status === 'complete') {
+                                sendSignal(peerId, 'file_available', {
+                                    file_id: fileId, name: file.name, size: file.size, type: file.type
+                                });
+                                await db.history.add({
+                                    name: file.name, size: file.size, type: file.type,
+                                    timestamp: Date.now(), sender: 'Me', status: 'sent', fileId: fileId
+                                });
+                            }
+
+                            totalLoaded += chunk.size;
                             const elapsed = (Date.now() - startTime) / 1000;
-                            fileSpeeds[fileId] = e.loaded / (elapsed || 0.1) / (1024 * 1024);
-
-                            // Aggregate progress
-                            const totalLoaded = Object.values(fileProgresses).reduce((acc, val) => acc + val, 0);
-                            const totalSpeed = Object.values(fileSpeeds).reduce((acc, val) => acc + val, 0);
+                            const speed = totalLoaded / (elapsed || 0.1) / (1024 * 1024);
                             const overallPercent = Math.round((totalLoaded / totalSize) * 100);
 
-                            setTransfers(prev => ({...prev, [peerId]: {
-                                ...prev[peerId],
-                                progress: overallPercent,
-                                speed: totalSpeed.toFixed(1),
-                                current: Object.keys(fileProgresses).length // Not quite right but gives a sense of activity
-                            }}));
+                            setTransfers(prev => {
+                                const current = prev[peerId] || {};
+                                const history = current.speedHistory || [];
+                                const newHistory = [...history, parseFloat(speed.toFixed(1))].slice(-20);
+                                return {
+                                    ...prev,
+                                    [peerId]: { ...current, progress: overallPercent, speed: speed.toFixed(1), speedHistory: newHistory }
+                                };
+                            });
+                        } catch (err) {
+                            addLog(`Upload error for ${file.name}: ${err.message}`);
+                            showToast(`Upload failed: ${file.name}`);
+                            break;
                         }
-                    };
-
-                    const uploadPromise = new Promise((resolve, reject) => {
-                        xhr.onload = () => {
-                            if (xhr.status === 200) {
-                                try {
-                                    const response = JSON.parse(xhr.responseText);
-                                    resolve(response.file_id);
-                                } catch (e) { reject(new Error('Invalid response')); }
-                            } else {
-                                reject(new Error('Upload failed'));
-                            }
-                        };
-                        xhr.onerror = () => reject(new Error('Upload failed'));
-                    });
-
-                    xhr.send(formData);
-
-                    try {
-                        const serverFileId = await uploadPromise;
-                        sendSignal(peerId, 'file_available', {
-                            file_id: serverFileId,
-                            name: file.name,
-                            size: file.size,
-                            type: file.type
-                        });
-
-                        await db.history.add({
-                            name: file.name, size: file.size, type: file.type,
-                            timestamp: Date.now(), sender: 'Me', status: 'sent', fileId: serverFileId
-                        });
-                    } catch (err) {
-                        addLog(`Upload error for ${file.name}: ${err.message}`);
                     }
-                });
-
-                try {
-                    await Promise.all(uploadPromises);
-                } catch (err) {
-                    showToast("One or more uploads failed");
                 }
 
                 setTransfers(prev => ({...prev, [peerId]: { status: 'complete', progress: 100 }}));
@@ -488,6 +523,23 @@ HTML_TEMPLATE = """
                     <svg width={size} height={size} className="absolute -inset-2">
                         <circle className="text-white/10" strokeWidth="4" stroke="currentColor" fill="transparent" r={radius} cx={size/2} cy={size/2} />
                         <circle className="text-[var(--accent-primary)] circular-progress" strokeWidth="4" strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round" stroke="currentColor" fill="transparent" r={radius} cx={size/2} cy={size/2} />
+                    </svg>
+                );
+            };
+
+            const Sparkline = ({ data, width = 40, height = 12 }) => {
+                if (!data || data.length < 2) return null;
+                const min = Math.min(...data);
+                const max = Math.max(...data, 0.1);
+                const points = data.map((d, i) => {
+                    const x = (i / (data.length - 1)) * width;
+                    const y = height - ((d - min) / (max - min || 1)) * height;
+                    return `${x},${y}`;
+                }).join(' ');
+
+                return (
+                    <svg width={width} height={height} className="overflow-visible ml-2 inline-block">
+                        <polyline fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" points={points} className="opacity-70" />
                     </svg>
                 );
             };
@@ -583,22 +635,41 @@ HTML_TEMPLATE = """
                                         const transfer = transfers[p.uid];
                                         const isActive = transfer?.status === 'sending' || transfer?.status === 'receiving';
                                         const isPeerSelected = selectedPeers.includes(p.uid);
+                                        const isPaused = pausedPeers.includes(p.uid);
+
                                         return (
                                             <React.Fragment key={p.uid}>
                                             {isActive && <EnergyBeam x={x} y={y} />}
                                             <div className="absolute cursor-pointer group transition-all duration-500" style={{transform: `translate(${x}px, ${y}px)`}} onClick={() => {
+                                                if (isActive) return; // Don't deselect during active transfer
                                                 if (selectedPeers.includes(p.uid)) { setSelectedPeers(prev => prev.filter(id => id !== p.uid)); }
                                                 else { setSelectedPeers(prev => [...prev, p.uid]); }
                                             }}>
-                                                <div className={`p-5 rounded-full glass-panel border-2 transition-all duration-300 group-hover:scale-110 relative ${isPeerSelected ? 'border-[var(--accent-primary)] shadow-[0_0_20px_var(--accent-glow)]' : 'border-white/10'} ${transfer?.status === 'sending' ? 'animate-pulse' : ''}`}>
+                                                <div className={`p-5 rounded-full glass-panel border-2 transition-all duration-300 group-hover:scale-110 relative ${isPeerSelected ? 'border-[var(--accent-primary)] shadow-[0_0_20px_var(--accent-glow)]' : 'border-white/10'} ${transfer?.status === 'sending' && !isPaused ? 'animate-pulse' : ''}`}>
                                                     {transfer?.progress > 0 && transfer.progress < 100 && <CircularProgress progress={transfer.progress} size={84} />}
                                                     {p.type === 'pc' ? <Monitor className={isPeerSelected ? 'text-[var(--accent-primary)]' : ''} /> : <Smartphone className={isPeerSelected ? 'text-[var(--accent-primary)]' : ''} />}
                                                     {isPeerSelected && <div className="absolute -top-1 -right-1 bg-indigo-500 rounded-full p-1"><Check size={10} /></div>}
                                                     {celebrations.some(c => c.peerId === p.uid) && <div className="celebration-ring inset-0" />}
+
+                                                    {isActive && transfer?.status === 'sending' && (
+                                                        <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex-col gap-1">
+                                                            <div className="flex gap-2">
+                                                                <button onClick={(e) => { e.stopPropagation(); isPaused ? setPausedPeers(prev => prev.filter(id => id !== p.uid)) : setPausedPeers(prev => [...prev, p.uid]); }} className="p-1 hover:text-indigo-400">
+                                                                    {isPaused ? <Play size={16} fill="currentColor" /> : <Pause size={16} fill="currentColor" />}
+                                                                </button>
+                                                                <button onClick={(e) => { e.stopPropagation(); setCancelledPeers(prev => [...prev, p.uid]); }} className="p-1 hover:text-red-400">
+                                                                    <X size={16} />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    )}
                                                 </div>
                                                 <div className="absolute top-20 left-1/2 -translate-x-1/2 whitespace-nowrap flex flex-col items-center gap-1">
                                                     <div className={`bg-black/40 backdrop-blur-md px-3 py-1 rounded-full text-xs font-medium border ${isPeerSelected ? 'border-[var(--accent-primary)] text-[var(--accent-primary)]' : 'border-white/10'}`}>
-                                                        {p.name} {transfer?.speed && `· ${transfer.speed}MB/s`}
+                                                        <div className="flex items-center">
+                                                            {p.name} {transfer?.speed && `· ${transfer.speed}MB/s`}
+                                                            {transfer?.speedHistory && <Sparkline data={transfer.speedHistory} />}
+                                                        </div>
                                                     </div>
                                                     {transfer?.status === 'sending' && transfer.total > 1 && (
                                                         <div className="text-[10px] bg-indigo-600/50 px-2 py-0.5 rounded-full border border-indigo-400/30">
@@ -625,9 +696,31 @@ HTML_TEMPLATE = """
                                             </div>
                                             <div className="text-lg font-bold mb-1">Ready to share?</div>
                                             <div className="text-sm opacity-50 mb-4">Drag files here or</div>
-                                            <div className="relative inline-block">
-                                                <button className="bg-indigo-600 hover:bg-indigo-500 px-6 py-2 rounded-xl text-sm font-bold transition-all shadow-lg shadow-indigo-500/20">Select Files</button>
-                                                <input type="file" multiple className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" onChange={e => setSelectedFiles(Array.from(e.target.files).map(f => ({file: f, id: Math.random()}))) } />
+                                            <div className="flex justify-center gap-3">
+                                                <div className="relative inline-block">
+                                                    <button className="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-lg shadow-indigo-500/20">Select Files</button>
+                                                    <input type="file" multiple className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" onChange={e => setSelectedFiles(Array.from(e.target.files).map(f => ({file: f, id: Math.random()}))) } />
+                                                </div>
+                                                <div className="relative inline-block">
+                                                    <button className="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl text-xs font-bold transition-all">Select Folder</button>
+                                                    <input type="file" webkitdirectory="true" directory="true" className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" onChange={async (e) => {
+                                                        const files = Array.from(e.target.files);
+                                                        if (files.length === 0) return;
+
+                                                        const folderName = files[0].webkitRelativePath.split('/')[0] || 'folder';
+                                                        showToast("Zipping folder...");
+
+                                                        const zip = new JSZip();
+                                                        files.forEach(f => {
+                                                            zip.file(f.webkitRelativePath, f);
+                                                        });
+
+                                                        const content = await zip.generateAsync({type:"blob"});
+                                                        const zippedFile = new File([content], `${folderName}.zip`, {type: "application/zip"});
+                                                        setSelectedFiles([{file: zippedFile, id: Math.random()}]);
+                                                        showToast("Folder ready to send");
+                                                    }} />
+                                                </div>
                                             </div>
                                         </div>
                                     ) : (
@@ -821,6 +914,7 @@ def service_worker():
         'https://cdn.tailwindcss.com',
         'https://unpkg.com/lucide-react@0.477.0/dist/umd/lucide-react.min.js',
         'https://unpkg.com/dexie/dist/dexie.js',
+        'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
         'https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js',
         'https://raw.githubusercontent.com/lucide-react/lucide/main/icons/zap.png'
     ];
@@ -872,26 +966,58 @@ def signal():
 
 @app.route('/api/upload', methods=['POST'])
 def upload_file():
-    if 'file' not in request.files:
-        return jsonify({"error": "No file part"}), 400
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify({"error": "No selected file"}), 400
+    file = request.files.get('file')
+    file_id = request.form.get('file_id')
+    chunk_index = int(request.form.get('chunk_index', 0))
+    total_chunks = int(request.form.get('total_chunks', 1))
+    filename = request.form.get('filename')
 
-    safe_name = secure_filename(file.filename)
-    file_id = str(uuid.uuid4())
-    filename = f"{file_id}_{safe_name}"
-    filepath = os.path.join(UPLOAD_FOLDER, filename)
-    file.save(filepath)
+    if not file or not file_id or not filename:
+        return jsonify({"error": "Missing data"}), 400
 
-    with state_lock:
-        state["files"][file_id] = {
-            "filename": safe_name,
-            "internal_path": filename,
-            "timestamp": time.time()
-        }
+    safe_name = secure_filename(filename)
+    temp_filename = f"{file_id}_{safe_name}.part"
+    filepath = os.path.join(UPLOAD_FOLDER, temp_filename)
 
-    return jsonify({"file_id": file_id})
+    # Append chunk to file
+    mode = "ab" if chunk_index > 0 else "wb"
+    with open(filepath, mode) as f:
+        f.write(file.read())
+
+    if chunk_index + 1 == total_chunks:
+        # Finalize file
+        final_filename = f"{file_id}_{safe_name}"
+        final_path = os.path.join(UPLOAD_FOLDER, final_filename)
+        # Handle case where final file might already exist (shouldn't happen with UUID but good practice)
+        if os.path.exists(final_path):
+            os.remove(final_path)
+        os.rename(filepath, final_path)
+        with state_lock:
+            state["files"][file_id] = {
+                "filename": safe_name,
+                "internal_path": final_filename,
+                "timestamp": time.time()
+            }
+        return jsonify({"status": "complete", "file_id": file_id})
+
+    return jsonify({"status": "chunk_saved", "chunk_index": chunk_index})
+
+@app.route('/api/cancel_upload', methods=['POST'])
+def cancel_upload():
+    data = request.json
+    file_id = data.get('file_id')
+    filename = data.get('filename')
+    if not file_id or not filename:
+        return jsonify({"error": "Missing data"}), 400
+
+    safe_name = secure_filename(filename)
+    temp_filename = f"{file_id}_{safe_name}.part"
+    filepath = os.path.join(UPLOAD_FOLDER, temp_filename)
+
+    if os.path.exists(filepath):
+        os.remove(filepath)
+
+    return jsonify({"status": "cancelled"})
 
 @app.route('/api/download/<file_id>')
 def download_file(file_id):
