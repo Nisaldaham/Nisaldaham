@@ -5,7 +5,7 @@ import json
 import uuid
 import threading
 from werkzeug.utils import secure_filename
-from flask import Flask, render_template_string, request, jsonify, send_from_directory
+from flask import Flask, render_template_string, request, jsonify, send_from_directory, Response
 
 app = Flask(__name__)
 
@@ -22,7 +22,6 @@ def cleanup_uploads():
             for filename in os.listdir(UPLOAD_FOLDER):
                 filepath = os.path.join(UPLOAD_FOLDER, filename)
                 if os.path.isfile(filepath):
-                    # Remove files older than 30 minutes
                     if now - os.path.getmtime(filepath) > 1800:
                         files_to_remove.append((filepath, filename.split('_')[0]))
 
@@ -37,12 +36,11 @@ def cleanup_uploads():
                         print(f"Error removing {filepath}: {ex}")
         except Exception as e:
             print(f"Cleanup error: {e}")
-        time.sleep(300) # Run every 5 minutes
+        time.sleep(300)
 
 def get_local_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
-        # doesn't even have to be reachable
         s.connect(('10.255.255.255', 1))
         IP = s.getsockname()[0]
     except Exception:
@@ -54,11 +52,11 @@ def get_local_ip():
 LOCAL_IP = get_local_ip()
 PORT = 5000
 
-# In-memory storage for signaling and presence
 state = {
     "devices": {},
-    "signals": [], # Each signal: { "sender": ..., "target": ..., "timestamp": ..., ... }
-    "files": {}    # Mapping of file_id to metadata
+    "signals": [],
+    "files": {},
+    "clients": {}
 }
 state_lock = threading.Lock()
 
@@ -78,7 +76,6 @@ HTML_TEMPLATE = """
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide-react@0.477.0/dist/umd/lucide-react.min.js"></script>
     <script>
-        // Compatibility shim for different Lucide UMD versions
         window.LucideReact = window.LucideReact || window.lucide;
     </script>
     <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
@@ -97,13 +94,11 @@ HTML_TEMPLATE = """
             --panel-bg: rgba(255, 255, 255, 0.05);
             --panel-border: rgba(255, 255, 255, 0.1);
         }
-
         body.theme-neon {
             --accent-primary: #00ffcc;
             --accent-glow: rgba(0, 255, 204, 0.4);
             --bg-gradient: radial-gradient(circle at 50% 50%, #00120f 0%, #000000 100%);
         }
-
         body.theme-light {
             --accent-primary: #3b82f6;
             --accent-glow: rgba(59, 130, 246, 0.2);
@@ -112,7 +107,6 @@ HTML_TEMPLATE = """
             --panel-bg: rgba(255, 255, 255, 0.7);
             --panel-border: rgba(0, 0, 0, 0.05);
         }
-
         @keyframes radar {
             0% { transform: scale(0.2); opacity: 1; }
             100% { transform: scale(3.5); opacity: 0; }
@@ -125,7 +119,6 @@ HTML_TEMPLATE = """
         .radar-ring:nth-child(1) { animation-delay: 0s; }
         .radar-ring:nth-child(2) { animation-delay: 1.33s; }
         .radar-ring:nth-child(3) { animation-delay: 2.66s; }
-
         .glass-panel {
             background: var(--panel-bg);
             backdrop-filter: blur(24px);
@@ -144,7 +137,22 @@ HTML_TEMPLATE = """
             background: rgba(255, 255, 255, 0.2);
             border: 1px solid rgba(255, 255, 255, 0.4);
         }
-
+        @keyframes flow-glow {
+            0% { transform: translateY(-100%) rotate(0deg); opacity: 0; }
+            50% { opacity: 0.5; }
+            100% { transform: translateY(100%) rotate(180deg); opacity: 0; }
+        }
+        .drag-overlay {
+            background: rgba(99, 102, 241, 0.1);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            border: 4px dashed var(--accent-primary);
+        }
+        .drag-overlay::before {
+            content: ''; position: absolute; inset: -50%;
+            background: linear-gradient(45deg, transparent, var(--accent-glow), transparent);
+            animation: flow-glow 4s linear infinite;
+        }
         body {
             background: var(--bg-gradient);
             min-height: 100vh;
@@ -153,10 +161,8 @@ HTML_TEMPLATE = """
             transition: background 0.5s ease, color 0.5s ease;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
-
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
         .circular-progress {
             transition: stroke-dashoffset 0.35s;
             transform: rotate(-90deg);
@@ -171,7 +177,6 @@ HTML_TEMPLATE = """
             position: absolute; border: 2px solid var(--accent-primary); border-radius: 50%;
             animation: celebrate 0.8s ease-out forwards;
         }
-
         @keyframes pulse-beam {
             0% { stroke-dashoffset: 200; opacity: 0.3; stroke-width: 1; }
             50% { opacity: 1; stroke-width: 3; }
@@ -183,7 +188,6 @@ HTML_TEMPLATE = """
             filter: drop-shadow(0 0 12px var(--accent-glow));
             animation: pulse-beam 1.5s linear infinite;
         }
-
         .drop-glow {
             box-shadow: 0 0 30px var(--accent-glow);
             border-color: var(--accent-primary) !important;
@@ -201,11 +205,10 @@ HTML_TEMPLATE = """
             Video, Music, History: LucideHistory, Settings, QrCode,
             Download, Trash2, ShieldCheck, Lock, Info, Pause, Play,
             MoreVertical, User, Star, Battery, BatteryCharging, BatteryLow, BatteryMedium, BatteryWarning,
-            Copy, ExternalLink
+            Copy, ExternalLink, Wifi, WifiOff, SignalHigh, SignalMedium, SignalLow, RefreshCcw
         } = LucideReact;
 
         const ImageIcon = LucideImage;
-
         const MY_ID = Math.random().toString(36).substr(2, 9);
         const CHUNK_SIZE = 1024 * 1024; // 1MB chunks
 
@@ -231,7 +234,6 @@ HTML_TEMPLATE = """
             );
         }
 
-        // Setup Database
         const db = new Dexie("AirShareDB");
         db.version(3).stores({
             history: '++id, name, size, type, timestamp, sender, status, fileId',
@@ -247,7 +249,6 @@ HTML_TEMPLATE = """
                 else if (/iPhone|iPad|iPod/i.test(ua)) os = 'iOS';
                 else if (/Android/i.test(ua)) os = 'Android';
                 else if (/Linux/i.test(ua)) os = 'Linux';
-
                 let type = (os === 'iOS' || os === 'Android') ? 'mobile' : 'pc';
                 return {
                     uid: MY_ID,
@@ -294,8 +295,6 @@ HTML_TEMPLATE = """
             useEffect(() => {
                 fetch('/api/config').then(res => res.json()).then(setLocalConfig);
                 loadHistory();
-
-                // Battery Status API
                 if ('getBattery' in navigator) {
                     navigator.getBattery().then(battery => {
                         const updateBattery = () => {
@@ -312,27 +311,16 @@ HTML_TEMPLATE = """
                         battery.addEventListener('chargingchange', updateBattery);
                     });
                 }
-
                 const handleBeforeUnload = (e) => {
                     const hasActiveTransfers = Object.values(stateRef.current.transfers).some(t => t.status === 'sending' || t.status === 'receiving');
-                    if (hasActiveTransfers) {
-                        e.preventDefault();
-                        e.returnValue = '';
-                    }
+                    if (hasActiveTransfers) { e.preventDefault(); e.returnValue = ''; }
                 };
                 window.addEventListener('beforeunload', handleBeforeUnload);
-
-                // Wake Lock API
                 let wakeLock = null;
                 const requestWakeLock = async () => {
-                    try {
-                        if ('wakeLock' in navigator) {
-                            wakeLock = await navigator.wakeLock.request('screen');
-                        }
-                    } catch (err) { console.warn("Wake lock failed", err); }
+                    try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {}
                 };
                 requestWakeLock();
-
                 return () => {
                     window.removeEventListener('beforeunload', handleBeforeUnload);
                     if (wakeLock) wakeLock.release();
@@ -356,22 +344,34 @@ HTML_TEMPLATE = """
                 setPeerCustomizations(mapping);
             };
 
-            useEffect(() => {
-                loadPeerCustomizations();
-            }, []);
+            useEffect(() => { loadPeerCustomizations(); }, []);
 
-            const syncState = async () => {
-                try {
-                    const res = await fetch('/api/sync', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({ device: myDevice })
-                    });
-                    const data = await res.json();
-                    setPeers(Object.values(data.devices).filter(d => d.uid !== MY_ID));
-                    data.signals.forEach(sig => handleSignal(sig));
-                } catch (e) { console.error("Sync error", e); }
-            };
+            useEffect(() => {
+                let eventSource = null;
+                const startSSE = () => {
+                    eventSource = new EventSource(`/api/events/${MY_ID}`);
+                    eventSource.onmessage = (e) => {
+                        const data = JSON.parse(e.data);
+                        if (data.type === 'sync') { setPeers(Object.values(data.devices).filter(d => d.uid !== MY_ID)); }
+                        else if (data.type !== 'heartbeat') { handleSignal(data); }
+                    };
+                    eventSource.onerror = () => { eventSource.close(); setTimeout(startSSE, 2000); };
+                };
+                startSSE();
+                const syncInterval = setInterval(async () => {
+                    const start = Date.now();
+                    try {
+                        await fetch('/api/sync', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({ device: { ...myDevice, rtt: myDevice.lastRtt } })
+                        });
+                        const rtt = Date.now() - start;
+                        setMyDevice(prev => ({ ...prev, lastRtt: rtt }));
+                    } catch (e) {}
+                }, 3000);
+                return () => { if (eventSource) eventSource.close(); clearInterval(syncInterval); };
+            }, [myDevice]);
 
             const sendSignal = async (target, type, payload) => {
                 await fetch('/api/signal', {
@@ -381,82 +381,43 @@ HTML_TEMPLATE = """
                 });
             };
 
-            useEffect(() => {
-                const interval = setInterval(syncState, 2000);
-                return () => clearInterval(interval);
-            }, [myDevice]);
-
             const handleSignal = async (signal) => {
                 const { type, payload, sender, senderDevice } = signal;
                 if (type === 'transfer_request') {
                     const custom = peerCustomizations[sender];
-                    if (custom?.isTrusted) {
-                        sendSignal(sender, 'transfer_accepted', {});
-                        return;
-                    }
-
-                    if (securityMode === 'pin') {
-                        setShowPinEntry({ sender, senderDevice, files: payload.files });
-                    } else {
-                        setIncomingRequests(prev => [...prev, { id: Math.random(), sender, senderDevice, files: payload.files }]);
-                    }
-                } else if (type === 'transfer_accepted') {
-                    startUploading(sender);
-                } else if (type === 'transfer_declined') {
-                    showToast(`${senderDevice.name} declined the transfer.`);
-                } else if (type === 'file_available') {
-                    handleIncomingFile(sender, payload);
-                }
+                    if (custom?.isTrusted) { sendSignal(sender, 'transfer_accepted', {}); return; }
+                    if (securityMode === 'pin') { setShowPinEntry({ sender, senderDevice, files: payload.files }); }
+                    else { setIncomingRequests(prev => [...prev, { id: Math.random(), sender, senderDevice, files: payload.files }]); }
+                } else if (type === 'transfer_accepted') { startUploading(sender); }
+                else if (type === 'transfer_declined') { showToast(`${senderDevice.name} declined the transfer.`); }
+                else if (type === 'file_available') { handleIncomingFile(sender, payload); }
             };
 
             const startUploading = async (peerId) => {
                 const filesToSend = stateRef.current.selectedFiles;
                 if (filesToSend.length === 0) return;
-
                 const totalSize = filesToSend.reduce((acc, f) => acc + f.file.size, 0);
                 let totalLoaded = 0;
                 let startTime = Date.now();
-
-                setTransfers(prev => ({...prev, [peerId]: {
-                    status: 'sending', progress: 0, speed: 0,
-                    currentFile: 'Starting...',
-                    total: filesToSend.length, current: 0
-                }}));
-
+                setTransfers(prev => ({...prev, [peerId]: { status: 'sending', progress: 0, speed: 0, currentFile: 'Starting...', total: filesToSend.length, current: 0 }}));
                 for (let i = 0; i < filesToSend.length; i++) {
                     const fObj = filesToSend[i];
                     const file = fObj.file;
                     const fileId = "f-" + Math.random().toString(36).substr(2, 9);
                     const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
-
-                    setTransfers(prev => ({...prev, [peerId]: {
-                        ...prev[peerId], current: i + 1, currentFile: file.name
-                    }}));
-
+                    setTransfers(prev => ({...prev, [peerId]: { ...prev[peerId], current: i + 1, currentFile: file.name }}));
                     for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
-                        // Check for cancellation
                         if (stateRef.current.cancelledPeers?.includes(peerId)) {
-                            fetch('/api/cancel_upload', {
-                                method: 'POST',
-                                headers: {'Content-Type': 'application/json'},
-                                body: JSON.stringify({ file_id: fileId, filename: file.name })
-                            });
-                            setTransfers(prev => {
-                                const newTransfers = {...prev};
-                                delete newTransfers[peerId];
-                                return newTransfers;
-                            });
+                            fetch('/api/cancel_upload', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ file_id: fileId, filename: file.name }) });
+                            setTransfers(prev => { const n = {...prev}; delete n[peerId]; return n; });
                             setCancelledPeers(prev => prev.filter(id => id !== peerId));
                             showToast("Transfer cancelled");
                             return;
                         }
-
-                        // Check for pause
                         while (stateRef.current.pausedPeers?.includes(peerId)) {
                             await new Promise(r => setTimeout(r, 500));
                             if (stateRef.current.cancelledPeers?.includes(peerId)) break;
                         }
-
                         const start = chunkIndex * CHUNK_SIZE;
                         const end = Math.min(start + CHUNK_SIZE, file.size);
                         const chunk = file.slice(start, end);
@@ -466,54 +427,30 @@ HTML_TEMPLATE = """
                         formData.append('chunk_index', chunkIndex);
                         formData.append('total_chunks', totalChunks);
                         formData.append('filename', file.name);
-
                         try {
                             const res = await fetch('/api/upload', { method: 'POST', body: formData });
                             const result = await res.json();
-
                             if (result.status === 'complete') {
-                                sendSignal(peerId, 'file_available', {
-                                    file_id: fileId, name: file.name, size: file.size, type: file.type
-                                });
-                                await db.history.add({
-                                    name: file.name, size: file.size, type: file.type,
-                                    timestamp: Date.now(), sender: 'Me', status: 'sent', fileId: fileId
-                                });
+                                sendSignal(peerId, 'file_available', { file_id: fileId, name: file.name, size: file.size, type: file.type });
+                                await db.history.add({ name: file.name, size: file.size, type: file.type, timestamp: Date.now(), sender: 'Me', status: 'sent', fileId: fileId });
                             }
-
                             totalLoaded += chunk.size;
                             const elapsed = (Date.now() - startTime) / 1000;
                             const speed = totalLoaded / (elapsed || 0.1) / (1024 * 1024);
                             const overallPercent = Math.round((totalLoaded / totalSize) * 100);
-
                             setTransfers(prev => {
-                                const current = prev[peerId] || {};
-                                const history = current.speedHistory || [];
-                                const newHistory = [...history, parseFloat(speed.toFixed(1))].slice(-20);
-                                return {
-                                    ...prev,
-                                    [peerId]: { ...current, progress: overallPercent, speed: speed.toFixed(1), speedHistory: newHistory }
-                                };
+                                const c = prev[peerId] || {};
+                                const h = c.speedHistory || [];
+                                const nh = [...h, parseFloat(speed.toFixed(1))].slice(-20);
+                                return { ...prev, [peerId]: { ...c, progress: overallPercent, speed: speed.toFixed(1), speedHistory: nh } };
                             });
-                        } catch (err) {
-                            addLog(`Upload error for ${file.name}: ${err.message}`);
-                            showToast(`Upload failed: ${file.name}`);
-                            break;
-                        }
+                        } catch (err) { break; }
                     }
                 }
-
                 setTransfers(prev => ({...prev, [peerId]: { status: 'complete', progress: 100 }}));
                 setCelebrations(prev => [...prev, { id: Date.now(), peerId }]);
                 setTimeout(() => setCelebrations(prev => prev.filter(c => c.peerId !== peerId)), 1000);
-
-                confetti({
-                    particleCount: 150,
-                    spread: 70,
-                    origin: { y: 0.6 },
-                    colors: theme === 'neon' ? ['#00ffcc', '#ffffff'] : ['#6366f1', '#ffffff']
-                });
-
+                confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: theme === 'neon' ? ['#00ffcc', '#ffffff'] : ['#6366f1', '#ffffff'] });
                 setSelectedFiles([]);
                 loadHistory();
                 notify("Transfer Complete", "Files sent successfully.");
@@ -521,57 +458,44 @@ HTML_TEMPLATE = """
 
             const handleIncomingFile = async (senderId, fileMeta) => {
                 const { file_id, name, size, type } = fileMeta;
-
                 setTransfers(prev => ({...prev, [senderId]: { status: 'receiving', progress: 100, currentFile: name }}));
-
                 const senderName = stateRef.current.peers.find(p => p.uid === senderId)?.name || 'Unknown Device';
-
-                await db.history.add({
-                    name, size, type, timestamp: Date.now(),
-                    sender: senderName, status: 'received', fileId: file_id
-                });
-
+                await db.history.add({ name, size, type, timestamp: Date.now(), sender: senderName, status: 'received', fileId: file_id });
                 loadHistory();
-
-                // Trigger download
                 const downloadUrl = `/api/download/${file_id}`;
                 const a = document.createElement('a');
-                a.href = downloadUrl;
-                a.download = name;
-                document.body.appendChild(a);
-                a.click();
+                a.href = downloadUrl; a.download = name; document.body.appendChild(a); a.click();
                 setTimeout(() => {
                     document.body.removeChild(a);
                     setTransfers(prev => ({...prev, [senderId]: { status: 'complete', progress: 100 }}));
                     setCelebrations(prev => [...prev, { id: Date.now(), peerId: senderId }]);
                     setTimeout(() => setCelebrations(prev => prev.filter(c => c.peerId !== senderId)), 1000);
                 }, 100);
-
                 notify("File Received", `${name} has been downloaded.`);
             };
 
             const showToast = (message, type = 'info') => {
                 const id = Math.random().toString(36).substr(2, 9);
                 setToasts(prev => [...prev, { id, message, type }]);
-                setTimeout(() => {
-                    setToasts(prev => prev.filter(t => t.id !== id));
-                }, 3000);
+                setTimeout(() => { setToasts(prev => prev.filter(t => t.id !== id)); }, 3000);
             };
 
             const notify = (title, body) => {
-                if (Notification.permission === 'granted') {
-                    new Notification(title, { body });
-                } else if (Notification.permission !== 'denied') {
-                    Notification.requestPermission();
-                }
+                if (Notification.permission === 'granted') { new Notification(title, { body }); }
+                else if (Notification.permission !== 'denied') { Notification.requestPermission(); }
             };
 
             const formatSize = (bytes) => {
                 if (bytes === 0) return '0 B';
-                const k = 1024;
-                const sizes = ['B', 'KB', 'MB', 'GB'];
-                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                const k = 1024, sizes = ['B', 'KB', 'MB', 'GB'], i = Math.floor(Math.log(bytes) / Math.log(k));
                 return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            };
+
+            const SignalIcon = ({ rtt, size = 14 }) => {
+                if (rtt === undefined || rtt === null) return <WifiOff size={size} className="opacity-30" />;
+                if (rtt < 100) return <SignalHigh size={size} className="text-green-400" />;
+                if (rtt < 300) return <SignalMedium size={size} className="text-yellow-400" />;
+                return <SignalLow size={size} className="text-red-400" />;
             };
 
             const BatteryIcon = ({ battery, size = 16, className = "" }) => {
@@ -582,7 +506,6 @@ HTML_TEMPLATE = """
                 else if (level < 20) Icon = BatteryWarning;
                 else if (level < 40) Icon = BatteryLow;
                 else if (level < 70) Icon = BatteryMedium;
-
                 return (
                     <div className={`flex items-center gap-1 ${className}`}>
                         <span className="text-[10px] font-bold">{level}%</span>
@@ -592,9 +515,7 @@ HTML_TEMPLATE = """
             };
 
             const CircularProgress = ({ progress, size = 60 }) => {
-                const radius = (size / 2) - 4;
-                const circumference = radius * 2 * Math.PI;
-                const offset = circumference - (progress / 100) * circumference;
+                const radius = (size / 2) - 4, circumference = radius * 2 * Math.PI, offset = circumference - (progress / 100) * circumference;
                 return (
                     <svg width={size} height={size} className="absolute -inset-2">
                         <circle className="text-white/10" strokeWidth="4" stroke="currentColor" fill="transparent" r={radius} cx={size/2} cy={size/2} />
@@ -606,13 +527,7 @@ HTML_TEMPLATE = """
             const PeerDetailsModal = ({ peer, custom, onClose }) => {
                 const [nickname, setNickname] = useState(custom?.nickname || '');
                 const [isTrusted, setIsTrusted] = useState(custom?.isTrusted || false);
-
-                const save = async () => {
-                    await db.peers.put({ uid: peer.uid, nickname, isTrusted });
-                    loadPeerCustomizations();
-                    onClose();
-                };
-
+                const save = async () => { await db.peers.put({ uid: peer.uid, nickname, isTrusted }); loadPeerCustomizations(); onClose(); };
                 return (
                     <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[110]" onClick={onClose}>
                         <div className="glass-panel p-8 rounded-[2.5rem] w-full max-w-xs" onClick={e => e.stopPropagation()}>
@@ -644,44 +559,18 @@ HTML_TEMPLATE = """
 
             const Sparkline = ({ data, width = 40, height = 12 }) => {
                 if (!data || data.length < 2) return null;
-                const min = Math.min(...data);
-                const max = Math.max(...data, 0.1);
-                const points = data.map((d, i) => {
-                    const x = (i / (data.length - 1)) * width;
-                    const y = height - ((d - min) / (max - min || 1)) * height;
-                    return `${x},${y}`;
-                }).join(' ');
-
-                return (
-                    <svg width={width} height={height} className="overflow-visible ml-2 inline-block">
-                        <polyline fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" points={points} className="opacity-70" />
-                    </svg>
-                );
+                const min = Math.min(...data), max = Math.max(...data, 0.1);
+                const points = data.map((d, i) => { const x = (i / (data.length - 1)) * width, y = height - ((d - min) / (max - min || 1)) * height; return `${x},${y}`; }).join(' ');
+                return <svg width={width} height={height} className="overflow-visible ml-2 inline-block"><polyline fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" points={points} className="opacity-70" /></svg>;
             };
 
-            const EnergyBeam = ({ x, y }) => {
-                return (
-                    <svg className="absolute inset-0 w-full h-full pointer-events-none z-0">
-                        <line x1="50%" y1="50%" x2={`calc(50% + ${x}px)`} y2={`calc(50% + ${y}px)`} className="energy-beam" />
-                    </svg>
-                );
-            };
+            const EnergyBeam = ({ x, y }) => <svg className="absolute inset-0 w-full h-full pointer-events-none z-0"><line x1="50%" y1="50%" x2={`calc(50% + ${x}px)`} y2={`calc(50% + ${y}px)`} className="energy-beam" /></svg>;
 
             const QRCodeModal = () => {
                 const canvasRef = useRef();
                 const url = `http://${localConfig.ip}:${localConfig.port}`;
-
-                useEffect(() => {
-                    if (canvasRef.current) {
-                        QRCode.toCanvas(canvasRef.current, url, { width: 200, margin: 2, color: { dark: '#1e1b4b', light: '#ffffff' } });
-                    }
-                }, []);
-
-                const copyUrl = () => {
-                    navigator.clipboard.writeText(url);
-                    showToast("Link copied to clipboard!");
-                };
-
+                useEffect(() => { if (canvasRef.current) QRCode.toCanvas(canvasRef.current, url, { width: 200, margin: 2, color: { dark: '#1e1b4b', light: '#ffffff' } }); }, []);
+                const copyUrl = () => { navigator.clipboard.writeText(url); showToast("Link copied to clipboard!"); };
                 return (
                     <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[100]" onClick={() => setShowQR(false)}>
                         <div className="glass-panel p-8 rounded-[2.5rem] text-center max-w-sm w-full mx-4" onClick={e => e.stopPropagation()}>
@@ -690,15 +579,10 @@ HTML_TEMPLATE = """
                                 <button onClick={() => setShowQR(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors"><X size={20}/></button>
                             </div>
                             <p className="text-sm opacity-60 mb-8">Scan to join the network or share the link manually</p>
-                            <div className="bg-white p-6 rounded-[2rem] inline-block mb-8 shadow-2xl shadow-indigo-500/20">
-                                <canvas ref={canvasRef}></canvas>
-                            </div>
+                            <div className="bg-white p-6 rounded-[2rem] inline-block mb-8 shadow-2xl shadow-indigo-500/20"><canvas ref={canvasRef}></canvas></div>
                             <div className="flex flex-col gap-3">
                                 <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex items-center justify-between">
-                                    <div className="flex items-center gap-3 overflow-hidden">
-                                        <ExternalLink size={18} className="text-indigo-400 flex-shrink-0" />
-                                        <span className="text-xs font-mono truncate opacity-60">{url}</span>
-                                    </div>
+                                    <div className="flex items-center gap-3 overflow-hidden"><ExternalLink size={18} className="text-indigo-400 flex-shrink-0" /><span className="text-xs font-mono truncate opacity-60">{url}</span></div>
                                     <button onClick={copyUrl} className="p-2 hover:bg-white/10 rounded-xl transition-colors text-indigo-400"><Copy size={18} /></button>
                                 </div>
                             </div>
@@ -710,13 +594,8 @@ HTML_TEMPLATE = """
             const PinModal = () => {
                 const [enteredPin, setEnteredPin] = useState('');
                 const checkPin = () => {
-                    if (enteredPin === pin) {
-                        sendSignal(showPinEntry.sender, 'transfer_accepted', {});
-                        setShowPinEntry(null);
-                    } else {
-                        showToast("Incorrect PIN", "error");
-                        setEnteredPin('');
-                    }
+                    if (enteredPin === pin) { sendSignal(showPinEntry.sender, 'transfer_accepted', {}); setShowPinEntry(null); }
+                    else { showToast("Incorrect PIN", "error"); setEnteredPin(''); }
                 };
                 return (
                     <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[100]">
@@ -735,200 +614,115 @@ HTML_TEMPLATE = """
             }
 
             return (
-                <div className="h-screen flex flex-col" onDragOver={e => {e.preventDefault(); setDragActive(true)}} onDrop={e => {e.preventDefault(); setDragActive(false); setSelectedFiles(Array.from(e.dataTransfer.files).map(f => ({file: f, id: Math.random()})))}}>
-                    <header className="px-8 py-6 flex justify-between items-center z-10">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/30">
-                                <Zap size={24} fill="white" />
-                            </div>
-                            <h1 className="text-2xl font-black tracking-tight">AirShare Py</h1>
+                <div className="h-screen flex flex-col" onDragOver={e => {e.preventDefault(); setDragActive(true)}} onDragLeave={e => { if (e.clientX <= 0 || e.clientY <= 0 || e.clientX >= window.innerWidth || e.clientY >= window.innerHeight) setDragActive(false); }} onDrop={e => {e.preventDefault(); setDragActive(false); setSelectedFiles(Array.from(e.dataTransfer.files).map(f => ({file: f, id: Math.random()})))}}>
+                    {dragActive && (
+                        <div className="fixed inset-4 z-[300] drag-overlay rounded-[3rem] flex flex-col items-center justify-center pointer-events-none animate-in fade-in zoom-in duration-300">
+                            <div className="p-8 bg-indigo-600 rounded-full shadow-2xl shadow-indigo-500/50 mb-8"><UploadCloud size={64} className="text-white" /></div>
+                            <h2 className="text-4xl font-black text-white mb-2">Drop to AirShare</h2>
+                            <p className="text-lg text-white/60">Release files anywhere to start sharing</p>
                         </div>
+                    )}
+                    <header className="px-8 py-6 flex justify-between items-center z-10">
+                        <div className="flex items-center gap-3"><div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/30"><Zap size={24} fill="white" /></div><h1 className="text-2xl font-black tracking-tight">AirShare Py</h1></div>
                         <div className="flex gap-2">
                             <button onClick={() => setShowQR(true)} className="glass-button p-3 rounded-full"><QrCode size={20}/></button>
                             <button onClick={() => setActiveTab('history')} className={`glass-button p-3 rounded-full ${activeTab === 'history' ? 'bg-white/20' : ''}`}><LucideHistory size={20}/></button>
                             <button onClick={() => setActiveTab('settings')} className={`glass-button p-3 rounded-full ${activeTab === 'settings' ? 'bg-white/20' : ''}`}><Settings size={20}/></button>
                         </div>
                     </header>
-
                     <main className="flex-1 relative flex flex-col items-center justify-between p-4 md:p-8 overflow-hidden">
                         {activeTab === 'radar' && (
                             <>
                                 <div className="flex-1 flex items-center justify-center w-full min-h-0 relative">
                                     <div className="relative w-full max-w-md lg:max-w-xl aspect-square flex items-center justify-center">
-                                        <div className="radar-ring w-32 h-32 md:w-48 md:h-48"></div>
-                                        <div className="radar-ring w-64 h-64 md:w-96 md:h-96"></div>
-                                        <div className="radar-ring w-96 h-96 md:w-[32rem] md:h-[32rem]"></div>
+                                        <div className="radar-ring w-32 h-32 md:w-48 md:h-48"></div><div className="radar-ring w-64 h-64 md:w-96 md:h-96"></div><div className="radar-ring w-96 h-96 md:w-[32rem] md:h-[32rem]"></div>
                                         <div className="relative z-10 glass-panel p-6 md:p-8 rounded-full border-[var(--accent-primary)] border-2 shadow-2xl shadow-indigo-500/20 group">
                                              {myDevice.type === 'pc' ? <Monitor size={48} className="text-[var(--accent-primary)]"/> : <Smartphone size={48} className="text-[var(--accent-primary)]"/>}
-                                             <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                 <BatteryIcon battery={myDevice.battery} size={12} />
-                                             </div>
+                                             <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity"><BatteryIcon battery={myDevice.battery} size={12} /></div>
                                         </div>
                                         {peers.map((p, i) => {
-                                        const angle = (i * (360 / Math.max(peers.length, 1))) * (Math.PI / 180);
-                                        const radius = 180;
-                                        const x = Math.cos(angle) * radius;
-                                        const y = Math.sin(angle) * radius;
-                                        const transfer = transfers[p.uid];
-                                        const isActive = transfer?.status === 'sending' || transfer?.status === 'receiving';
-                                        const isPeerSelected = selectedPeers.includes(p.uid);
-                                        const isPaused = pausedPeers.includes(p.uid);
-
-                                        return (
-                                            <React.Fragment key={p.uid}>
-                                            {isActive && <EnergyBeam x={x} y={y} />}
-                                            <div className="absolute cursor-pointer group transition-all duration-500" style={{transform: `translate(${x}px, ${y}px)`}} onClick={() => {
-                                                if (isActive) return; // Don't deselect during active transfer
-                                                if (selectedPeers.includes(p.uid)) { setSelectedPeers(prev => prev.filter(id => id !== p.uid)); }
-                                                else { setSelectedPeers(prev => [...prev, p.uid]); }
-                                            }}>
-                                                <div className={`p-5 rounded-full glass-panel border-2 transition-all duration-300 group-hover:scale-110 relative ${isPeerSelected ? 'border-[var(--accent-primary)] shadow-[0_0_20px_var(--accent-glow)]' : 'border-white/10'} ${transfer?.status === 'sending' && !isPaused ? 'animate-pulse' : ''}`}>
-                                                    {transfer?.progress > 0 && transfer.progress < 100 && <CircularProgress progress={transfer.progress} size={84} />}
-                                                    {p.type === 'pc' ? <Monitor className={isPeerSelected ? 'text-[var(--accent-primary)]' : ''} /> : <Smartphone className={isPeerSelected ? 'text-[var(--accent-primary)]' : ''} />}
-
-                                                    {p.battery && (
-                                                        <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded-full border border-white/10 scale-75">
-                                                            <BatteryIcon battery={p.battery} size={10} />
+                                            const angle = (i * (360 / Math.max(peers.length, 1))) * (Math.PI / 180), radius = 180, x = Math.cos(angle) * radius, y = Math.sin(angle) * radius;
+                                            const transfer = transfers[p.uid], isActive = transfer?.status === 'sending' || transfer?.status === 'receiving', isPeerSelected = selectedPeers.includes(p.uid), isPaused = pausedPeers.includes(p.uid);
+                                            return (
+                                                <React.Fragment key={p.uid}>
+                                                    {isActive && <EnergyBeam x={x} y={y} />}
+                                                    <div className="absolute cursor-pointer group transition-all duration-500" style={{transform: `translate(${x}px, ${y}px)`}} onClick={() => { if (isActive) return; if (selectedPeers.includes(p.uid)) setSelectedPeers(prev => prev.filter(id => id !== p.uid)); else setSelectedPeers(prev => [...prev, p.uid]); }}>
+                                                        <div className={`p-5 rounded-full glass-panel border-2 transition-all duration-300 group-hover:scale-110 relative ${isPeerSelected ? 'border-[var(--accent-primary)] shadow-[0_0_20px_var(--accent-glow)]' : 'border-white/10'} ${transfer?.status === 'sending' && !isPaused ? 'animate-pulse' : ''}`}>
+                                                            {transfer?.progress > 0 && transfer.progress < 100 && <CircularProgress progress={transfer.progress} size={84} />}
+                                                            {p.type === 'pc' ? <Monitor className={isPeerSelected ? 'text-[var(--accent-primary)]' : ''} /> : <Smartphone className={isPeerSelected ? 'text-[var(--accent-primary)]' : ''} />}
+                                                            {p.battery && <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded-full border border-white/10 scale-75 flex gap-1"><BatteryIcon battery={p.battery} size={10} /><SignalIcon rtt={p.rtt} size={10} /></div>}
+                                                            {peerCustomizations[p.uid]?.isTrusted && <div className="absolute -top-1 -left-1 bg-yellow-500 rounded-full p-1 shadow-[0_0_10px_rgba(234,179,8,0.5)]"><Star size={10} className="fill-white text-white" /></div>}
+                                                            {isPeerSelected && <div className="absolute -top-1 -right-1 bg-indigo-500 rounded-full p-1"><Check size={10} /></div>}
+                                                            {celebrations.some(c => c.peerId === p.uid) && <div className="celebration-ring inset-0" />}
+                                                            {isActive && transfer?.status === 'sending' && (
+                                                                <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex-col gap-1">
+                                                                    <div className="flex gap-2">
+                                                                        <button onClick={(e) => { e.stopPropagation(); isPaused ? setPausedPeers(prev => prev.filter(id => id !== p.uid)) : setPausedPeers(prev => [...prev, p.uid]); }} className="p-1 hover:text-indigo-400">{isPaused ? <Play size={16} fill="currentColor" /> : <Pause size={16} fill="currentColor" />}</button>
+                                                                        <button onClick={(e) => { e.stopPropagation(); setCancelledPeers(prev => [...prev, p.uid]); }} className="p-1 hover:text-red-400"><X size={16} /></button>
+                                                                    </div>
+                                                                </div>
+                                                            )}
                                                         </div>
-                                                    )}
-
-                                                    {peerCustomizations[p.uid]?.isTrusted && <div className="absolute -top-1 -left-1 bg-yellow-500 rounded-full p-1 shadow-[0_0_10px_rgba(234,179,8,0.5)]"><Star size={10} className="fill-white text-white" /></div>}
-                                                    {isPeerSelected && <div className="absolute -top-1 -right-1 bg-indigo-500 rounded-full p-1"><Check size={10} /></div>}
-                                                    {celebrations.some(c => c.peerId === p.uid) && <div className="celebration-ring inset-0" />}
-
-                                                    {isActive && transfer?.status === 'sending' && (
-                                                        <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex-col gap-1">
-                                                            <div className="flex gap-2">
-                                                                <button onClick={(e) => { e.stopPropagation(); isPaused ? setPausedPeers(prev => prev.filter(id => id !== p.uid)) : setPausedPeers(prev => [...prev, p.uid]); }} className="p-1 hover:text-indigo-400">
-                                                                    {isPaused ? <Play size={16} fill="currentColor" /> : <Pause size={16} fill="currentColor" />}
-                                                                </button>
-                                                                <button onClick={(e) => { e.stopPropagation(); setCancelledPeers(prev => [...prev, p.uid]); }} className="p-1 hover:text-red-400">
-                                                                    <X size={16} />
-                                                                </button>
+                                                        <div className="absolute top-20 left-1/2 -translate-x-1/2 whitespace-nowrap flex flex-col items-center gap-1">
+                                                            <div className={`bg-black/40 backdrop-blur-md pl-3 pr-1 py-1 rounded-full text-xs font-medium border flex items-center gap-2 ${isPeerSelected ? 'border-[var(--accent-primary)] text-[var(--accent-primary)]' : 'border-white/10'}`}>
+                                                                <div className="flex items-center">{peerCustomizations[p.uid]?.nickname || p.name} {transfer?.speed && `· ${transfer.speed}MB/s`}{transfer?.speedHistory && <Sparkline data={transfer.speedHistory} />}</div>
+                                                                <button onClick={(e) => { e.stopPropagation(); setSelectedPeerDetails(p); }} className="p-1 hover:bg-white/10 rounded-full transition-colors"><MoreVertical size={14} /></button>
                                                             </div>
+                                                            {transfer?.status === 'sending' && transfer.total > 1 && <div className="text-[10px] bg-indigo-600/50 px-2 py-0.5 rounded-full border border-indigo-400/30 flex flex-col items-center"><span>Batch: {transfer.current}/{transfer.total}</span><span className="truncate max-w-[100px] opacity-70">{transfer.currentFile}</span></div>}
+                                                            {transfer?.status === 'receiving' && <div className="text-[10px] bg-green-600/50 px-2 py-0.5 rounded-full border border-green-400/30">Receiving: {transfer.currentFile}</div>}
                                                         </div>
-                                                    )}
-                                                </div>
-                                                <div className="absolute top-20 left-1/2 -translate-x-1/2 whitespace-nowrap flex flex-col items-center gap-1">
-                                                    <div className={`bg-black/40 backdrop-blur-md pl-3 pr-1 py-1 rounded-full text-xs font-medium border flex items-center gap-2 ${isPeerSelected ? 'border-[var(--accent-primary)] text-[var(--accent-primary)]' : 'border-white/10'}`}>
-                                                        <div className="flex items-center">
-                                                            {peerCustomizations[p.uid]?.nickname || p.name} {transfer?.speed && `· ${transfer.speed}MB/s`}
-                                                            {transfer?.speedHistory && <Sparkline data={transfer.speedHistory} />}
-                                                        </div>
-                                                        <button onClick={(e) => { e.stopPropagation(); setSelectedPeerDetails(p); }} className="p-1 hover:bg-white/10 rounded-full transition-colors">
-                                                            <MoreVertical size={14} />
-                                                        </button>
                                                     </div>
-                                                    {transfer?.status === 'sending' && transfer.total > 1 && (
-                                                        <div className="text-[10px] bg-indigo-600/50 px-2 py-0.5 rounded-full border border-indigo-400/30">
-                                                            {transfer.current}/{transfer.total}: {transfer.currentFile}
-                                                        </div>
-                                                    )}
-                                                    {transfer?.status === 'receiving' && (
-                                                        <div className="text-[10px] bg-green-600/50 px-2 py-0.5 rounded-full border border-green-400/30">
-                                                            Receiving: {transfer.currentFile}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                            </React.Fragment>
-                                        );
+                                                </React.Fragment>
+                                            );
                                         })}
                                     </div>
                                 </div>
                                 <div className={`w-full max-w-md glass-panel p-6 md:p-8 rounded-[2.5rem] transition-all duration-300 relative overflow-hidden group ${dragActive ? 'scale-105 drop-glow ring-4 ring-indigo-500/20' : ''}`}>
                                     {selectedFiles.length === 0 ? (
                                         <div className="text-center relative">
-                                            <div className="w-12 h-12 md:w-16 md:h-16 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-indigo-500/20 transition-colors">
-                                                <UploadCloud className="text-indigo-400" />
-                                            </div>
-                                            <div className="text-lg font-bold mb-1">Ready to share?</div>
-                                            <div className="text-sm opacity-50 mb-4">Drag files here or</div>
+                                            <div className="w-12 h-12 md:w-16 md:h-16 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-indigo-500/20 transition-colors"><UploadCloud className="text-indigo-400" /></div>
+                                            <div className="text-lg font-bold mb-1">Ready to share?</div><div className="text-sm opacity-50 mb-4">Drag files here or</div>
                                             <div className="flex justify-center gap-3">
-                                                <div className="relative inline-block">
-                                                    <button className="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-lg shadow-indigo-500/20">Select Files</button>
-                                                    <input type="file" multiple className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" onChange={e => setSelectedFiles(Array.from(e.target.files).map(f => ({file: f, id: Math.random()}))) } />
-                                                </div>
-                                                <div className="relative inline-block">
-                                                    <button className="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl text-xs font-bold transition-all">Select Folder</button>
-                                                    <input type="file" webkitdirectory="true" directory="true" className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" onChange={async (e) => {
-                                                        const files = Array.from(e.target.files);
-                                                        if (files.length === 0) return;
-
-                                                        const folderName = files[0].webkitRelativePath.split('/')[0] || 'folder';
-                                                        showToast("Zipping folder...");
-
-                                                        const zip = new JSZip();
-                                                        files.forEach(f => {
-                                                            zip.file(f.webkitRelativePath, f);
-                                                        });
-
-                                                        const content = await zip.generateAsync({type:"blob"});
-                                                        const zippedFile = new File([content], `${folderName}.zip`, {type: "application/zip"});
-                                                        setSelectedFiles([{file: zippedFile, id: Math.random()}]);
-                                                        showToast("Folder ready to send");
-                                                    }} />
-                                                </div>
+                                                <div className="relative inline-block"><button className="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-lg shadow-indigo-500/20">Select Files</button><input type="file" multiple className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" onChange={e => setSelectedFiles(Array.from(e.target.files).map(f => ({file: f, id: Math.random()}))) } /></div>
+                                                <div className="relative inline-block"><button className="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl text-xs font-bold transition-all">Select Folder</button><input type="file" webkitdirectory="true" directory="true" className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" onChange={async (e) => {
+                                                    const files = Array.from(e.target.files); if (files.length === 0) return;
+                                                    const folderName = files[0].webkitRelativePath.split('/')[0] || 'folder'; showToast("Zipping folder...");
+                                                    const zip = new JSZip(); files.forEach(f => { zip.file(f.webkitRelativePath, f); });
+                                                    const content = await zip.generateAsync({type:"blob"});
+                                                    const zippedFile = new File([content], `${folderName}.zip`, {type: "application/zip"});
+                                                    setSelectedFiles([{file: zippedFile, id: Math.random()}]); showToast("Folder ready to send");
+                                                }} /></div>
                                             </div>
                                         </div>
                                     ) : (
                                         <div className="flex flex-col gap-3">
-                                            <div className="flex justify-between items-center mb-2">
-                                                <div className="text-xs font-bold uppercase tracking-widest opacity-40">Queue ({selectedFiles.length})</div>
-                                                <button onClick={() => setSelectedFiles([])} className="text-xs text-red-400 hover:underline">Clear</button>
-                                            </div>
+                                            <div className="flex justify-between items-center mb-2"><div className="text-xs font-bold uppercase tracking-widest opacity-40">Queue ({selectedFiles.length})</div><button onClick={() => setSelectedFiles([])} className="text-xs text-red-400 hover:underline">Clear</button></div>
                                             <div className="max-h-48 overflow-y-auto no-scrollbar flex flex-col gap-2">
                                                 {selectedFiles.map(f => (
                                                     <div key={f.id} className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/5 cursor-pointer hover:bg-white/10 transition-colors" onClick={() => setSelectedPreview(f.file)}>
-                                                        <div className="w-10 h-10 rounded-lg bg-indigo-500/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                                                            <FilePreview file={f.file} />
-                                                        </div>
-                                                        <div className="flex-1 min-w-0">
-                                                            <div className="text-sm font-medium truncate">{f.file.name}</div>
-                                                            <div className="text-[10px] opacity-40 uppercase">{formatSize(f.file.size)}</div>
-                                                        </div>
+                                                        <div className="w-10 h-10 rounded-lg bg-indigo-500/20 flex items-center justify-center flex-shrink-0 overflow-hidden"><FilePreview file={f.file} /></div>
+                                                        <div className="flex-1 min-w-0"><div className="text-sm font-medium truncate">{f.file.name}</div><div className="text-[10px] opacity-40 uppercase">{formatSize(f.file.size)}</div></div>
                                                     </div>
                                                 ))}
                                             </div>
-                                            <button className={`mt-4 w-full py-3 rounded-2xl font-bold transition-all ${selectedPeers.length > 0 ? 'bg-indigo-600 hover:bg-indigo-500' : 'bg-white/5 opacity-50 cursor-not-allowed'}`} disabled={selectedPeers.length === 0} onClick={() => {
-                                                selectedPeers.forEach(peerId => { sendSignal(peerId, 'transfer_request', {files: selectedFiles.map(f => f.file.name)}); });
-                                                showToast(`Requests sent...`);
-                                                setSelectedPeers([]);
-                                            }}>SEND TO {selectedPeers.length} DEVICE{selectedPeers.length !== 1 ? 'S' : ''}</button>
+                                            <button className={`mt-4 w-full py-3 rounded-2xl font-bold transition-all ${selectedPeers.length > 0 ? 'bg-indigo-600 hover:bg-indigo-500' : 'bg-white/5 opacity-50 cursor-not-allowed'}`} disabled={selectedPeers.length === 0} onClick={() => { selectedPeers.forEach(peerId => { sendSignal(peerId, 'transfer_request', {files: selectedFiles.map(f => f.file.name)}); }); showToast(`Requests sent...`); setSelectedPeers([]); }}>SEND TO {selectedPeers.length} DEVICE{selectedPeers.length !== 1 ? 'S' : ''}</button>
                                         </div>
                                     )}
                                 </div>
                             </>
                         )}
-
                         {activeTab === 'history' && (
                             <div className="w-full max-w-2xl h-full flex flex-col py-4">
-                                <div className="flex justify-between items-center mb-6">
-                                    <h2 className="text-2xl font-bold flex items-center gap-3"><LucideHistory className="text-indigo-400" /> History</h2>
-                                    <button onClick={() => setActiveTab('radar')} className="glass-button px-4 py-2 rounded-xl text-sm font-bold">Back</button>
-                                </div>
+                                <div className="flex justify-between items-center mb-6"><h2 className="text-2xl font-bold flex items-center gap-3"><LucideHistory className="text-indigo-400" /> History</h2><button onClick={() => setActiveTab('radar')} className="glass-button px-4 py-2 rounded-xl text-sm font-bold">Back</button></div>
                                 <div className="flex-1 overflow-y-auto pr-2 no-scrollbar flex flex-col gap-3">
-                                    {history.length === 0 ? (
-                                        <div className="h-full flex flex-col items-center justify-center opacity-30"><File size={64} className="mb-4" /><p>No transfers yet</p></div>
-                                    ) : (
+                                    {history.length === 0 ? (<div className="h-full flex flex-col items-center justify-center opacity-30"><File size={64} className="mb-4" /><p>No transfers yet</p></div>) : (
                                         history.map(item => (
                                             <div key={item.id} className="glass-panel p-4 rounded-2xl flex items-center gap-4 group">
-                                                <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center relative">
-                                                    {item.type?.startsWith('image/') ? <ImageIcon /> : item.type?.startsWith('video/') ? <Video /> : <File />}
-                                                    <div className={`absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[8px] ${item.status === 'received' ? 'bg-green-500' : 'bg-blue-500'}`}>
-                                                        {item.status === 'received' ? <Download size={8} /> : <UploadCloud size={8} />}
-                                                    </div>
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="font-bold truncate text-sm">{item.name}</div>
-                                                    <div className="text-xs opacity-50">{formatSize(item.size)} • {item.sender} • {new Date(item.timestamp).toLocaleTimeString()}</div>
-                                                </div>
+                                                <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center relative">{item.type?.startsWith('image/') ? <ImageIcon /> : item.type?.startsWith('video/') ? <Video /> : <File />}<div className={`absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[8px] ${item.status === 'received' ? 'bg-green-500' : 'bg-blue-500'}`}>{item.status === 'received' ? <Download size={8} /> : <UploadCloud size={8} />}</div></div>
+                                                <div className="flex-1 min-w-0"><div className="font-bold truncate text-sm">{item.name}</div><div className="text-xs opacity-50">{formatSize(item.size)} • {item.sender} • {new Date(item.timestamp).toLocaleTimeString()}</div></div>
                                                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    {item.status === 'received' && item.fileId && (
-                                                        <a href={`/api/download/${item.fileId}`} download={item.name} className="p-3 bg-white/5 rounded-xl hover:bg-indigo-500/20">
-                                                            <Download size={18} className="text-indigo-400" />
-                                                        </a>
-                                                    )}
+                                                    {item.status === 'sent' && item.fileId && (<button onClick={() => { if (selectedPeers.length === 0) { showToast("Select peers on Radar first", "info"); setActiveTab('radar'); return; } selectedPeers.forEach(peerId => { sendSignal(peerId, 'file_available', { file_id: item.fileId, name: item.name, size: item.size, type: item.type }); }); showToast(`Sent to ${selectedPeers.length} peer(s)`); }} className="p-3 bg-white/5 rounded-xl hover:bg-indigo-500/20"><RefreshCcw size={18} className="text-indigo-400" /></button>)}
+                                                    {item.status === 'received' && item.fileId && (<a href={`/api/download/${item.fileId}`} download={item.name} className="p-3 bg-white/5 rounded-xl hover:bg-indigo-500/20"><Download size={18} className="text-indigo-400" /></a>)}
                                                     <button onClick={() => db.history.delete(item.id).then(loadHistory)} className="p-3 bg-white/5 rounded-xl hover:bg-red-500/20"><Trash2 size={18} className="text-red-400" /></button>
                                                 </div>
                                             </div>
@@ -937,78 +731,43 @@ HTML_TEMPLATE = """
                                 </div>
                             </div>
                         )}
-
                         {activeTab === 'settings' && (
                             <div className="w-full max-w-md py-4">
-                                <div className="flex justify-between items-center mb-8">
-                                    <h2 className="text-2xl font-bold flex items-center gap-3"><Settings className="text-indigo-400" /> Settings</h2>
-                                    <button onClick={() => setActiveTab('radar')} className="glass-button px-4 py-2 rounded-xl text-sm font-bold">Done</button>
-                                </div>
+                                <div className="flex justify-between items-center mb-8"><h2 className="text-2xl font-bold flex items-center gap-3"><Settings className="text-indigo-400" /> Settings</h2><button onClick={() => setActiveTab('radar')} className="glass-button px-4 py-2 rounded-xl text-sm font-bold">Done</button></div>
                                 <div className="space-y-6">
-                                    <div className="glass-panel p-6 rounded-3xl">
-                                        <label className="block text-xs font-bold uppercase opacity-40 mb-3 tracking-widest">Device Name</label>
-                                        <input type="text" className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 outline-none focus:border-indigo-500 transition-colors" value={myDevice.name} onChange={e => { setMyDevice({...myDevice, name: e.target.value}); localStorage.setItem('deviceName', e.target.value); }} />
-                                    </div>
+                                    <div className="glass-panel p-6 rounded-3xl"><label className="block text-xs font-bold uppercase opacity-40 mb-3 tracking-widest">Device Name</label><input type="text" className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 outline-none focus:border-indigo-500 transition-colors" value={myDevice.name} onChange={e => { setMyDevice({...myDevice, name: e.target.value}); localStorage.setItem('deviceName', e.target.value); }} /></div>
                                     <div className="glass-panel p-6 rounded-3xl">
                                         <label className="block text-xs font-bold uppercase opacity-40 mb-4 tracking-widest">Security Mode</label>
                                         <div className="flex gap-2">
                                             <button className={`flex-1 py-4 rounded-2xl flex flex-col items-center gap-2 transition-all ${securityMode === 'approval' ? 'bg-indigo-600 shadow-lg shadow-indigo-500/20' : 'bg-white/5'}`} onClick={() => {setSecurityMode('approval'); localStorage.setItem('securityMode', 'approval')}}><ShieldCheck size={24} /><span className="text-sm font-bold">Approval</span></button>
                                             <button className={`flex-1 py-4 rounded-2xl flex flex-col items-center gap-2 transition-all ${securityMode === 'pin' ? 'bg-indigo-600 shadow-lg shadow-indigo-500/20' : 'bg-white/5'}`} onClick={() => {setSecurityMode('pin'); localStorage.setItem('securityMode', 'pin')}}><Lock size={24} /><span className="text-sm font-bold">PIN Code</span></button>
                                         </div>
-                                        {securityMode === 'pin' && (
-                                            <div className="mt-4 animate-in fade-in slide-in-from-top-2">
-                                                <input type="text" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-center font-mono tracking-widest outline-none focus:border-indigo-500" value={pin} maxLength={4} onChange={e => { const v = e.target.value.replace(/[^0-9]/g, ''); setPin(v); localStorage.setItem('securityPin', v); }} />
-                                            </div>
-                                        )}
+                                        {securityMode === 'pin' && (<div className="mt-4 animate-in fade-in slide-in-from-top-2"><input type="text" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-center font-mono tracking-widest outline-none focus:border-indigo-500" value={pin} maxLength={4} onChange={e => { const v = e.target.value.replace(/[^0-9]/g, ''); setPin(v); localStorage.setItem('securityPin', v); }} /></div>)}
                                     </div>
-                                    <div className="glass-panel p-6 rounded-3xl">
-                                        <label className="block text-xs font-bold uppercase opacity-40 mb-3 tracking-widest">Theme</label>
-                                        <div className="flex gap-2">
-                                            {['default', 'neon', 'light'].map(t => (
-                                                <button key={t} className={`flex-1 py-3 rounded-xl text-xs font-bold capitalize transition-all ${theme === t ? 'bg-indigo-600 shadow-lg' : 'bg-white/5 hover:bg-white/10'}`} onClick={() => setTheme(t)}>{t}</button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                    <div className="glass-panel p-6 rounded-3xl flex items-center gap-4 border-indigo-500/30">
-                                        <Info className="text-[var(--accent-primary)]" />
-                                        <div className="text-xs opacity-60">HTTP Mode: Browser security may limit some PWA features.</div>
-                                    </div>
+                                    <div className="glass-panel p-6 rounded-3xl"><label className="block text-xs font-bold uppercase opacity-40 mb-3 tracking-widest">Theme</label><div className="flex gap-2">{['default', 'neon', 'light'].map(t => (<button key={t} className={`flex-1 py-3 rounded-xl text-xs font-bold capitalize transition-all ${theme === t ? 'bg-indigo-600 shadow-lg' : 'bg-white/5 hover:bg-white/10'}`} onClick={() => setTheme(t)}>{t}</button>))}</div></div>
+                                    <div className="glass-panel p-6 rounded-3xl flex items-center gap-4 border-indigo-500/30"><Info className="text-[var(--accent-primary)]" /><div className="text-xs opacity-60">HTTP Mode: Browser security may limit some PWA features.</div></div>
                                 </div>
                             </div>
                         )}
                     </main>
-
                     <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-[200] flex flex-col gap-3 w-full max-w-xs pointer-events-none">
                         {toasts.map(t => (
                             <div key={t.id} className="glass-panel px-6 py-4 rounded-[1.5rem] flex items-center gap-4 animate-in slide-in-from-bottom-8 fade-in duration-500 pointer-events-auto shadow-2xl">
-                                <div className={`w-3 h-3 rounded-full ${t.type === 'error' ? 'bg-red-500 shadow-[0_0_12px_rgba(239,68,68,0.5)]' : 'bg-indigo-500 shadow-[0_0_12px_rgba(99,102,241,0.5)]'}`} />
-                                <span className="text-sm font-bold tracking-tight">{t.message}</span>
+                                <div className={`w-3 h-3 rounded-full ${t.type === 'error' ? 'bg-red-500 shadow-[0_0_12px_rgba(239,68,68,0.5)]' : 'bg-indigo-500 shadow-[0_0_12px_rgba(99,102,241,0.5)]'}`} /><span className="text-sm font-bold tracking-tight">{t.message}</span>
                             </div>
                         ))}
                     </div>
-
                     {showQR && <QRCodeModal />}
                     {showPinEntry && <PinModal />}
                     {selectedPreview && (
                         <div className="fixed inset-0 bg-black/90 backdrop-blur-xl flex items-center justify-center z-[150]" onClick={() => setSelectedPreview(null)}>
                             <div className="w-full max-w-lg aspect-video glass-panel p-4 rounded-[2.5rem]" onClick={e => e.stopPropagation()}>
-                                <div className="flex justify-between items-center mb-4 px-2">
-                                    <h3 className="font-bold truncate max-w-[200px]">{selectedPreview.name}</h3>
-                                    <button onClick={() => setSelectedPreview(null)} className="p-2 hover:bg-white/10 rounded-full transition-colors"><X size={20}/></button>
-                                </div>
-                                <div className="w-full h-[calc(100%-3rem)] rounded-2xl overflow-hidden bg-black/20">
-                                    <FilePreview file={selectedPreview} full={true} />
-                                </div>
+                                <div className="flex justify-between items-center mb-4 px-2"><h3 className="font-bold truncate max-w-[200px]">{selectedPreview.name}</h3><button onClick={() => setSelectedPreview(null)} className="p-2 hover:bg-white/10 rounded-full transition-colors"><X size={20}/></button></div>
+                                <div className="w-full h-[calc(100%-3rem)] rounded-2xl overflow-hidden bg-black/20"><FilePreview file={selectedPreview} full={true} /></div>
                             </div>
                         </div>
                     )}
-                    {selectedPeerDetails && (
-                        <PeerDetailsModal
-                            peer={selectedPeerDetails}
-                            custom={peerCustomizations[selectedPeerDetails.uid]}
-                            onClose={() => setSelectedPeerDetails(null)}
-                        />
-                    )}
+                    {selectedPeerDetails && <PeerDetailsModal peer={selectedPeerDetails} custom={peerCustomizations[selectedPeerDetails.uid]} onClose={() => setSelectedPeerDetails(null)} />}
                     {incomingRequests.map(req => (
                         <div key={req.id} className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[100]">
                             <div className="glass-panel p-10 rounded-[2.5rem] max-w-xs w-full text-center">
@@ -1025,13 +784,8 @@ HTML_TEMPLATE = """
                 </div>
             );
         }
-
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js');
-        }
+        const root = ReactDOM.createRoot(document.getElementById('root')); root.render(<App />);
+        if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js'); }
     </script>
 </body>
 </html>
@@ -1084,6 +838,7 @@ def service_worker():
         'https://unpkg.com/dexie/dist/dexie.js',
         'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
         'https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js',
+        'https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js',
         'https://raw.githubusercontent.com/lucide-react/lucide/main/icons/zap.png'
     ];
 
@@ -1110,26 +865,46 @@ def service_worker():
     """
     return sw_code, 200, {'Content-Type': 'application/javascript'}
 
+@app.route('/api/events/<uid>')
+def events(uid):
+    def stream():
+        q = []
+        with state_lock:
+            state["clients"][uid] = q
+
+        while True:
+            if q:
+                with state_lock:
+                    msg = q.pop(0)
+                yield f"data: {json.dumps(msg)}\n\n"
+            else:
+                time.sleep(0.5)
+                yield f"data: {json.dumps({'type': 'heartbeat'})}\n\n"
+
+    return Response(stream(), mimetype='text/event-stream')
+
 @app.route('/api/sync', methods=['POST'])
 def sync():
     data = request.json
     device = data.get('device')
     uid = device.get('uid')
     now = time.time()
+
     with state_lock:
         state["devices"][uid] = {**device, "last_seen": now}
         state["devices"] = {k: v for k, v in state["devices"].items() if now - v["last_seen"] < 10}
-        state["signals"] = [s for s in state["signals"] if now - s.get("timestamp", 0) < 30]
-        my_signals = [s for s in state["signals"] if s["target"] == uid]
-        state["signals"] = [s for s in state["signals"] if s["target"] != uid]
-    return jsonify({ "devices": state["devices"], "signals": my_signals })
+        for client_id, q in state["clients"].items():
+            q.append({"type": "sync", "devices": state["devices"]})
+
+    return jsonify({"status": "ok"})
 
 @app.route('/api/signal', methods=['POST'])
 def signal():
     signal_data = request.json
-    signal_data["timestamp"] = time.time()
+    target = signal_data.get('target')
     with state_lock:
-        state["signals"].append(signal_data)
+        if target in state["clients"]:
+            state["clients"][target].append(signal_data)
     return jsonify({"status": "ok"})
 
 @app.route('/api/upload', methods=['POST'])
@@ -1147,16 +922,13 @@ def upload_file():
     temp_filename = f"{file_id}_{safe_name}.part"
     filepath = os.path.join(UPLOAD_FOLDER, temp_filename)
 
-    # Append chunk to file
     mode = "ab" if chunk_index > 0 else "wb"
     with open(filepath, mode) as f:
         f.write(file.read())
 
     if chunk_index + 1 == total_chunks:
-        # Finalize file
         final_filename = f"{file_id}_{safe_name}"
         final_path = os.path.join(UPLOAD_FOLDER, final_filename)
-        # Handle case where final file might already exist (shouldn't happen with UUID but good practice)
         if os.path.exists(final_path):
             os.remove(final_path)
         os.rename(filepath, final_path)
@@ -1177,14 +949,11 @@ def cancel_upload():
     filename = data.get('filename')
     if not file_id or not filename:
         return jsonify({"error": "Missing data"}), 400
-
     safe_name = secure_filename(filename)
     temp_filename = f"{file_id}_{safe_name}.part"
     filepath = os.path.join(UPLOAD_FOLDER, temp_filename)
-
     if os.path.exists(filepath):
         os.remove(filepath)
-
     return jsonify({"status": "cancelled"})
 
 @app.route('/api/download/<file_id>')
@@ -1193,12 +962,9 @@ def download_file(file_id):
         file_meta = state["files"].get(file_id)
     if not file_meta:
         return "File not found", 404
-
     return send_from_directory(UPLOAD_FOLDER, file_meta["internal_path"], as_attachment=True, download_name=file_meta["filename"])
 
 if __name__ == '__main__':
-    # Start cleanup thread
     threading.Thread(target=cleanup_uploads, daemon=True).start()
-
     print(f"AirShare Py running at http://{LOCAL_IP}:{PORT}")
-    app.run(host='0.0.0.0', port=PORT, debug=True)
+    app.run(host='0.0.0.0', port=PORT, debug=True, threaded=True)
