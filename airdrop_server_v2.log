@@ -1,0 +1,42 @@
+AirShare Py running at http://192.168.0.2:5000
+ * Serving Flask app 'app'
+ * Debug mode: on
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.0.2:5000
+[33mPress CTRL+C to quit[0m
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 101-566-456
+127.0.0.1 - - [08/Mar/2026 15:58:40] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Mar/2026 15:58:42] "GET /sw.js HTTP/1.1" 200 -
+127.0.0.1 - - [08/Mar/2026 15:58:42] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Mar/2026 15:58:43] "GET /api/config HTTP/1.1" 200 -
+127.0.0.1 - - [08/Mar/2026 15:58:43] "GET /api/events/52hkaz1uz HTTP/1.1" 200 -
+127.0.0.1 - - [08/Mar/2026 15:58:43] "GET /api/events/52hkaz1uz HTTP/1.1" 200 -
+127.0.0.1 - - [08/Mar/2026 15:58:46] "POST /api/sync HTTP/1.1" 200 -
+127.0.0.1 - - [08/Mar/2026 15:58:46] "GET /api/events/52hkaz1uz HTTP/1.1" 200 -
+127.0.0.1 - - [08/Mar/2026 15:58:49] "POST /api/sync HTTP/1.1" 200 -
+127.0.0.1 - - [08/Mar/2026 15:58:50] "GET /api/events/52hkaz1uz HTTP/1.1" 200 -
+127.0.0.1 - - [08/Mar/2026 15:58:52] "POST /api/sync HTTP/1.1" 200 -
+127.0.0.1 - - [08/Mar/2026 15:58:53] "GET /api/events/52hkaz1uz HTTP/1.1" 200 -
+127.0.0.1 - - [08/Mar/2026 15:58:55] "POST /api/sync HTTP/1.1" 200 -
+127.0.0.1 - - [08/Mar/2026 15:58:56] "GET /api/events/52hkaz1uz HTTP/1.1" 200 -
+127.0.0.1 - - [08/Mar/2026 15:58:58] "POST /api/sync HTTP/1.1" 200 -
+127.0.0.1 - - [08/Mar/2026 15:58:59] "GET /api/events/52hkaz1uz HTTP/1.1" 200 -
+127.0.0.1 - - [08/Mar/2026 15:59:01] "POST /api/sync HTTP/1.1" 200 -
+127.0.0.1 - - [08/Mar/2026 15:59:02] "GET /api/events/52hkaz1uz HTTP/1.1" 200 -
+127.0.0.1 - - [08/Mar/2026 15:59:04] "POST /api/sync HTTP/1.1" 200 -
+127.0.0.1 - - [08/Mar/2026 15:59:05] "GET /api/events/52hkaz1uz HTTP/1.1" 200 -
+127.0.0.1 - - [08/Mar/2026 15:59:07] "POST /api/sync HTTP/1.1" 200 -
+127.0.0.1 - - [08/Mar/2026 15:59:08] "GET /api/events/52hkaz1uz HTTP/1.1" 200 -
+127.0.0.1 - - [08/Mar/2026 15:59:10] "POST /api/sync HTTP/1.1" 200 -
+127.0.0.1 - - [08/Mar/2026 15:59:11] "GET /api/events/52hkaz1uz HTTP/1.1" 200 -
+127.0.0.1 - - [08/Mar/2026 15:59:13] "POST /api/sync HTTP/1.1" 200 -
+127.0.0.1 - - [08/Mar/2026 15:59:14] "GET /api/events/52hkaz1uz HTTP/1.1" 200 -
+ * Detected change in '/app/app.py', reloading
+AirShare Py running at http://192.168.0.2:5000
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 101-566-456

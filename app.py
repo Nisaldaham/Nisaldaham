@@ -87,80 +87,79 @@ HTML_TEMPLATE = """
     <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/lucide-react/lucide/main/icons/zap.png">
     <style>
         :root {
-            --accent-primary: #6366f1;
-            --accent-glow: rgba(99, 102, 241, 0.4);
-            --bg-gradient: radial-gradient(circle at 50% 50%, #1e1b4b 0%, #0f172a 100%);
+            --accent-primary: #007aff;
+            --accent-glow: rgba(0, 122, 255, 0.3);
+            --bg-color: #000000;
             --text-color: #ffffff;
-            --panel-bg: rgba(255, 255, 255, 0.05);
-            --panel-border: rgba(255, 255, 255, 0.1);
-        }
-        body.theme-neon {
-            --accent-primary: #00ffcc;
-            --accent-glow: rgba(0, 255, 204, 0.4);
-            --bg-gradient: radial-gradient(circle at 50% 50%, #00120f 0%, #000000 100%);
+            --panel-bg: rgba(30, 30, 30, 0.6);
+            --panel-border: rgba(255, 255, 255, 0.15);
+            --glass-blur: blur(40px);
+            --card-radius: 2rem;
         }
         body.theme-light {
-            --accent-primary: #3b82f6;
-            --accent-glow: rgba(59, 130, 246, 0.2);
-            --bg-gradient: radial-gradient(circle at 50% 50%, #f0f9ff 0%, #e0f2fe 100%);
-            --text-color: #1e293b;
+            --accent-primary: #007aff;
+            --accent-glow: rgba(0, 122, 255, 0.2);
+            --bg-color: #f2f2f7;
+            --text-color: #000000;
             --panel-bg: rgba(255, 255, 255, 0.7);
-            --panel-border: rgba(0, 0, 0, 0.05);
+            --panel-border: rgba(0, 0, 0, 0.08);
         }
-        @keyframes radar {
-            0% { transform: scale(0.2); opacity: 1; }
-            100% { transform: scale(3.5); opacity: 0; }
+        @keyframes float {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-20px) scale(1.05); }
         }
-        .radar-ring {
-            position: absolute; border-radius: 50%; border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 0 20px rgba(255, 255, 255, 0.05) inset; animation: radar 4s linear infinite;
+        .liquid-bg {
+            position: fixed; inset: 0; z-index: -1; overflow: hidden; background: var(--bg-color);
         }
-        .theme-light .radar-ring { border-color: rgba(0, 0, 0, 0.1); }
-        .theme-light .ambient-glow { box-shadow: 0 0 15px rgba(59, 130, 246, 0.1); }
-        .radar-ring:nth-child(1) { animation-delay: 0s; }
-        .radar-ring:nth-child(2) { animation-delay: 1.33s; }
-        .radar-ring:nth-child(3) { animation-delay: 2.66s; }
+        .blob {
+            position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.4;
+            animation: float 20s ease-in-out infinite;
+        }
+        .blob-1 { width: 600px; height: 600px; background: #5856d6; top: -10%; left: -10%; animation-delay: 0s; }
+        .blob-2 { width: 500px; height: 500px; background: #007aff; bottom: -5%; right: -5%; animation-delay: -5s; }
+        .blob-3 { width: 400px; height: 400px; background: #af52de; top: 40%; left: 30%; animation-delay: -10s; }
+
+        @keyframes radar-pulse {
+            0% { transform: scale(0.6); opacity: 0.6; stroke-width: 1px; }
+            100% { transform: scale(2.5); opacity: 0; stroke-width: 0.5px; }
+        }
+        .radar-circle {
+            fill: none; stroke: var(--text-color); opacity: 0.1;
+            transform-origin: center; animation: radar-pulse 6s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+            pointer-events: none;
+        }
+        .radar-circle:nth-child(2) { animation-delay: 2s; }
+        .radar-circle:nth-child(3) { animation-delay: 4s; }
+
         .glass-panel {
             background: var(--panel-bg);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            border: 1px solid var(--panel-border);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border: 0.5px solid var(--panel-border);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
         }
         .glass-button {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            border: 0.5px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .theme-light .glass-button { background: rgba(0, 0, 0, 0.05); border-color: rgba(0, 0, 0, 0.1); }
-        .glass-button:hover {
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-        }
-        @keyframes flow-glow {
-            0% { transform: translateY(-100%) rotate(0deg); opacity: 0; }
-            50% { opacity: 0.5; }
-            100% { transform: translateY(100%) rotate(180deg); opacity: 0; }
-        }
+        .theme-light .glass-button { background: rgba(0, 0, 0, 0.04); border-color: rgba(0, 0, 0, 0.08); }
+        .glass-button:active { transform: scale(0.92); opacity: 0.8; }
+
         .drag-overlay {
-            background: rgba(99, 102, 241, 0.1);
-            backdrop-filter: blur(40px);
-            -webkit-backdrop-filter: blur(40px);
-            border: 4px dashed var(--accent-primary);
-        }
-        .drag-overlay::before {
-            content: ''; position: absolute; inset: -50%;
-            background: linear-gradient(45deg, transparent, var(--accent-glow), transparent);
-            animation: flow-glow 4s linear infinite;
+            background: rgba(0, 122, 255, 0.05);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 2px solid var(--accent-primary);
         }
         body {
-            background: var(--bg-gradient);
             min-height: 100vh;
             color: var(--text-color);
             overflow: hidden;
-            transition: background 0.5s ease, color 0.5s ease;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            transition: background 0.8s ease, color 0.8s ease;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
         }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -206,14 +205,14 @@ HTML_TEMPLATE = """
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useRef, useCallback } = React;
+        const { useState, useEffect, useRef, useCallback, useMemo } = React;
         const {
-            Monitor, Smartphone, Laptop, File, Check, X,
-            UploadCloud, Shield, Zap, Image: LucideImage,
+            File, Check, X, UploadCloud, Shield, Zap, Image: LucideImage,
             Video, Music, History: LucideHistory, Settings, QrCode,
             Download, Trash2, ShieldCheck, Lock, Info, Pause, Play,
             MoreVertical, User, Star, Battery, BatteryCharging, BatteryLow, BatteryMedium, BatteryWarning,
-            Copy, ExternalLink, Wifi, WifiOff, SignalHigh, SignalMedium, SignalLow, RefreshCcw
+            Copy, ExternalLink, Wifi, WifiOff, SignalHigh, SignalMedium, SignalLow, RefreshCcw,
+            ChevronRight, Share, Smartphone, Monitor, Laptop
         } = LucideReact;
 
         const ImageIcon = LucideImage;
@@ -501,9 +500,9 @@ HTML_TEMPLATE = """
 
             const SignalIcon = ({ rtt, size = 14 }) => {
                 if (rtt === undefined || rtt === null) return <WifiOff size={size} className="opacity-30" />;
-                if (rtt < 100) return <SignalHigh size={size} className="text-green-400" />;
-                if (rtt < 300) return <SignalMedium size={size} className="text-yellow-400" />;
-                return <SignalLow size={size} className="text-red-400" />;
+                if (rtt < 80) return <div className="flex items-end gap-[1px] h-3"><div className="w-[2px] h-[30%] bg-current opacity-100 rounded-sm"></div><div className="w-[2px] h-[60%] bg-current opacity-100 rounded-sm"></div><div className="w-[2px] h-[100%] bg-current opacity-100 rounded-sm"></div></div>;
+                if (rtt < 250) return <div className="flex items-end gap-[1px] h-3"><div className="w-[2px] h-[30%] bg-current opacity-100 rounded-sm"></div><div className="w-[2px] h-[60%] bg-current opacity-100 rounded-sm"></div><div className="w-[2px] h-[100%] bg-current opacity-30 rounded-sm"></div></div>;
+                return <div className="flex items-end gap-[1px] h-3"><div className="w-[2px] h-[30%] bg-current opacity-100 rounded-sm"></div><div className="w-[2px] h-[60%] bg-current opacity-30 rounded-sm"></div><div className="w-[2px] h-[100%] bg-current opacity-30 rounded-sm"></div></div>;
             };
 
             const BatteryIcon = ({ battery, size = 16, className = "" }) => {
@@ -523,13 +522,30 @@ HTML_TEMPLATE = """
             };
 
             const CircularProgress = ({ progress, size = 60 }) => {
-                const radius = (size / 2) - 4, circumference = radius * 2 * Math.PI, offset = circumference - (progress / 100) * circumference;
+                const radius = (size / 2) - 2, circumference = radius * 2 * Math.PI, offset = circumference - (progress / 100) * circumference;
                 return (
-                    <svg width={size} height={size} className="absolute -inset-2">
-                        <circle className="text-white/10" strokeWidth="4" stroke="currentColor" fill="transparent" r={radius} cx={size/2} cy={size/2} />
-                        <circle className="text-[var(--accent-primary)] circular-progress" strokeWidth="4" strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round" stroke="currentColor" fill="transparent" r={radius} cx={size/2} cy={size/2} />
+                    <svg width={size} height={size} className="absolute -inset-[2px]">
+                        <circle className="opacity-10" strokeWidth="2" stroke="currentColor" fill="transparent" r={radius} cx={size/2} cy={size/2} />
+                        <circle className="text-[var(--accent-primary)] circular-progress" strokeWidth="2" strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round" stroke="currentColor" fill="transparent" r={radius} cx={size/2} cy={size/2} />
                     </svg>
                 );
+            };
+
+            const DeviceSilhouette = ({ type, os, className }) => {
+                if (os === 'iOS' || type === 'mobile') return (
+                    <svg viewBox="0 0 40 80" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="1" y="1" width="38" height="78" rx="8" stroke="currentColor" strokeWidth="2"/>
+                        <rect x="14" y="4" width="12" height="2.5" rx="1.25" fill="currentColor" opacity="0.8"/>
+                    </svg>
+                );
+                if (os === 'macOS' || type === 'pc') return (
+                    <svg viewBox="0 0 80 60" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="5" y="5" width="70" height="42" rx="3" stroke="currentColor" strokeWidth="2"/>
+                        <path d="M5 47H75L78 52H2L5 47Z" stroke="currentColor" strokeWidth="2"/>
+                        <rect x="35" y="47" width="10" height="2" fill="currentColor" opacity="0.3"/>
+                    </svg>
+                );
+                return <Monitor className={className} />;
             };
 
             const PeerDetailsModal = ({ peer, custom, onClose }) => {
@@ -623,16 +639,22 @@ HTML_TEMPLATE = """
 
             return (
                 <div className="h-screen flex flex-col" onDragOver={e => {e.preventDefault(); setDragActive(true)}} onDragLeave={e => { if (e.clientX <= 0 || e.clientY <= 0 || e.clientX >= window.innerWidth || e.clientY >= window.innerHeight) setDragActive(false); }} onDrop={e => {e.preventDefault(); setDragActive(false); setSelectedFiles(Array.from(e.dataTransfer.files).map(f => ({file: f, id: Math.random()})))}}>
+                    <div className="liquid-bg">
+                        <div className="blob blob-1"></div><div className="blob blob-2"></div><div className="blob blob-3"></div>
+                    </div>
                     {dragActive && (
-                        <div className="fixed inset-4 z-[300] drag-overlay rounded-[3rem] flex flex-col items-center justify-center pointer-events-none animate-in fade-in zoom-in duration-300">
-                            <div className="p-8 bg-indigo-600 rounded-full shadow-2xl shadow-indigo-500/50 mb-8"><UploadCloud size={64} className="text-white" /></div>
-                            <h2 className="text-4xl font-black text-white mb-2">Drop to AirShare</h2>
-                            <p className="text-lg text-white/60">Release files anywhere to start sharing</p>
+                        <div className="fixed inset-4 z-[300] drag-overlay rounded-[3rem] flex flex-col items-center justify-center pointer-events-none animate-in fade-in zoom-in duration-500">
+                            <div className="w-24 h-24 bg-[var(--accent-primary)] rounded-full flex items-center justify-center shadow-2xl shadow-indigo-500/40 mb-8"><UploadCloud size={48} className="text-white" /></div>
+                            <h2 className="text-3xl font-bold mb-2">Share to AirShare</h2>
+                            <p className="text-lg opacity-60">Drop files to prepare</p>
                         </div>
                     )}
-                    <header className="px-8 py-6 flex justify-between items-center z-10">
-                        <div className="flex items-center gap-3"><div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/30"><Zap size={24} fill="white" /></div><h1 className="text-2xl font-black tracking-tight">AirShare Py</h1></div>
-                        <div className="flex gap-2">
+                    <header className="px-8 py-8 flex justify-between items-center z-10">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-[var(--accent-primary)] rounded-[10px] flex items-center justify-center shadow-lg"><Zap size={22} fill="white" stroke="white" /></div>
+                            <h1 className="text-2xl font-bold tracking-tight">AirShare</h1>
+                        </div>
+                        <div className="flex gap-3">
                             <button onClick={() => setShowQR(true)} className="glass-button p-3 rounded-full"><QrCode size={20}/></button>
                             <button onClick={() => setActiveTab('history')} className={`glass-button p-3 rounded-full ${activeTab === 'history' ? 'bg-white/20' : ''}`}><LucideHistory size={20}/></button>
                             <button onClick={() => setActiveTab('settings')} className={`glass-button p-3 rounded-full ${activeTab === 'settings' ? 'bg-white/20' : ''}`}><Settings size={20}/></button>
@@ -642,48 +664,51 @@ HTML_TEMPLATE = """
                         {activeTab === 'radar' && (
                             <>
                                 <div className="flex-1 flex items-center justify-center w-full min-h-0 relative">
-                                    <div className="relative w-full max-w-md lg:max-w-xl aspect-square flex items-center justify-center">
-                                        <div className="radar-ring w-32 h-32 md:w-48 md:h-48"></div><div className="radar-ring w-64 h-64 md:w-96 md:h-96"></div><div className="radar-ring w-96 h-96 md:w-[32rem] md:h-[32rem]"></div>
-                                        <div className="relative z-10 glass-panel p-6 md:p-8 rounded-full border-[var(--accent-primary)] border-2 shadow-2xl shadow-indigo-500/20 group">
-                                             {myDevice.type === 'pc' ? <Monitor size={48} className="text-[var(--accent-primary)]"/> : <Smartphone size={48} className="text-[var(--accent-primary)]"/>}
-                                             <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity"><BatteryIcon battery={myDevice.battery} size={12} /></div>
+                                    <div className="relative w-full max-w-lg aspect-square flex items-center justify-center">
+                                        <svg className="absolute w-full h-full pointer-events-none overflow-visible">
+                                            <circle cx="50%" cy="50%" r="20%" className="radar-circle" />
+                                            <circle cx="50%" cy="50%" r="40%" className="radar-circle" />
+                                            <circle cx="50%" cy="50%" r="60%" className="radar-circle" />
+                                        </svg>
+                                        <div className="relative z-10 glass-panel p-8 rounded-full border-white/20 shadow-2xl group active:scale-90 transition-all cursor-pointer overflow-hidden duration-300">
+                                             <DeviceSilhouette type={myDevice.type} os={myDevice.os} className="w-14 h-14 text-[var(--accent-primary)]" />
+                                             <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                                         </div>
                                         {peers.map((p, i) => {
-                                            const angle = (i * (360 / Math.max(peers.length, 1))) * (Math.PI / 180), radius = 180, x = Math.cos(angle) * radius, y = Math.sin(angle) * radius;
+                                            const angle = (i * (360 / Math.max(peers.length, 1)) - 90) * (Math.PI / 180), radius = 160, x = Math.cos(angle) * radius, y = Math.sin(angle) * radius;
                                             const transfer = transfers[p.uid], isActive = transfer?.status === 'sending' || transfer?.status === 'receiving', isPeerSelected = selectedPeers.includes(p.uid), isPaused = pausedPeers.includes(p.uid);
                                             return (
                                                 <React.Fragment key={p.uid}>
                                                     {isActive && <EnergyBeam x={x} y={y} />}
-                                                    <div className="absolute cursor-pointer group transition-all duration-500" style={{transform: `translate(${x}px, ${y}px)`}} onClick={() => { if (isActive) return; if (selectedPeers.includes(p.uid)) setSelectedPeers(prev => prev.filter(id => id !== p.uid)); else setSelectedPeers(prev => [...prev, p.uid]); }}>
-                                                        <div className={`p-5 rounded-full glass-panel border-2 transition-all duration-300 group-hover:scale-110 relative ambient-glow ${isPeerSelected ? 'border-[var(--accent-primary)] shadow-[0_0_20px_var(--accent-glow)]' : 'border-white/10'} ${transfer?.status === 'sending' && !isPaused ? 'animate-pulse' : ''}`}>
-                                                            {transfer?.progress > 0 && transfer.progress < 100 && <CircularProgress progress={transfer.progress} size={84} />}
-                                                            {p.os === 'macOS' ? <Laptop className={isPeerSelected ? 'text-[var(--accent-primary)]' : ''} /> : p.type === 'pc' ? <Monitor className={isPeerSelected ? 'text-[var(--accent-primary)]' : ''} /> : <Smartphone className={isPeerSelected ? 'text-[var(--accent-primary)]' : ''} />}
-                                                            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 flex flex-col items-center gap-0.5">
-                                                                <div className="bg-black/60 backdrop-blur-md px-2 py-1 rounded-full border border-white/10 scale-[0.85] flex items-center gap-1.5 whitespace-nowrap shadow-lg">
-                                                                    <span className="font-bold text-[var(--accent-primary)] text-[10px]">{p.os}</span>
-                                                                    {p.battery && <BatteryIcon battery={p.battery} size={14} />}
-                                                                    <SignalIcon rtt={p.rtt} size={14} />
+                                                    <div className="absolute cursor-pointer group transition-all duration-700 ease-out animate-in fade-in zoom-in" style={{transform: `translate(${x}px, ${y}px)`}} onClick={() => { if (isActive) return; if (selectedPeers.includes(p.uid)) setSelectedPeers(prev => prev.filter(id => id !== p.uid)); else setSelectedPeers(prev => [...prev, p.uid]); }}>
+                                                        <div className={`p-6 rounded-full glass-panel border-white/10 transition-all duration-500 group-hover:scale-110 group-active:scale-90 relative ${isPeerSelected ? 'ring-2 ring-[var(--accent-primary)] shadow-[0_0_30px_var(--accent-glow)]' : ''}`}>
+                                                            {transfer?.progress > 0 && transfer.progress < 100 && <CircularProgress progress={transfer.progress} size={88} />}
+                                                            <DeviceSilhouette type={p.type} os={p.os} className={`w-10 h-10 ${isPeerSelected ? 'text-[var(--accent-primary)]' : 'opacity-80'}`} />
+
+                                                            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2">
+                                                                <div className="bg-black/80 backdrop-blur-md px-1.5 py-0.5 rounded-md border border-white/10 scale-90 flex items-center gap-1 shadow-xl">
+                                                                    <SignalIcon rtt={p.rtt} />
+                                                                    {p.battery && <BatteryIcon battery={p.battery} size={10} />}
                                                                 </div>
                                                             </div>
-                                                            {peerCustomizations[p.uid]?.isTrusted && <div className="absolute -top-1 -left-1 bg-yellow-500 rounded-full p-1 shadow-[0_0_10px_rgba(234,179,8,0.5)]"><Star size={10} className="fill-white text-white" /></div>}
-                                                            {isPeerSelected && <div className="absolute -top-1 -right-1 bg-indigo-500 rounded-full p-1"><Check size={10} /></div>}
+
+                                                            {peerCustomizations[p.uid]?.isTrusted && <div className="absolute -top-1 -left-1 bg-yellow-400 rounded-full p-1 shadow-lg"><Star size={8} className="fill-white text-white" /></div>}
+                                                            {isPeerSelected && !isActive && <div className="absolute -top-1 -right-1 bg-[var(--accent-primary)] rounded-full p-1"><Check size={8} className="text-white" /></div>}
                                                             {celebrations.some(c => c.peerId === p.uid) && <div className="celebration-ring inset-0" />}
-                                                            {isActive && transfer?.status === 'sending' && (
-                                                                <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex-col gap-1">
-                                                                    <div className="flex gap-2">
-                                                                        <button onClick={(e) => { e.stopPropagation(); isPaused ? setPausedPeers(prev => prev.filter(id => id !== p.uid)) : setPausedPeers(prev => [...prev, p.uid]); }} className="p-1 hover:text-indigo-400">{isPaused ? <Play size={16} fill="currentColor" /> : <Pause size={16} fill="currentColor" />}</button>
-                                                                        <button onClick={(e) => { e.stopPropagation(); setCancelledPeers(prev => [...prev, p.uid]); }} className="p-1 hover:text-red-400"><X size={16} /></button>
+                                                        </div>
+                                                        <div className="absolute top-24 left-1/2 -translate-x-1/2 whitespace-nowrap flex flex-col items-center gap-1">
+                                                            <div className={`text-xs font-semibold px-2 py-0.5 rounded-full transition-colors ${isPeerSelected ? 'text-[var(--accent-primary)]' : 'opacity-60'}`}>
+                                                                {peerCustomizations[p.uid]?.nickname || p.name}
+                                                            </div>
+                                                            {transfer?.status === 'sending' && (
+                                                                <div className="flex flex-col items-center gap-1">
+                                                                    <div className="text-[9px] bg-[var(--accent-primary)]/20 text-[var(--accent-primary)] px-2 py-0.5 rounded-full font-bold">{transfer.progress}%</div>
+                                                                    <div className="flex items-center text-[8px] opacity-40 font-bold">
+                                                                        {transfer.speed} MB/s
+                                                                        <Sparkline data={transfer.speedHistory} />
                                                                     </div>
                                                                 </div>
                                                             )}
-                                                        </div>
-                                                        <div className="absolute top-20 left-1/2 -translate-x-1/2 whitespace-nowrap flex flex-col items-center gap-1">
-                                                            <div className={`bg-black/40 backdrop-blur-md pl-3 pr-1 py-1 rounded-full text-xs font-medium border flex items-center gap-2 ${isPeerSelected ? 'border-[var(--accent-primary)] text-[var(--accent-primary)]' : 'border-white/10'}`}>
-                                                                <div className="flex items-center">{peerCustomizations[p.uid]?.nickname || p.name} {transfer?.speed && `· ${transfer.speed}MB/s`}{transfer?.speedHistory && <Sparkline data={transfer.speedHistory} />}</div>
-                                                                <button onClick={(e) => { e.stopPropagation(); setSelectedPeerDetails(p); }} className="p-1 hover:bg-white/10 rounded-full transition-colors"><MoreVertical size={14} /></button>
-                                                            </div>
-                                                            {transfer?.status === 'sending' && transfer.total > 1 && <div className="text-[10px] bg-indigo-600/50 px-2 py-0.5 rounded-full border border-indigo-400/30 flex flex-col items-center"><span>Batch: {transfer.current}/{transfer.total}</span><span className="truncate max-w-[100px] opacity-70">{transfer.currentFile}</span></div>}
-                                                            {transfer?.status === 'receiving' && <div className="text-[10px] bg-green-600/50 px-2 py-0.5 rounded-full border border-green-400/30">Receiving: {transfer.currentFile}</div>}
                                                         </div>
                                                     </div>
                                                 </React.Fragment>
@@ -691,61 +716,70 @@ HTML_TEMPLATE = """
                                         })}
                                     </div>
                                 </div>
-                                <div className={`w-full max-w-md glass-panel p-6 md:p-8 rounded-[2.5rem] transition-all duration-300 relative overflow-hidden group ${dragActive ? 'scale-105 drop-glow ring-4 ring-indigo-500/20' : ''}`}>
+                                <div className={`w-full max-w-md glass-panel p-6 rounded-[2.5rem] transition-all duration-500 relative overflow-hidden group mb-4 ${dragActive ? 'scale-[1.02]' : ''}`}>
                                     {selectedFiles.length === 0 ? (
-                                        <div className="text-center relative">
-                                            <div className="w-12 h-12 md:w-16 md:h-16 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-indigo-500/20 transition-colors"><UploadCloud className="text-indigo-400" /></div>
-                                            <div className="text-lg font-bold mb-1">Ready to share?</div><div className="text-sm opacity-50 mb-4">Drag files here or</div>
-                                            <div className="flex justify-center gap-3">
-                                                <div className="relative inline-block"><button className="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-lg shadow-indigo-500/20">Select Files</button><input type="file" multiple className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" onChange={e => setSelectedFiles(Array.from(e.target.files).map(f => ({file: f, id: Math.random()}))) } /></div>
-                                                <div className="relative inline-block"><button className="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl text-xs font-bold transition-all">Select Folder</button><input type="file" webkitdirectory="true" directory="true" className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" onChange={async (e) => {
-                                                    const files = Array.from(e.target.files); if (files.length === 0) return;
-                                                    const folderName = files[0].webkitRelativePath.split('/')[0] || 'folder'; showToast("Zipping folder...");
-                                                    const zip = new JSZip(); files.forEach(f => { zip.file(f.webkitRelativePath, f); });
-                                                    const content = await zip.generateAsync({type:"blob"});
-                                                    const zippedFile = new File([content], `${folderName}.zip`, {type: "application/zip"});
-                                                    setSelectedFiles([{file: zippedFile, id: Math.random()}]); showToast("Folder ready to send");
-                                                }} /></div>
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center group-hover:bg-[var(--accent-primary)]/10 transition-colors"><Share className="text-[var(--accent-primary)]" /></div>
+                                            <div className="flex-1">
+                                                <div className="font-bold">AirShare</div>
+                                                <div className="text-sm opacity-50 truncate">Select files or a folder to share</div>
+                                            </div>
+                                            <div className="flex gap-2 relative">
+                                                <div className="relative">
+                                                    <button className="bg-[var(--accent-primary)] text-white px-5 py-2.5 rounded-full text-sm font-bold shadow-lg shadow-blue-500/20 active:scale-95 transition-transform">Files</button>
+                                                    <input type="file" multiple className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => setSelectedFiles(prev => [...prev, ...Array.from(e.target.files).map(f => ({file: f, id: Math.random()}))]) } />
+                                                </div>
+                                                <div className="relative">
+                                                    <button className="glass-button px-5 py-2.5 rounded-full text-sm font-bold active:scale-95 transition-transform">Folder</button>
+                                                    <input type="file" webkitdirectory="" directory="" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => setSelectedFiles(prev => [...prev, ...Array.from(e.target.files).map(f => ({file: f, id: Math.random()}))]) } />
+                                                </div>
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="flex flex-col gap-3">
-                                            <div className="flex justify-between items-center mb-2"><div className="text-xs font-bold uppercase tracking-widest opacity-40">Queue ({selectedFiles.length})</div><button onClick={() => setSelectedFiles([])} className="text-xs text-red-400 hover:underline">Clear</button></div>
-                                            <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar -mx-2 px-2">
+                                        <div className="flex flex-col gap-4">
+                                            <div className="flex justify-between items-center">
+                                                <div className="text-xs font-bold uppercase tracking-widest opacity-30">{selectedFiles.length} item{selectedFiles.length !== 1 ? 's' : ''} to share</div>
+                                                <button onClick={() => setSelectedFiles([])} className="text-xs font-bold text-red-500">Cancel</button>
+                                            </div>
+                                            <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
                                                 {selectedFiles.map(f => (
-                                                    <div key={f.id} className="flex-shrink-0 w-32 md:w-40 bg-white/5 rounded-[1.5rem] border border-white/10 overflow-hidden group/card cursor-pointer hover:border-indigo-500/50 transition-all" onClick={() => setSelectedPreview(f.file)}>
-                                                        <div className="aspect-[4/3] relative bg-black/20 overflow-hidden">
-                                                            <FilePreview file={f.file} />
-                                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/card:opacity-100 transition-opacity flex items-center justify-center">
-                                                                <button onClick={(e) => { e.stopPropagation(); setSelectedFiles(prev => prev.filter(item => item.id !== f.id)); }} className="bg-red-500 p-1.5 rounded-full hover:scale-110 transition-transform"><X size={14}/></button>
-                                                            </div>
+                                                    <div key={f.id} className="flex-shrink-0 w-24 h-24 rounded-2xl bg-black/20 overflow-hidden relative group/card border border-white/5" onClick={() => setSelectedPreview(f.file)}>
+                                                        <FilePreview file={f.file} />
+                                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/card:opacity-100 transition-opacity flex items-center justify-center">
+                                                            <button onClick={(e) => { e.stopPropagation(); setSelectedFiles(prev => prev.filter(item => item.id !== f.id)); }} className="bg-red-500 p-1.5 rounded-full"><X size={12}/></button>
                                                         </div>
-                                                        <div className="p-3">
-                                                            <div className="text-[10px] font-medium truncate mb-0.5">{f.file.name}</div>
-                                                            <div className="text-[8px] opacity-40 font-bold uppercase tracking-wider">{formatSize(f.file.size)}</div>
+                                                        <div className="absolute bottom-0 left-0 right-0 p-1.5 bg-gradient-to-t from-black/80 to-transparent">
+                                                            <div className="text-[8px] font-bold truncate">{f.file.name}</div>
                                                         </div>
                                                     </div>
                                                 ))}
                                             </div>
-                                            <button className={`mt-4 w-full py-3 rounded-2xl font-bold transition-all ${selectedPeers.length > 0 ? 'bg-indigo-600 hover:bg-indigo-500' : 'bg-white/5 opacity-50 cursor-not-allowed'}`} disabled={selectedPeers.length === 0} onClick={() => { selectedPeers.forEach(peerId => { sendSignal(peerId, 'transfer_request', {files: selectedFiles.map(f => f.file.name)}); }); showToast(`Requests sent...`); setSelectedPeers([]); }}>SEND TO {selectedPeers.length} DEVICE{selectedPeers.length !== 1 ? 'S' : ''}</button>
+                                            <button className={`w-full py-4 rounded-2xl font-bold transition-all transform active:scale-[0.98] ${selectedPeers.length > 0 ? 'bg-[var(--accent-primary)] text-white' : 'bg-white/5 opacity-50'}`} disabled={selectedPeers.length === 0} onClick={() => { selectedPeers.forEach(peerId => { sendSignal(peerId, 'transfer_request', {files: selectedFiles.map(f => f.file.name)}); }); showToast(`Sending to ${selectedPeers.length} device(s)...`); setSelectedPeers([]); }}>Share with {selectedPeers.length || '...'} device{selectedPeers.length !== 1 ? 's' : ''}</button>
                                         </div>
                                     )}
                                 </div>
                             </>
                         )}
                         {activeTab === 'history' && (
-                            <div className="w-full max-w-2xl h-full flex flex-col py-4">
-                                <div className="flex justify-between items-center mb-6"><h2 className="text-2xl font-bold flex items-center gap-3"><LucideHistory className="text-indigo-400" /> History</h2><button onClick={() => setActiveTab('radar')} className="glass-button px-4 py-2 rounded-xl text-sm font-bold">Back</button></div>
+                            <div className="w-full max-w-2xl h-full flex flex-col py-4 animate-in slide-in-from-right-8 duration-500">
+                                <div className="flex justify-between items-center mb-8"><h2 className="text-2xl font-bold">History</h2><button onClick={() => setActiveTab('radar')} className="glass-button px-6 py-2 rounded-full text-sm font-bold">Done</button></div>
                                 <div className="flex-1 overflow-y-auto pr-2 no-scrollbar flex flex-col gap-3">
-                                    {history.length === 0 ? (<div className="h-full flex flex-col items-center justify-center opacity-30"><File size={64} className="mb-4" /><p>No transfers yet</p></div>) : (
+                                    {history.length === 0 ? (<div className="h-full flex flex-col items-center justify-center opacity-20"><File size={48} className="mb-4" /><p>No activity yet</p></div>) : (
                                         history.map(item => (
-                                            <div key={item.id} className="glass-panel p-4 rounded-2xl flex items-center gap-4 group">
-                                                <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center relative">{item.type?.startsWith('image/') ? <ImageIcon /> : item.type?.startsWith('video/') ? <Video /> : <File />}<div className={`absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[8px] ${item.status === 'received' ? 'bg-green-500' : 'bg-blue-500'}`}>{item.status === 'received' ? <Download size={8} /> : <UploadCloud size={8} />}</div></div>
-                                                <div className="flex-1 min-w-0"><div className="font-bold truncate text-sm">{item.name}</div><div className="text-xs opacity-50">{formatSize(item.size)} • {item.sender} • {new Date(item.timestamp).toLocaleTimeString()}</div></div>
-                                                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    {item.status === 'sent' && item.fileId && (<button onClick={() => { if (selectedPeers.length === 0) { showToast("Select peers on Radar first", "info"); setActiveTab('radar'); return; } selectedPeers.forEach(peerId => { sendSignal(peerId, 'file_available', { file_id: item.fileId, name: item.name, size: item.size, type: item.type }); }); showToast(`Sent to ${selectedPeers.length} peer(s)`); }} className="p-3 bg-white/5 rounded-xl hover:bg-indigo-500/20"><RefreshCcw size={18} className="text-indigo-400" /></button>)}
-                                                    {item.status === 'received' && item.fileId && (<a href={`/api/download/${item.fileId}`} download={item.name} className="p-3 bg-white/5 rounded-xl hover:bg-indigo-500/20"><Download size={18} className="text-indigo-400" /></a>)}
-                                                    <button onClick={() => db.history.delete(item.id).then(loadHistory)} className="p-3 bg-white/5 rounded-xl hover:bg-red-500/20"><Trash2 size={18} className="text-red-400" /></button>
+                                            <div key={item.id} className="glass-panel p-5 rounded-3xl flex items-center gap-4 group hover:border-white/20 transition-colors">
+                                                <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center relative">
+                                                    {item.type?.startsWith('image/') ? <ImageIcon size={20}/> : item.type?.startsWith('video/') ? <Video size={20}/> : <File size={20}/>}
+                                                    <div className={`absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center border-2 border-[var(--bg-color)] ${item.status === 'received' ? 'bg-green-500' : 'bg-[var(--accent-primary)]'}`}>
+                                                        {item.status === 'received' ? <Download size={10} className="text-white" /> : <UploadCloud size={10} className="text-white" />}
+                                                    </div>
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="font-bold truncate text-sm">{item.name}</div>
+                                                    <div className="text-[10px] opacity-40 font-medium">{formatSize(item.size)} • {item.sender} • {new Date(item.timestamp).toLocaleTimeString()}</div>
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    {item.fileId && (<a href={`/api/download/${item.fileId}`} download={item.name} className="p-3 bg-white/5 rounded-2xl hover:bg-[var(--accent-primary)]/20 transition-colors text-[var(--accent-primary)]"><Download size={18} /></a>)}
+                                                    <button onClick={() => db.history.delete(item.id).then(loadHistory)} className="p-3 bg-white/5 rounded-2xl hover:bg-red-500/20 transition-colors text-red-500"><Trash2 size={18} /></button>
                                                 </div>
                                             </div>
                                         ))
@@ -754,20 +788,30 @@ HTML_TEMPLATE = """
                             </div>
                         )}
                         {activeTab === 'settings' && (
-                            <div className="w-full max-w-md py-4">
-                                <div className="flex justify-between items-center mb-8"><h2 className="text-2xl font-bold flex items-center gap-3"><Settings className="text-indigo-400" /> Settings</h2><button onClick={() => setActiveTab('radar')} className="glass-button px-4 py-2 rounded-xl text-sm font-bold">Done</button></div>
-                                <div className="space-y-6">
-                                    <div className="glass-panel p-6 rounded-3xl"><label className="block text-xs font-bold uppercase opacity-40 mb-3 tracking-widest">Device Name</label><input type="text" className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 outline-none focus:border-indigo-500 transition-colors" value={myDevice.name} onChange={e => { setMyDevice({...myDevice, name: e.target.value}); localStorage.setItem('deviceName', e.target.value); }} /></div>
-                                    <div className="glass-panel p-6 rounded-3xl">
-                                        <label className="block text-xs font-bold uppercase opacity-40 mb-4 tracking-widest">Security Mode</label>
-                                        <div className="flex gap-2">
-                                            <button className={`flex-1 py-4 rounded-2xl flex flex-col items-center gap-2 transition-all ${securityMode === 'approval' ? 'bg-indigo-600 shadow-lg shadow-indigo-500/20' : 'bg-white/5'}`} onClick={() => {setSecurityMode('approval'); localStorage.setItem('securityMode', 'approval')}}><ShieldCheck size={24} /><span className="text-sm font-bold">Approval</span></button>
-                                            <button className={`flex-1 py-4 rounded-2xl flex flex-col items-center gap-2 transition-all ${securityMode === 'pin' ? 'bg-indigo-600 shadow-lg shadow-indigo-500/20' : 'bg-white/5'}`} onClick={() => {setSecurityMode('pin'); localStorage.setItem('securityMode', 'pin')}}><Lock size={24} /><span className="text-sm font-bold">PIN Code</span></button>
+                            <div className="w-full max-w-md py-4 animate-in slide-in-from-right-8 duration-500">
+                                <div className="flex justify-between items-center mb-8"><h2 className="text-2xl font-bold">Settings</h2><button onClick={() => setActiveTab('radar')} className="glass-button px-6 py-2 rounded-full text-sm font-bold">Done</button></div>
+                                <div className="space-y-4">
+                                    <div className="glass-panel p-6 rounded-[2rem] space-y-4">
+                                        <div>
+                                            <label className="block text-[10px] font-bold uppercase opacity-30 mb-2 ml-1">Device Name</label>
+                                            <input type="text" className="w-full bg-white/5 border border-white/5 rounded-2xl px-4 py-3 outline-none focus:border-[var(--accent-primary)] transition-colors" value={myDevice.name} onChange={e => { setMyDevice({...myDevice, name: e.target.value}); localStorage.setItem('deviceName', e.target.value); }} />
                                         </div>
-                                        {securityMode === 'pin' && (<div className="mt-4 animate-in fade-in slide-in-from-top-2"><input type="text" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-center font-mono tracking-widest outline-none focus:border-indigo-500" value={pin} maxLength={4} onChange={e => { const v = e.target.value.replace(/[^0-9]/g, ''); setPin(v); localStorage.setItem('securityPin', v); }} /></div>)}
+                                        <div>
+                                            <label className="block text-[10px] font-bold uppercase opacity-30 mb-3 ml-1">Security</label>
+                                            <div className="flex gap-2">
+                                                <button className={`flex-1 py-4 rounded-2xl flex flex-col items-center gap-2 transition-all ${securityMode === 'approval' ? 'bg-[var(--accent-primary)] text-white' : 'bg-white/5'}`} onClick={() => {setSecurityMode('approval'); localStorage.setItem('securityMode', 'approval')}}><Shield size={20} /><span className="text-xs font-bold">Approval</span></button>
+                                                <button className={`flex-1 py-4 rounded-2xl flex flex-col items-center gap-2 transition-all ${securityMode === 'pin' ? 'bg-[var(--accent-primary)] text-white' : 'bg-white/5'}`} onClick={() => {setSecurityMode('pin'); localStorage.setItem('securityMode', 'pin')}}><Lock size={20} /><span className="text-xs font-bold">PIN</span></button>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className="glass-panel p-6 rounded-3xl"><label className="block text-xs font-bold uppercase opacity-40 mb-3 tracking-widest">Theme</label><div className="flex gap-2">{['default', 'neon', 'light'].map(t => (<button key={t} className={`flex-1 py-3 rounded-xl text-xs font-bold capitalize transition-all ${theme === t ? 'bg-indigo-600 shadow-lg' : 'bg-white/5 hover:bg-white/10'}`} onClick={() => setTheme(t)}>{t}</button>))}</div></div>
-                                    <div className="glass-panel p-6 rounded-3xl flex items-center gap-4 border-indigo-500/30"><Info className="text-[var(--accent-primary)]" /><div className="text-xs opacity-60">HTTP Mode: Browser security may limit some PWA features.</div></div>
+                                    <div className="glass-panel p-6 rounded-[2rem]">
+                                        <label className="block text-[10px] font-bold uppercase opacity-30 mb-3 ml-1">Appearance</label>
+                                        <div className="flex gap-2">
+                                            <button className={`flex-1 py-3 rounded-xl text-xs font-bold transition-all ${theme === 'default' ? 'bg-white/20' : 'bg-white/5'}`} onClick={() => setTheme('default')}>Dark</button>
+                                            <button className={`flex-1 py-3 rounded-xl text-xs font-bold transition-all ${theme === 'light' ? 'bg-white/20' : 'bg-white/5'}`} onClick={() => setTheme('light')}>Light</button>
+                                        </div>
+                                    </div>
+                                    <div className="p-6 opacity-30 text-[10px] flex items-center gap-3"><Info size={14} /><span>Files are shared over local network. No internet data is used.</span></div>
                                 </div>
                             </div>
                         )}
@@ -791,14 +835,16 @@ HTML_TEMPLATE = """
                     )}
                     {selectedPeerDetails && <PeerDetailsModal peer={selectedPeerDetails} custom={peerCustomizations[selectedPeerDetails.uid]} onClose={() => setSelectedPeerDetails(null)} />}
                     {incomingRequests.map(req => (
-                        <div key={req.id} className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[100]">
-                            <div className="glass-panel p-10 rounded-[2.5rem] max-w-xs w-full text-center">
-                                <div className="w-20 h-20 bg-indigo-600/20 rounded-full flex items-center justify-center mx-auto mb-6"><Smartphone className="text-indigo-400" size={40} /></div>
-                                <h2 className="text-xl font-bold mb-2">{req.senderDevice.name}</h2>
-                                <p className="text-sm opacity-60 mb-8">Wants to share {req.files.length} file{req.files.length > 1 ? 's' : ''}</p>
-                                <div className="flex gap-4">
-                                    <button className="flex-1 py-4 rounded-2xl bg-white/5 font-bold hover:bg-white/10" onClick={() => { sendSignal(req.sender, 'transfer_declined', {}); setIncomingRequests(prev => prev.filter(r => r.id !== req.id)); }}>Decline</button>
-                                    <button className="flex-1 py-4 rounded-2xl bg-indigo-600 font-bold hover:bg-indigo-500 shadow-lg shadow-indigo-500/20" onClick={() => { sendSignal(req.sender, 'transfer_accepted', {}); setIncomingRequests(prev => prev.filter(r => r.id !== req.id)); }}>Accept</button>
+                        <div key={req.id} className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] animate-in fade-in duration-300">
+                            <div className="glass-panel p-8 rounded-[2rem] max-w-xs w-full text-center animate-in zoom-in-95 duration-300 shadow-2xl">
+                                <div className="w-16 h-16 bg-[var(--accent-primary)]/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                                    <DeviceSilhouette type={req.senderDevice.type} os={req.senderDevice.os} className="w-8 h-8 text-[var(--accent-primary)]" />
+                                </div>
+                                <h2 className="text-lg font-bold mb-1">{req.senderDevice.name}</h2>
+                                <p className="text-xs opacity-40 mb-8 font-medium">Wants to share {req.files.length} item{req.files.length !== 1 ? 's' : ''}</p>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <button className="py-3 rounded-xl bg-white/5 font-bold text-sm active:scale-95 transition-transform" onClick={() => { sendSignal(req.sender, 'transfer_declined', {}); setIncomingRequests(prev => prev.filter(r => r.id !== req.id)); }}>Decline</button>
+                                    <button className="py-3 rounded-xl bg-[var(--accent-primary)] font-bold text-sm text-white active:scale-95 transition-transform" onClick={() => { sendSignal(req.sender, 'transfer_accepted', {}); setIncomingRequests(prev => prev.filter(r => r.id !== req.id)); }}>Accept</button>
                                 </div>
                             </div>
                         </div>
