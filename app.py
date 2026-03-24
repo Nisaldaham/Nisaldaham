@@ -104,6 +104,16 @@ HTML_TEMPLATE = """
             --panel-bg: rgba(255, 255, 255, 0.7);
             --panel-border: rgba(0, 0, 0, 0.08);
         }
+        body.theme-apple {
+            --accent-primary: #34c759;
+            --accent-glow: rgba(52, 199, 89, 0.3);
+            --bg-color: #f2f2f7;
+            --text-color: #000000;
+            --panel-bg: rgba(255, 255, 255, 0.75);
+            --panel-border: rgba(52, 199, 89, 0.2);
+            --apple-blue: #007aff;
+            --apple-green: #34c759;
+        }
         @keyframes float {
             0%, 100% { transform: translateY(0) scale(1); }
             50% { transform: translateY(-20px) scale(1.05); }
@@ -116,8 +126,11 @@ HTML_TEMPLATE = """
             animation: float 20s ease-in-out infinite;
         }
         .blob-1 { width: 600px; height: 600px; background: #5856d6; top: -10%; left: -10%; animation-delay: 0s; }
+        .theme-apple .blob-1 { background: #34c759; }
         .blob-2 { width: 500px; height: 500px; background: #007aff; bottom: -5%; right: -5%; animation-delay: -5s; }
+        .theme-apple .blob-2 { background: #007aff; }
         .blob-3 { width: 400px; height: 400px; background: #af52de; top: 40%; left: 30%; animation-delay: -10s; }
+        .theme-apple .blob-3 { background: #64d2ff; }
 
         @keyframes radar-pulse {
             0% { transform: scale(0.6); opacity: 0.6; stroke-width: 1px; }
@@ -199,6 +212,29 @@ HTML_TEMPLATE = """
         .ambient-glow {
             animation: ambient-glow 3s ease-in-out infinite;
         }
+        @keyframes splash-fade {
+            0% { opacity: 1; transform: scale(1); visibility: visible; }
+            70% { opacity: 1; transform: scale(1.05); }
+            100% { opacity: 0; transform: scale(1.2); visibility: hidden; }
+        }
+        .splash-screen {
+            position: fixed; inset: 0; z-index: 500; background: #f2f2f7;
+            display: flex; flex-direction: column; items-center; justify-content: center;
+            animation: splash-fade 2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            pointer-events: none;
+        }
+        .splash-icon-container {
+            width: 120px; height: 120px; position: relative;
+        }
+        @keyframes radar-sweep {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .radar-sweep {
+            position: absolute; inset: 0; border-radius: 50%;
+            background: conic-gradient(from 0deg, rgba(52, 199, 89, 0.4) 0%, transparent 40%);
+            animation: radar-sweep 2s linear infinite;
+        }
     </style>
 </head>
 <body>
@@ -218,6 +254,36 @@ HTML_TEMPLATE = """
         const ImageIcon = LucideImage;
         const MY_ID = Math.random().toString(36).substr(2, 9);
         const CHUNK_SIZE = 1024 * 1024; // 1MB chunks
+
+        function AppleIcon({ className = "w-24 h-24" }) {
+            return (
+                <div className={`relative flex items-center justify-center ${className}`}>
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#34c759] to-[#007aff] rounded-3xl shadow-xl overflow-hidden">
+                        <div className="radar-sweep"></div>
+                        <div className="absolute inset-0 flex items-center justify-center opacity-20">
+                            <div className="border border-white rounded-full w-[80%] h-[80%] absolute"></div>
+                            <div className="border border-white rounded-full w-[60%] h-[60%] absolute"></div>
+                            <div className="border border-white rounded-full w-[40%] h-[40%] absolute"></div>
+                            <div className="w-full h-[0.5px] bg-white absolute top-1/2"></div>
+                            <div className="h-full w-[0.5px] bg-white absolute left-1/2"></div>
+                        </div>
+                    </div>
+                    <div className="relative z-10 text-white">
+                        <div className="w-4 h-4 bg-white rounded-full shadow-[0_0_15px_rgba(255,255,255,0.8)]"></div>
+                    </div>
+                </div>
+            );
+        }
+
+        function SplashScreen() {
+            return (
+                <div className="splash-screen">
+                    <AppleIcon className="w-32 h-32 mb-8" />
+                    <h1 className="text-2xl font-bold tracking-tight text-gray-900">AirShare</h1>
+                    <div className="mt-12 text-xs font-bold text-gray-400 uppercase tracking-widest">Powered by Local Wi-Fi</div>
+                </div>
+            );
+        }
 
         function FilePreview({ file, full = false }) {
             const [url, setUrl] = useState(null);
@@ -288,6 +354,12 @@ HTML_TEMPLATE = """
             const [celebrations, setCelebrations] = useState([]);
             const [logs, setLogs] = useState([]);
             const [theme, setTheme] = useState(localStorage.getItem('theme') || 'default');
+            const [showSplash, setShowSplash] = useState(true);
+
+            useEffect(() => {
+                const timer = setTimeout(() => setShowSplash(false), 2000);
+                return () => clearTimeout(timer);
+            }, []);
 
             const stateRef = useRef({ peers, transfers, selectedFiles, pausedPeers, cancelledPeers });
             useEffect(() => {
@@ -336,6 +408,8 @@ HTML_TEMPLATE = """
 
             useEffect(() => {
                 document.body.className = theme === 'default' ? '' : `theme-${theme}`;
+                if (theme === 'apple') document.body.style.background = '#f2f2f7';
+                else document.body.style.background = '';
                 localStorage.setItem('theme', theme);
             }, [theme]);
 
@@ -639,6 +713,7 @@ HTML_TEMPLATE = """
 
             return (
                 <div className="h-screen flex flex-col" onDragOver={e => {e.preventDefault(); setDragActive(true)}} onDragLeave={e => { if (e.clientX <= 0 || e.clientY <= 0 || e.clientX >= window.innerWidth || e.clientY >= window.innerHeight) setDragActive(false); }} onDrop={e => {e.preventDefault(); setDragActive(false); setSelectedFiles(Array.from(e.dataTransfer.files).map(f => ({file: f, id: Math.random()})))}}>
+                    {showSplash && <SplashScreen />}
                     <div className="liquid-bg">
                         <div className="blob blob-1"></div><div className="blob blob-2"></div><div className="blob blob-3"></div>
                     </div>
@@ -655,9 +730,9 @@ HTML_TEMPLATE = """
                             <h1 className="text-2xl font-bold tracking-tight">AirShare</h1>
                         </div>
                         <div className="flex gap-3">
-                            <button onClick={() => setShowQR(true)} className="glass-button p-3 rounded-full"><QrCode size={20}/></button>
-                            <button onClick={() => setActiveTab('history')} className={`glass-button p-3 rounded-full ${activeTab === 'history' ? 'bg-white/20' : ''}`}><LucideHistory size={20}/></button>
-                            <button onClick={() => setActiveTab('settings')} className={`glass-button p-3 rounded-full ${activeTab === 'settings' ? 'bg-white/20' : ''}`}><Settings size={20}/></button>
+                            <button onClick={() => setShowQR(true)} className="glass-button p-3 rounded-full" aria-label="QR Code"><QrCode size={20}/></button>
+                            <button onClick={() => setActiveTab('history')} className={`glass-button p-3 rounded-full ${activeTab === 'history' ? 'bg-white/20' : ''}`} aria-label="History"><LucideHistory size={20}/></button>
+                            <button onClick={() => setActiveTab('settings')} className={`glass-button p-3 rounded-full ${activeTab === 'settings' ? 'bg-white/20' : ''}`} aria-label="Settings"><Settings size={20}/></button>
                         </div>
                     </header>
                     <main className="flex-1 relative flex flex-col items-center justify-between p-4 md:p-8 overflow-hidden">
@@ -731,7 +806,24 @@ HTML_TEMPLATE = """
                                                 </div>
                                                 <div className="relative">
                                                     <button className="glass-button px-5 py-2.5 rounded-full text-sm font-bold active:scale-95 transition-transform">Folder</button>
-                                                    <input type="file" webkitdirectory="" directory="" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => setSelectedFiles(prev => [...prev, ...Array.from(e.target.files).map(f => ({file: f, id: Math.random()}))]) } />
+                                                    <input type="file" webkitdirectory="" directory="" className="absolute inset-0 opacity-0 cursor-pointer" onChange={async (e) => {
+                                                        const files = Array.from(e.target.files);
+                                                        if (files.length === 0) return;
+
+                                                        // Group files by top-level directory name
+                                                        const folderName = files[0].webkitRelativePath.split('/')[0] || 'folder';
+
+                                                        showToast("Preparing folder...", "info");
+                                                        const zip = new JSZip();
+                                                        files.forEach(f => {
+                                                            zip.file(f.webkitRelativePath, f);
+                                                        });
+
+                                                        const content = await zip.generateAsync({type: "blob"});
+                                                        const zipFile = new File([content], `${folderName}.zip`, { type: "application/zip" });
+                                                        setSelectedFiles(prev => [...prev, { file: zipFile, id: Math.random() }]);
+                                                        showToast("Folder ready!", "success");
+                                                    }} />
                                                 </div>
                                             </div>
                                         </div>
@@ -809,6 +901,7 @@ HTML_TEMPLATE = """
                                         <div className="flex gap-2">
                                             <button className={`flex-1 py-3 rounded-xl text-xs font-bold transition-all ${theme === 'default' ? 'bg-white/20' : 'bg-white/5'}`} onClick={() => setTheme('default')}>Dark</button>
                                             <button className={`flex-1 py-3 rounded-xl text-xs font-bold transition-all ${theme === 'light' ? 'bg-white/20' : 'bg-white/5'}`} onClick={() => setTheme('light')}>Light</button>
+                                            <button className={`flex-1 py-3 rounded-xl text-xs font-bold transition-all ${theme === 'apple' ? 'bg-blue-500/20 text-blue-600' : 'bg-white/5'}`} onClick={() => setTheme('apple')}>Apple</button>
                                         </div>
                                     </div>
                                     <div className="p-6 opacity-30 text-[10px] flex items-center gap-3"><Info size={14} /><span>Files are shared over local network. No internet data is used.</span></div>
@@ -939,15 +1032,19 @@ def events(uid):
         q = []
         with state_lock:
             state["clients"][uid] = q
-
-        while True:
-            if q:
-                with state_lock:
-                    msg = q.pop(0)
-                yield f"data: {json.dumps(msg)}\n\n"
-            else:
-                time.sleep(0.5)
-                yield f"data: {json.dumps({'type': 'heartbeat'})}\n\n"
+        try:
+            while True:
+                if q:
+                    with state_lock:
+                        msg = q.pop(0)
+                    yield f"data: {json.dumps(msg)}\n\n"
+                else:
+                    time.sleep(0.5)
+                    yield f"data: {json.dumps({'type': 'heartbeat'})}\n\n"
+        finally:
+            with state_lock:
+                if uid in state["clients"]:
+                    del state["clients"][uid]
 
     return Response(stream(), mimetype='text/event-stream')
 
@@ -986,8 +1083,9 @@ def upload_file():
     if not file or not file_id or not filename:
         return jsonify({"error": "Missing data"}), 400
 
+    safe_file_id = secure_filename(file_id)
     safe_name = secure_filename(filename)
-    temp_filename = f"{file_id}_{safe_name}.part"
+    temp_filename = f"{safe_file_id}_{safe_name}.part"
     filepath = os.path.join(UPLOAD_FOLDER, temp_filename)
 
     mode = "ab" if chunk_index > 0 else "wb"
@@ -995,18 +1093,18 @@ def upload_file():
         f.write(file.read())
 
     if chunk_index + 1 == total_chunks:
-        final_filename = f"{file_id}_{safe_name}"
+        final_filename = f"{safe_file_id}_{safe_name}"
         final_path = os.path.join(UPLOAD_FOLDER, final_filename)
         if os.path.exists(final_path):
             os.remove(final_path)
         os.rename(filepath, final_path)
         with state_lock:
-            state["files"][file_id] = {
+            state["files"][safe_file_id] = {
                 "filename": safe_name,
                 "internal_path": final_filename,
                 "timestamp": time.time()
             }
-        return jsonify({"status": "complete", "file_id": file_id})
+        return jsonify({"status": "complete", "file_id": safe_file_id})
 
     return jsonify({"status": "chunk_saved", "chunk_index": chunk_index})
 
@@ -1017,8 +1115,9 @@ def cancel_upload():
     filename = data.get('filename')
     if not file_id or not filename:
         return jsonify({"error": "Missing data"}), 400
+    safe_file_id = secure_filename(file_id)
     safe_name = secure_filename(filename)
-    temp_filename = f"{file_id}_{safe_name}.part"
+    temp_filename = f"{safe_file_id}_{safe_name}.part"
     filepath = os.path.join(UPLOAD_FOLDER, temp_filename)
     if os.path.exists(filepath):
         os.remove(filepath)
