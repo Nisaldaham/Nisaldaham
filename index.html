@@ -1,196 +1,297 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Educational Resources - Free Study Materials for Students</title>
-
-    <!-- GOOGLE FONTS -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-        as="style">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-    <!-- FONT AWESOME -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
-        media="print" onload="this.media='all'">
-
-    <!-- TAILWIND CDN -->
+    <title>Weathry - Smart Weather Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-
-    <meta property="og:image" content="https://apilage.lk/banner_3.png">
-    <meta name="twitter:image" content="https://apilage.lk/banner_3.png">
-    <meta name="description"
-        content="Access free educational resources for students affected by recent floods. Browse materials by grade or subject and download instantly.">
-
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        * {
-            font-family: 'Inter', sans-serif;
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
         }
 
-        /* Custom Styles for a more polished UI */
         body {
-            background-color: #f8fafc; /* Softer gray background */
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg-gradient);
+            color: #f8fafc;
+            min-height: 100vh;
+            overflow: hidden; /* Main scroll handled by sections */
         }
 
-        #google_translate_element {
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            border-radius: 1.5rem;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        .sidebar-item {
+            transition: all 0.3s ease;
+            cursor: pointer;
+            padding: 0.75rem;
+            border-radius: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sidebar-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #3b82f6;
+        }
+
+        .sidebar-item.active {
+            background: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+
+        /* Weather Animations */
+        #weather-bg {
             position: fixed;
-            top: 1rem;
-            right: 1rem;
-            z-index: 1000;
-            background: white;
-            padding: 0.25rem 0.5rem;
-            border-radius: 0.5rem;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            font-size: 0.875rem;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: -1;
+            opacity: 0.6; overflow: hidden;
         }
 
-        .goog-te-gadget img {
-            display: none;
+        .rain-drop {
+            position: absolute; background-color: rgba(255, 255, 255, 0.2);
+            width: 2px; height: 15px; top: -20px; animation: fall linear infinite;
         }
 
-        .header-card {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        .cloud-particle {
+            position: absolute;
+            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 70%);
+            border-radius: 50%; filter: blur(20px); animation: drift linear infinite;
         }
 
-        .filter-btn {
-            transition: all 0.2s ease-in-out;
-            border: 1px solid transparent;
+        .lightning-flash {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: white; opacity: 0; pointer-events: none; transition: opacity 0.05s;
         }
 
-        .filter-btn.active {
-            background-color: #3b82f6; /* Professional blue */
-            color: white;
-            border-color: #3b82f6;
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
-            transform: translateY(-2px);
-        }
+        @keyframes fall { to { transform: translateY(100vh) translateX(20px); } }
+        @keyframes drift { from { transform: translateX(-20vw); } to { transform: translateX(120vw); } }
 
-        .filter-btn:not(.active):hover {
-            background-color: #f3f4f6;
-            border-color: #d1d5db;
-        }
+        #map-container { height: 500px; width: 100%; border-radius: 1.5rem; }
+        .hidden { display: none !important; }
     </style>
 </head>
+<body class="flex flex-col md:flex-row p-4 gap-6 h-screen">
+    <div id="weather-bg"></div>
 
-<body class="p-4 md:p-6">
-    <!-- Header -->
-    <header class="bg-white rounded-xl header-card sticky top-4 z-50">
-        <div class="container mx-auto px-4 py-3">
-            <div class="flex items-center justify-between">
-                <a href="/" class="flex items-center gap-3">
-                    <div class="bg-blue-600 p-3 rounded-lg">
-                        <i class="fas fa-book-open text-2xl text-white"></i>
-                    </div>
-                    <div>
-                        <h1 class="text-xl md:text-2xl font-bold text-gray-800">Educational Resources</h1>
-                        <p class="text-xs md:text-sm text-gray-500">Support for flood-affected students</p>
-                    </div>
-                </a>
-                <a href="/"
-                    class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 md:px-5 py-2 rounded-lg transition-colors text-sm md:text-base font-medium">
-                    <i class="fas fa-home mr-2 opacity-70"></i>Home
-                </a>
+    <!-- Sidebar -->
+    <aside class="glass-card w-full md:w-20 lg:w-24 flex flex-row md:flex-col items-center py-4 md:py-8 justify-between z-[2000]">
+        <div class="flex flex-row md:flex-col items-center gap-6 md:gap-10">
+            <div class="text-blue-500 flex flex-col items-center gap-1">
+                <i data-lucide="cloud-lightning" class="w-8 h-8"></i>
+            </div>
+            <nav class="flex flex-row md:flex-col gap-4 md:gap-6">
+                <div class="sidebar-item active group" data-tab="dashboard" title="Dashboard">
+                    <i data-lucide="layout-grid" class="w-6 h-6"></i>
+                </div>
+                <div class="sidebar-item group" data-tab="map" title="Map View">
+                    <i data-lucide="map" class="w-6 h-6"></i>
+                </div>
+                <div class="sidebar-item group" data-tab="stats" title="Statistics">
+                    <i data-lucide="pie-chart" class="w-6 h-6"></i>
+                </div>
+                <div class="sidebar-item group" data-tab="calendar" title="Calendar">
+                    <i data-lucide="calendar" class="w-6 h-6"></i>
+                </div>
+                <div class="sidebar-item group" data-tab="settings" title="Settings">
+                    <i data-lucide="settings" class="w-6 h-6"></i>
+                </div>
+            </nav>
+        </div>
+        <div class="flex flex-row md:flex-col items-center gap-6">
+            <div class="relative group cursor-pointer">
+                <i data-lucide="bell" class="w-6 h-6 text-gray-400"></i>
+                <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
+            </div>
+            <div class="w-10 h-10 rounded-full overflow-hidden border-2 border-white/20">
+                <img src="https://i.pravatar.cc/150?u=weather" alt="User" class="w-full h-full object-cover">
             </div>
         </div>
-    </header>
+    </aside>
 
-    <div class="container mx-auto max-w-7xl px-4 py-6 md:py-8">
-        <!-- Breadcrumb -->
-        <div id="breadcrumb" class="mb-6 flex items-center gap-2 text-sm text-gray-500 flex-wrap">
-            <a href="#" onclick="showGrades(); return false;" class="hover:text-blue-600 transition-colors">
-                <i class="fas fa-home mr-1.5"></i>All Grades
-            </a>
-        </div>
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col gap-6 overflow-hidden">
 
-        <!-- Search & Filter Bar -->
-        <div class="bg-white rounded-xl shadow-sm p-4 md:p-6 mb-8">
-            <div class="flex flex-col md:flex-row items-stretch md:items-center gap-4">
-                <div class="flex-1">
-                     <h2 class="text-lg font-semibold text-gray-700 mb-3">Browse Resources</h2>
-                    <div class="relative">
-                        <input type="text" id="searchInput" placeholder="Search for notes, past papers, etc."
-                            onkeyup="searchMaterials(this.value)"
-                            class="w-full px-4 py-3 pl-11 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none text-sm md:text-base">
-                        <i
-                            class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+        <!-- Dashboard Section -->
+        <div id="dashboard-section" class="grid grid-cols-1 lg:grid-cols-12 gap-6 overflow-y-auto pr-2">
+            <!-- Left: Quick Info -->
+            <div class="lg:col-span-4 flex flex-col gap-6">
+                <div class="glass-card p-6 flex flex-col min-h-[400px] relative overflow-hidden">
+                    <div class="flex justify-between items-center z-10">
+                        <div class="relative flex-1 mr-4">
+                            <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"></i>
+                            <input type="text" placeholder="Search city..." class="bg-white/10 border-none rounded-xl pl-10 pr-4 py-2 w-full focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                        </div>
+                        <button class="p-2 bg-white/10 rounded-xl hover:bg-white/20 transition-all">
+                            <i data-lucide="locate-fixed" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+
+                    <div class="mt-12 flex flex-col items-center text-center z-10">
+                        <i data-lucide="cloud-lightning" class="w-24 h-24 text-yellow-400 mb-4"></i>
+                        <h1 class="text-8xl font-bold mb-2">28°c</h1>
+                        <p class="text-2xl font-medium text-white">Rainy Storm Clouds</p>
+                    </div>
+
+                    <div class="mt-auto pt-6 border-t border-white/10 z-10">
+                        <div class="flex items-center gap-2 mb-2">
+                            <i data-lucide="map-pin" class="w-4 h-4 text-blue-400"></i>
+                            <span class="city-name text-sm font-medium">Florida, US</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="clock" class="w-4 h-4 text-blue-400"></i>
+                            <span class="current-time text-sm text-gray-400">...</span>
+                        </div>
                     </div>
                 </div>
-                <div class="md:ml-4">
-                     <h2 class="text-lg font-semibold text-gray-700 mb-3">Filter by Type</h2>
-                    <div id="filterContainer" class="flex flex-wrap gap-2">
-                        <button class="filter-btn px-4 py-2 rounded-lg bg-gray-100 text-gray-800 font-medium" data-filter="" onclick="filterByType('')">All Types</button>
-                        <button class="filter-btn px-4 py-2 rounded-lg bg-gray-100 text-gray-800 font-medium" data-filter="notes" onclick="filterByType('notes')">Notes</button>
-                        <button class="filter-btn px-4 py-2 rounded-lg bg-gray-100 text-gray-800 font-medium" data-filter="past_papers" onclick="filterByType('past_papers')">Past Papers</button>
-                        <button class="filter-btn px-4 py-2 rounded-lg bg-gray-100 text-gray-800 font-medium" data-filter="worksheets" onclick="filterByType('worksheets')">Worksheets</button>
-                        <button class="filter-btn px-4 py-2 rounded-lg bg-gray-100 text-gray-800 font-medium" data-filter="videos" onclick="filterByType('videos')">Videos</button>
+
+                <!-- 7 Day Forecast -->
+                <div class="glass-card p-6">
+                    <h3 class="font-bold mb-6">7 days Forecast</h3>
+                    <div class="flex flex-col gap-4">
+                        <div class="flex justify-between items-center text-sm">
+                            <div class="flex items-center gap-3 w-20"><i data-lucide="cloud" class="w-5 h-5 text-blue-300"></i> <span class="font-bold">+29°</span><span class="text-gray-500">/18</span></div>
+                            <span class="text-gray-400">25 July</span>
+                            <span class="w-20 text-right">Tuesday</span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm">
+                            <div class="flex items-center gap-3 w-20"><i data-lucide="cloud-rain" class="w-5 h-5 text-blue-500"></i> <span class="font-bold">+21°</span><span class="text-gray-500">/16</span></div>
+                            <span class="text-gray-400">26 July</span>
+                            <span class="w-20 text-right">Wednesday</span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm">
+                            <div class="flex items-center gap-3 w-20"><i data-lucide="sun" class="w-5 h-5 text-yellow-400"></i> <span class="font-bold">+24°</span><span class="text-gray-500">/20</span></div>
+                            <span class="text-gray-400">27 July</span>
+                            <span class="w-20 text-right">Thursday</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Highlights -->
+            <div class="lg:col-span-8 flex flex-col gap-6">
+                <h3 class="font-bold">Today's Highlight</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Wind -->
+                    <div class="glass-card p-5">
+                        <p class="text-sm text-gray-400 mb-2">Wind Status</p>
+                        <div id="wind-chart"></div>
+                        <div class="flex justify-between items-end mt-2">
+                            <h4 class="text-3xl font-bold" id="wind-val">7.9 km/h</h4>
+                            <p class="text-xs text-gray-500">5:01 AM</p>
+                        </div>
+                    </div>
+                    <!-- UV -->
+                    <div class="glass-card p-5">
+                        <p class="text-sm text-gray-400 mb-2">UV Index</p>
+                        <div id="uv-chart"></div>
+                        <h4 class="text-3xl font-bold text-center" id="uv-val">5.5 <span class="text-sm font-normal">uv</span></h4>
+                    </div>
+                    <!-- Sun -->
+                    <div class="glass-card p-5 flex flex-col">
+                        <p class="text-sm text-gray-400 mb-2">Sunrise & Sunset</p>
+                        <div class="flex-1 flex items-center justify-center py-4">
+                            <svg id="sun-arc" viewBox="0 0 180 100" class="w-full h-24">
+                                <path d="M 10 90 A 80 80 0 0 1 170 90" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="2" stroke-dasharray="4,4"/>
+                                <path d="M 10 90 A 80 80 0 0 1 170 90" fill="none" stroke="#fbbf24" stroke-width="2" stroke-dashoffset="100" stroke-dasharray="100"/>
+                                <circle id="sun-dot" r="5" fill="#fbbf24" filter="drop-shadow(0 0 5px #fbbf24)"/>
+                            </svg>
+                        </div>
+                        <div class="flex justify-between text-xs font-bold">
+                            <div><p class="text-gray-500 font-normal">Sunrise</p> 5:50 AM</div>
+                            <div class="text-right"><p class="text-gray-500 font-normal">Sunset</p> 6:30 PM</div>
+                        </div>
+                    </div>
+
+                    <!-- Small Widgets -->
+                    <div class="glass-card p-5">
+                        <p class="text-sm text-gray-400 mb-2">Humidity</p>
+                        <h4 class="text-3xl font-bold mb-2" id="humidity-val">84%</h4>
+                        <p class="text-xs text-gray-400">The dew point is 27° right now</p>
+                    </div>
+                    <div class="glass-card p-5">
+                        <p class="text-sm text-gray-400 mb-2">Visibility</p>
+                        <h4 class="text-3xl font-bold mb-2" id="visibility-val">03 km</h4>
+                        <p class="text-xs text-gray-400">Haze is affecting visibility</p>
+                    </div>
+                    <div class="glass-card p-5">
+                        <p class="text-sm text-gray-400 mb-2">Feels Like</p>
+                        <h4 class="text-3xl font-bold mb-2" id="feels-like-val">42°</h4>
+                        <p class="text-xs text-gray-400">Humidity is making it feel hotter.</p>
+                    </div>
+                </div>
+
+                <!-- Mini Map / Tip -->
+                <div class="glass-card p-6 flex flex-col md:flex-row items-center gap-6">
+                    <div class="flex-1">
+                        <h3 class="font-bold mb-4">Weather condition map</h3>
+                        <div class="h-40 bg-white/5 rounded-2xl overflow-hidden relative border border-white/10 group cursor-pointer" onclick="switchTab('map')">
+                             <div class="absolute inset-0 flex items-center justify-center opacity-30 group-hover:opacity-60 transition-opacity">
+                                 <i data-lucide="map" class="w-12 h-12"></i>
+                             </div>
+                             <p class="absolute bottom-3 left-3 text-[10px] text-gray-400">Click to expand full map</p>
+                        </div>
+                    </div>
+                    <div class="w-full md:w-64 bg-blue-500/10 p-5 rounded-2xl border border-blue-500/20">
+                        <div class="flex items-center gap-2 mb-3 text-blue-400">
+                            <i data-lucide="sparkles" class="w-4 h-4"></i>
+                            <span class="text-[10px] font-bold uppercase tracking-wider">Smart Tip</span>
+                        </div>
+                        <p class="text-xs leading-relaxed text-blue-100">It's going to rain, don't forget your umbrella!</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Content Area -->
-        <div id="contentArea">
-            <!-- Dynamic content will be loaded here -->
+        <!-- Map Section -->
+        <div id="map-section" class="hidden h-full flex flex-col gap-4">
+             <div class="flex justify-between items-center">
+                 <h2 class="text-2xl font-bold">Interactive Weather Map</h2>
+                 <button onclick="switchTab('dashboard')" class="text-sm text-blue-400 hover:underline">Back to Dashboard</button>
+             </div>
+             <div id="map-container" class="flex-1 glass-card overflow-hidden"></div>
         </div>
 
-        <!-- Loading State -->
-        <div id="loadingState" class="text-center py-12">
-            <div class="inline-block">
-                <i class="fas fa-spinner fa-spin text-5xl text-blue-500 mb-4"></i>
-                <p class="text-gray-600 text-lg font-medium">Loading resources...</p>
+        <!-- Stats Section -->
+        <div id="stats-section" class="hidden h-full flex flex-col gap-4 overflow-y-auto">
+            <h2 class="text-2xl font-bold">Detailed Statistics</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                 <div class="glass-card p-6 h-80">
+                     <h3 class="mb-4 font-bold">Temperature Trends</h3>
+                     <div id="temp-trend-chart"></div>
+                 </div>
+                 <div class="glass-card p-6 h-80">
+                     <h3 class="mb-4 font-bold">Precipitation Probability</h3>
+                     <div id="precip-chart"></div>
+                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Download Modal -->
-    <div id="downloadModal"
-        class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div class="sticky top-0 bg-white p-5 border-b border-gray-200 flex items-center justify-between">
-                <h3 class="text-xl font-bold text-gray-800">Download Material</h3>
-                <button onclick="closeDownloadModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
-                    <i class="fas fa-times text-2xl"></i>
-                </button>
-            </div>
-            <div id="modalContent" class="p-6">
-                <!-- Modal content loaded here -->
-            </div>
-        </div>
-    </div>
+    </main>
 
-    <!-- Footer -->
-    <footer class="border-t border-gray-200 mt-12">
-        <div class="container mx-auto max-w-7xl px-4 py-6">
-            <div class="text-center text-sm text-gray-500">
-                <p>
-                    <i class="fas fa-heart text-red-500 mr-1"></i>
-                    Providing free educational resources to support students.
-                </p>
-                <p class="mt-2 text-xs">
-                    © 2025 Flood Support Portal. All materials are for educational purposes.
-                </p>
-            </div>
-        </div>
-    </footer>
-
-    <!-- Google Translate Widget -->
-    <div id="google_translate_element"></div>
-    <script type="text/javascript">
-        function googleTranslateElementInit() {
-            new google.translate.TranslateElement({
-                pageLanguage: 'en',
-                includedLanguages: 'ta,si',
-                layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
-                autoDisplay: false
-            }, 'google_translate_element');
-        }
+    <script src="js/app.js"></script>
+    <script>
+        lucide.createIcons();
     </script>
-    <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
-
-    <script src="js/educational_resources.js?V=15.04.12.2025"></script>
 </body>
-
 </html>
