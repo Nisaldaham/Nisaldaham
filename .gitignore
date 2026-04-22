@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+config/
+api_keys.json
+face_v2.png
