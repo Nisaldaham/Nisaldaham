@@ -356,18 +356,20 @@ class JarvisUI:
         tk.Button(body, text="PDF", command=lambda: self._upload("pdf"), **btn_style).pack(side="left", padx=(0, 6), fill="y")
         tk.Button(body, text="IMAGE", command=lambda: self._upload("image"), **btn_style).pack(side="left", padx=(0, 12), fill="y")
 
-        input_wrap = tk.Frame(body, bg=C_BG2, highlightbackground=C_LINE, highlightthickness=1)
+        input_wrap = tk.Frame(body, bg=C_BG2, highlightbackground=C_PRI, highlightthickness=1)
         input_wrap.pack(side="left", fill="both", expand=True, padx=(0, 12))
         self.cmd_entry = tk.Entry(
             input_wrap,
-            fg=C_TEXT,
+            fg=C_PRI,
             bg=C_BG2,
             insertbackground=C_PRI,
             borderwidth=0,
             relief="flat",
-            font=("Consolas", 12),
+            font=("Consolas", 14),
         )
-        self.cmd_entry.pack(fill="both", expand=True, padx=12, pady=10)
+        self.cmd_entry.pack(fill="both", expand=True, padx=12, pady=8)
+        self.cmd_entry.insert(0, "// COMMAND INPUT")
+        self.cmd_entry.bind("<FocusIn>", lambda e: self.cmd_entry.delete(0, tk.END) if self.cmd_entry.get() == "// COMMAND INPUT" else None)
         self.cmd_entry.bind("<Return>", lambda e: self._on_send())
 
         self.mute_btn = tk.Button(body, text="MIC ACTIVE", command=self._on_mute_click, **btn_style)
@@ -378,7 +380,7 @@ class JarvisUI:
             command=self._on_send,
             bg=C_PRI,
             fg=C_BG,
-            activebackground=C_PRI_SOFT,
+            activebackground=C_ACC,
             activeforeground=C_BG,
             font=("Bahnschrift SemiBold", 10),
             borderwidth=0,
