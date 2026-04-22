@@ -26,25 +26,25 @@ API_FILE = CONFIG_DIR / "api_keys.json"
 SYSTEM_NAME = "J.A.R.V.I.S"
 MODEL_BADGE = "MARK XXX COMMAND CENTER"
 
-C_BG = "#02070d"
-C_BG2 = "#051521"
-C_PANEL = "#07131b"
-C_PANEL_ALT = "#0b1b26"
-C_PRI = "#64f1ff"
-C_PRI_SOFT = "#25bfd1"
-C_TEXT = "#e8fbff"
-C_MUTED = "#79a7b5"
-C_DIM = "#173849"
-C_LINE = "#123242"
-C_ACC = "#ffc857"
-C_RED = "#ff5d5d"
-C_GREEN = "#2ef0a3"
-# ── HUD v3.1 TOKENS ──
-C_GLOW = "#1a8694"
-C_STREAM = "#0a222e"
-C_HEX = "#081b26"
-C_BRACKET = "#123242"
-C_GRID = "#061822"
+C_BG = "#01080e"
+C_BG2 = "#010a14"
+C_PANEL = "#01080e" # Matches C_BG for modern holographic feel
+C_PANEL_ALT = "#020f1a"
+C_PRI = "#00f0ff" # Electric Cyan
+C_PRI_SOFT = "#008c9e"
+C_TEXT = "#d1f7ff"
+C_MUTED = "#4a7a8a"
+C_DIM = "#081b26"
+C_LINE = "#0b2b3d"
+C_ACC = "#ffa500" # Modern Amber
+C_RED = "#ff3b3b"
+C_GREEN = "#00ff9d"
+# ── HUD v4.0 TOKENS ──
+C_GLOW = "#003e4d"
+C_STREAM = "#051621"
+C_HEX = "#03121c"
+C_BRACKET = "#0b2b3d"
+C_GRID = "#01121d"
 
 
 class JarvisUI:
@@ -144,38 +144,40 @@ class JarvisUI:
         self._build_bottom_bar()
 
     def _make_panel(self, x, y, width, height, title):
-        # Main panel container with subtle glass-like border
-        frame = tk.Frame(self.root, bg=C_PANEL, highlightbackground=C_LINE, highlightthickness=1)
+        # Modern: Transparent frame with minimal ornaments
+        frame = tk.Frame(self.root, bg=C_BG, highlightbackground=C_LINE, highlightthickness=0)
         frame.place(x=x, y=y, width=width, height=height)
 
-        # High-tech corner brackets (Canvas for vector precision)
-        ornament = tk.Canvas(frame, bg=C_PANEL, height=height, width=width, highlightthickness=0)
+        ornament = tk.Canvas(frame, bg=C_BG, height=height, width=width, highlightthickness=0)
         ornament.place(x=0, y=0, relwidth=1, relheight=1)
 
-        def _draw_brackets(e=None):
+        def _draw_ornaments(e=None):
             ornament.delete("orn")
             w, h = ornament.winfo_width(), ornament.winfo_height()
-            ext = 12
-            # Corner Brackets
-            for x1, y1, x2, y2 in [(0,0,ext,0), (0,0,0,ext), (w-ext,0,w,0), (w,0,w,ext), (0,h-ext,0,h), (0,h,ext,h), (w-ext,h,w,h), (w,h-ext,w,h)]:
-                ornament.create_line(x1, y1, x2, y2, fill=C_PRI_SOFT, width=2, tags="orn")
-        ornament.bind("<Configure>", _draw_brackets)
+            # Top-Left Bracket
+            ornament.create_line(0, 32, 0, 0, 40, 0, fill=C_PRI, width=1, tags="orn")
+            # Bottom-Right Bracket
+            ornament.create_line(w-40, h, w, h, w, h-32, fill=C_PRI, width=1, tags="orn")
+            # Side bar
+            ornament.create_rectangle(0, 35, 2, h-35, fill=C_LINE, outline="", tags="orn")
 
-        header = tk.Frame(frame, bg=C_PANEL_ALT, height=32)
-        header.pack(fill="x", pady=(2, 0))
+        ornament.bind("<Configure>", _draw_ornaments)
+
+        header = tk.Frame(frame, bg=C_BG, height=30)
+        header.pack(fill="x", pady=(0, 5))
         tk.Label(
             header,
-            text=f"// {title}",
+            text=f"{title}",
             fg=C_PRI,
-            bg=C_PANEL_ALT,
-            font=("Bahnschrift SemiBold", 10),
+            bg=C_BG,
+            font=("Bahnschrift", 9, "bold"),
             anchor="w",
-            padx=12,
+            padx=10,
         ).pack(fill="both", expand=True)
         return frame
 
     def _build_left_panel(self):
-        body = tk.Frame(self.left_frame, bg=C_PANEL)
+        body = tk.Frame(self.left_frame, bg=C_BG)
         body.pack(fill="both", expand=True, padx=12, pady=12)
 
         self.metric_vars = {
@@ -235,7 +237,7 @@ class JarvisUI:
         self.log_text.configure(state="disabled")
 
     def _build_right_panel(self):
-        body = tk.Frame(self.right_frame, bg=C_PANEL)
+        body = tk.Frame(self.right_frame, bg=C_BG)
         body.pack(fill="both", expand=True, padx=12, pady=12)
 
         self.ai_text = tk.Text(
@@ -256,7 +258,7 @@ class JarvisUI:
         self.ai_text.tag_config("sys", foreground=C_GREEN, font=("Bahnschrift SemiBold", 10))
 
     def _build_mission_panel(self):
-        body = tk.Frame(self.mission_frame, bg=C_PANEL)
+        body = tk.Frame(self.mission_frame, bg=C_BG)
         body.pack(fill="both", expand=True, padx=12, pady=12)
 
         tk.Label(body, text="OPEN MISSIONS", fg=C_MUTED, bg=C_PANEL, font=("Consolas", 9, "bold")).pack(anchor="w")
@@ -291,7 +293,7 @@ class JarvisUI:
         self._render_recommendations()
 
     def _build_sat_panel(self):
-        body = tk.Frame(self.sat_frame, bg=C_PANEL)
+        body = tk.Frame(self.sat_frame, bg=C_BG)
         body.pack(fill="both", expand=True, padx=12, pady=12)
 
         self.sat_vars = {
@@ -309,7 +311,7 @@ class JarvisUI:
             tk.Label(row, textvariable=var, fg=C_ACC, bg=C_PANEL, font=("Consolas", 8, "bold")).pack(side="right")
 
     def _build_quick_dock(self):
-        dock = tk.Frame(self.quick_frame, bg=C_PANEL)
+        dock = tk.Frame(self.quick_frame, bg=C_BG)
         dock.pack(fill="both", expand=True, padx=10, pady=10)
         actions = [
             ("SYSTEM SCAN", "/status"),
@@ -337,7 +339,7 @@ class JarvisUI:
             btn.pack(side="left", padx=4)
 
     def _build_bottom_bar(self):
-        body = tk.Frame(self.bottom_frame, bg=C_PANEL)
+        body = tk.Frame(self.bottom_frame, bg=C_BG)
         body.pack(fill="both", expand=True, padx=12, pady=10)
 
         btn_style = {
@@ -660,9 +662,9 @@ class JarvisUI:
             c.create_text(pt["x"], pt["y"], text=char_str, fill=C_STREAM, font=("Consolas", 9), anchor="n", tags="render")
 
         # ── 3. TOP COMMAND BAR ──
-        c.create_rectangle(0, 0, self.W, 88, fill="#030a10", outline="", tags="render")
+        c.create_rectangle(0, 0, self.W, 88, fill="#010c17", outline="", tags="render")
         c.create_line(0, 88, self.W, 88, fill=C_LINE, width=1, tags="render")
-        c.create_text(self.W // 2, 30, text=SYSTEM_NAME, fill=C_PRI, font=("Bahnschrift SemiBold", 28), tags="render")
+        c.create_text(self.W // 2, 30, text=SYSTEM_NAME, fill=C_PRI, font=("Bahnschrift", 26, "bold"), tags="render")
         c.create_text(self.W // 2, 58, text=MODEL_BADGE, fill=C_MUTED, font=("Consolas", 9, "bold"), tags="render")
         c.create_text(self.W - 40, 30, text=self.clock_text, fill=C_TEXT, font=("Consolas", 18, "bold"), anchor="e", tags="render")
         c.create_text(self.W - 40, 55, text=self.date_text, fill=C_MUTED, font=("Consolas", 9), anchor="e", tags="render")
@@ -673,10 +675,10 @@ class JarvisUI:
             c.create_line(0, sy, self.W, sy, fill=C_PRI_SOFT, width=1, dash=(4, 4), tags="render")
             c.create_rectangle(0, sy-2, self.W, sy+2, fill=C_GLOW, stipple="gray25", outline="", tags="render")
 
-        # Status HUD
-        c.create_text(34, 30, text="SYSTEM STATUS", fill=C_MUTED, font=("Consolas", 8, "bold"), anchor="w", tags="render")
-        status_color = C_RED if self.is_sleeping else (C_ACC if self.speaking else C_GREEN)
-        c.create_text(34, 52, text=self.status_text, fill=status_color, font=("Bahnschrift SemiBold", 12), anchor="w", tags="render")
+        # Status HUD (Modern Minimal)
+        c.create_text(34, 30, text="STRATEGIC_CMD", fill=C_MUTED, font=("Bahnschrift", 8, "bold"), anchor="w", tags="render")
+        status_color = C_RED if self.is_sleeping else (C_ACC if self.speaking else C_PRI)
+        c.create_text(34, 52, text=self.status_text, fill=status_color, font=("Bahnschrift", 11), anchor="w", tags="render")
 
         # Decorative Coordinates/Data
         if self.tick % 10 == 0:
@@ -694,51 +696,53 @@ class JarvisUI:
         self._draw_side_telemetry(c)
 
         # ── 4. BOOT OVERLAY ──
-        if self.boot_tick > 0:
-            alpha = self.boot_tick / 100
-            # Tkinter doesn't do alpha well on canvas without images, so we simulate with C_GRID/C_BG
-            if self.boot_tick % 2 == 0:
+        if self.boot_tick > 50:
+            # First half: Initializing text
+            c.create_rectangle(0, 0, self.W, self.H, fill=C_BG, tags="render")
+            c.create_text(self.FCX, self.FCY, text="INITIALIZING MARK XXX...", fill=C_PRI, font=("Bahnschrift", 20), tags="render")
+        elif self.boot_tick > 0:
+            # Second half: Fading out overlay
+            if self.boot_tick % 4 < 2: # Subtle flicker effect during boot
                 c.create_rectangle(0, 0, self.W, self.H, fill=C_BG, tags="render")
-                c.create_text(self.FCX, self.FCY, text="INITIALIZING MARK XXX...", fill=C_PRI, font=("Bahnschrift SemiBold", 20), tags="render")
 
     def _draw_globe(self, canvas):
-        R = 140 * self.scale
+        R = 145 * self.scale
         dist = 500
-        zoom = 500
+        zoom = 550
 
-        # Draw 3D Wireframe Globe
-        points = []
-
-        # Latitudes
-        for lat in range(-90, 91, 15):
+        # ── Advanced Modern Globe: Dense Grid + Landmass Clusters ──
+        # Latitudes (Finer)
+        for lat in range(-90, 91, 10):
             phi = math.radians(lat)
             ring = []
-            for lon in range(0, 361, 10):
+            for lon in range(0, 361, 5):
                 theta = math.radians(lon) + self.globe_angle
 
                 x = R * math.cos(phi) * math.cos(theta)
                 y = R * math.sin(phi)
                 z = R * math.cos(phi) * math.sin(theta)
 
-                # Projection
                 z_eff = z + dist
                 px = self.FCX + (x * zoom / z_eff)
                 py = self.FCY + (y * zoom / z_eff)
 
-                if z < 0: # Front side
+                if z < 0:
                     ring.append((px, py))
+                    # Landmass simulation: Random clusters
+                    if (lat, lon) in [(10, 100), (20, 110), (15, 105), (-10, 200), (-15, 210), (50, 40), (45, 45)]:
+                         canvas.create_oval(px-2, py-2, px+2, py+2, fill=C_PRI, outline="", tags="render")
                 else:
                     if len(ring) > 1:
-                        canvas.create_line(ring, fill=C_GRID, width=1, tags="render")
+                        canvas.create_line(ring, fill=C_LINE, width=1, tags="render")
                     ring = []
             if len(ring) > 1:
-                canvas.create_line(ring, fill=C_GRID, width=1, tags="render")
+                canvas.create_line(ring, fill=C_LINE, width=1, tags="render")
 
-        # Longitudes
-        for lon in range(0, 181, 20):
+        # Longitudes (Finer)
+        for lon in range(0, 181, 15):
             theta_base = math.radians(lon) + self.globe_angle
             line = []
-            for lat in range(-90, 91, 5):
+            for lat in range(-90, 91, 3):
                 phi = math.radians(lat)
                 theta = theta_base
 
@@ -754,15 +758,15 @@ class JarvisUI:
                     line.append((px, py))
                 else:
                     if len(line) > 1:
-                        canvas.create_line(line, fill=C_GRID, width=1, tags="render")
+                        canvas.create_line(line, fill=C_LINE, width=1, tags="render")
                     line = []
             if len(line) > 1:
-                canvas.create_line(line, fill=C_GRID, width=1, tags="render")
+                canvas.create_line(line, fill=C_LINE, width=1, tags="render")
 
-        # Satellite Orbits
-        orbit_colors = [C_PRI_SOFT, C_ACC, C_GREEN]
+        # Satellite Orbits (Modern Thin Tracks)
+        orbit_colors = [C_PRI, C_ACC, C_GREEN]
 
-        # Threat Zones (Simulated)
+        # Threat Zones (Modern Pulse)
         for i in range(2):
             t_lat = math.radians(30 + i*20)
             t_lon = math.radians(45 + i*60) + self.globe_angle
@@ -774,9 +778,9 @@ class JarvisUI:
             if tz < 0:
                 px = self.FCX + (tx * zoom / z_eff)
                 py = self.FCY + (ty * zoom / z_eff)
-                canvas.create_oval(px-10, py-10, px+10, py+10, outline=C_RED, width=1, tags="render")
-                if self.tick % 20 < 10:
-                    canvas.create_text(px, py-15, text="THREAT DETECTED", fill=C_RED, font=("Consolas", 6, "bold"), tags="render")
+                canvas.create_oval(px-12, py-12, px+12, py+12, outline=C_RED, width=1, tags="render")
+                if self.tick % 30 < 15:
+                    canvas.create_text(px, py-20, text="SCANNING_TRGT", fill=C_RED, font=("Consolas", 6, "bold"), tags="render")
         for i in range(3):
             orbit_angle = self.globe_angle * (1.2 + i * 0.3)
             tilt = math.radians(45 + i * 30)
@@ -808,11 +812,11 @@ class JarvisUI:
                         canvas.create_oval(px-4, py-4, px+4, py+4, fill=orbit_colors[i], outline=C_TEXT, width=1, tags="render")
                         canvas.create_text(px+10, py-10, text=f"SAT-{i+1}", fill=orbit_colors[i], font=("Consolas", 7, "bold"), tags="render")
                         if i == 0:
-                            # Targeting Reticle
-                            canvas.create_line(px-15, py, px-8, py, fill=C_PRI, width=1, tags="render")
-                            canvas.create_line(px+8, py, px+15, py, fill=C_PRI, width=1, tags="render")
-                            canvas.create_line(px, py-15, px, py-8, fill=C_PRI, width=1, tags="render")
-                            canvas.create_line(px, py+8, px, py+15, fill=C_PRI, width=1, tags="render")
+                            # Targeting Reticle (Modern Cornered)
+                            canvas.create_line(px-12, py-12, px-6, py-12, fill=C_PRI, tags="render")
+                            canvas.create_line(px-12, py-12, px-12, py-6, fill=C_PRI, tags="render")
+                            canvas.create_line(px+12, py+12, px+6, py+12, fill=C_PRI, tags="render")
+                            canvas.create_line(px+12, py+12, px+12, py+6, fill=C_PRI, tags="render")
 
                             # Use satellite specific coordinates 'rad' and 'tilt'
                             # This is a simplification for visual effect
@@ -847,14 +851,14 @@ class JarvisUI:
         # Layer 1: Outermost static shroud
         canvas.create_oval(self.FCX - radius - 85, self.FCY - radius - 85, self.FCX + radius + 85, self.FCY + radius + 85, outline=C_DIM, width=1, tags="render")
 
-        # Technical Labels around reactor
-        labels = ["THRM", "CORE", "SYNC", "FLUX", "ORBT", "SENS"]
+        # Technical Labels around reactor (Fine Modern Font)
+        labels = ["THRM_X", "CORE_SYNC", "ORBT_CTRL", "SENS_LINK"]
         for i, label in enumerate(labels):
-            angle = math.radians(self.angle_4 * 0.5 + i * 90)
+            angle = math.radians(self.angle_4 * 0.4 + i * 90)
             dist = radius + 95
             lx = self.FCX + math.cos(angle) * dist
             ly = self.FCY + math.sin(angle) * dist
-            canvas.create_text(lx, ly, text=label, fill=C_DIM, font=("Consolas", 6, "bold"), tags="render")
+            canvas.create_text(lx, ly, text=label, fill=C_MUTED, font=("Bahnschrift", 6), tags="render")
 
         # Layer 2: Primary Arc segments (Angle 1)
         for i in range(12):
@@ -926,11 +930,11 @@ class JarvisUI:
         canvas.create_text(360, self.H - 202, text="NEURAL ACTIVITY", fill=C_MUTED, font=("Consolas", 8, "bold"), anchor="w", tags="render")
 
     def _draw_side_telemetry(self, canvas):
-        # Background "Code Stream" labels
-        for i in range(5):
-            y = 150 + i*150
-            canvas.create_text(50, y, text="0x"+hex(random.randint(0x1000, 0xFFFF))[2:].upper(), fill=C_STREAM, font=("Consolas", 7), anchor="w", tags="render")
-            canvas.create_text(self.W-50, y, text="LINK_ID:"+str(random.randint(1000, 9999)), fill=C_STREAM, font=("Consolas", 7), anchor="e", tags="render")
+        # Background "Code Stream" labels (Modernized)
+        for i in range(8):
+            y = 120 + i*100
+            canvas.create_text(60, y, text=f"SYS_DUMP::{hex(random.randint(0x1000, 0xFFFF))}", fill=C_STREAM, font=("Consolas", 6), anchor="w", tags="render")
+            canvas.create_text(self.W-60, y, text=f"PKT_LINK::{random.randint(100, 999)}", fill=C_STREAM, font=("Consolas", 6), anchor="e", tags="render")
 
         # Left side circular stats
         lx, ly = 180, self.H - 450
