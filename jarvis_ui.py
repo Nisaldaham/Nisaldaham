@@ -96,7 +96,7 @@ class JarvisUI:
         self.clock_text = time.strftime("%H:%M:%S")
         self.date_text = time.strftime("%d %b %Y").upper()
         self.glitch_tick = 0
-        self.boot_alpha = 0
+        self.boot_tick = 100
         self.snapshot = {}
 
         self.on_text_submit = None
@@ -585,6 +585,8 @@ class JarvisUI:
 
     def _animate(self):
         self.tick += 1
+        if self.boot_tick > 0:
+            self.boot_tick -= 1
         self.glitch_tick = max(0, self.glitch_tick - 1)
         if random.random() < 0.005:
             self.glitch_tick = random.randint(2, 5)
@@ -691,6 +693,14 @@ class JarvisUI:
         self._draw_brainwave(c)
         self._draw_side_telemetry(c)
 
+        # ── 4. BOOT OVERLAY ──
+        if self.boot_tick > 0:
+            alpha = self.boot_tick / 100
+            # Tkinter doesn't do alpha well on canvas without images, so we simulate with C_GRID/C_BG
+            if self.boot_tick % 2 == 0:
+                c.create_rectangle(0, 0, self.W, self.H, fill=C_BG, tags="render")
+                c.create_text(self.FCX, self.FCY, text="INITIALIZING MARK XXX...", fill=C_PRI, font=("Bahnschrift SemiBold", 20), tags="render")
+
     def _draw_globe(self, canvas):
         R = 140 * self.scale
         dist = 500
@@ -718,10 +728,10 @@ class JarvisUI:
                 if z < 0: # Front side
                     ring.append((px, py))
                 else:
-                    if ring:
+                    if len(ring) > 1:
                         canvas.create_line(ring, fill=C_GRID, width=1, tags="render")
-                        ring = []
-            if ring:
+                    ring = []
+            if len(ring) > 1:
                 canvas.create_line(ring, fill=C_GRID, width=1, tags="render")
 
         # Longitudes
@@ -743,14 +753,30 @@ class JarvisUI:
                 if z < 0:
                     line.append((px, py))
                 else:
-                    if line:
+                    if len(line) > 1:
                         canvas.create_line(line, fill=C_GRID, width=1, tags="render")
-                        line = []
-            if line:
+                    line = []
+            if len(line) > 1:
                 canvas.create_line(line, fill=C_GRID, width=1, tags="render")
 
         # Satellite Orbits
         orbit_colors = [C_PRI_SOFT, C_ACC, C_GREEN]
+
+        # Threat Zones (Simulated)
+        for i in range(2):
+            t_lat = math.radians(30 + i*20)
+            t_lon = math.radians(45 + i*60) + self.globe_angle
+            tx = R * math.cos(t_lat) * math.cos(t_lon)
+            ty = R * math.sin(t_lat)
+            tz = R * math.cos(t_lat) * math.sin(t_lon)
+
+            z_eff = tz + dist
+            if tz < 0:
+                px = self.FCX + (tx * zoom / z_eff)
+                py = self.FCY + (ty * zoom / z_eff)
+                canvas.create_oval(px-10, py-10, px+10, py+10, outline=C_RED, width=1, tags="render")
+                if self.tick % 20 < 10:
+                    canvas.create_text(px, py-15, text="THREAT DETECTED", fill=C_RED, font=("Consolas", 6, "bold"), tags="render")
         for i in range(3):
             orbit_angle = self.globe_angle * (1.2 + i * 0.3)
             tilt = math.radians(45 + i * 30)
@@ -782,17 +808,28 @@ class JarvisUI:
                         canvas.create_oval(px-4, py-4, px+4, py+4, fill=orbit_colors[i], outline=C_TEXT, width=1, tags="render")
                         canvas.create_text(px+10, py-10, text=f"SAT-{i+1}", fill=orbit_colors[i], font=("Consolas", 7, "bold"), tags="render")
                         if i == 0:
+                            # Targeting Reticle
+                            canvas.create_line(px-15, py, px-8, py, fill=C_PRI, width=1, tags="render")
+                            canvas.create_line(px+8, py, px+15, py, fill=C_PRI, width=1, tags="render")
+                            canvas.create_line(px, py-15, px, py-8, fill=C_PRI, width=1, tags="render")
+                            canvas.create_line(px, py+8, px, py+15, fill=C_PRI, width=1, tags="render")
+
                             # Use satellite specific coordinates 'rad' and 'tilt'
                             # This is a simplification for visual effect
                             sat_lat = math.degrees(rad) % 180 - 90
                             sat_lon = math.degrees(rad + tilt) % 360 - 180
                             self.sat_vars["LAT"].set(f"{sat_lat:.2f}°")
                             self.sat_vars["LON"].set(f"{sat_lon:.2f}°")
+
+                            # Satellite Link Flicker
+                            link_status = "STABLE" if self.tick % 50 > 5 else "RESYNC..."
+                            link_color = C_ACC if link_status == "STABLE" else C_RED
+                            self.sat_vars["STATUS"].set(link_status)
                 else:
-                    if orbit_pts:
+                    if len(orbit_pts) > 1:
                         canvas.create_line(orbit_pts, fill=C_DIM, width=1, dash=(2, 4), tags="render")
-                        orbit_pts = []
-            if orbit_pts:
+                    orbit_pts = []
+            if len(orbit_pts) > 1:
                 canvas.create_line(orbit_pts, fill=C_DIM, width=1, dash=(2, 4), tags="render")
 
     def _draw_reactor(self, canvas):
@@ -889,6 +926,12 @@ class JarvisUI:
         canvas.create_text(360, self.H - 202, text="NEURAL ACTIVITY", fill=C_MUTED, font=("Consolas", 8, "bold"), anchor="w", tags="render")
 
     def _draw_side_telemetry(self, canvas):
+        # Background "Code Stream" labels
+        for i in range(5):
+            y = 150 + i*150
+            canvas.create_text(50, y, text="0x"+hex(random.randint(0x1000, 0xFFFF))[2:].upper(), fill=C_STREAM, font=("Consolas", 7), anchor="w", tags="render")
+            canvas.create_text(self.W-50, y, text="LINK_ID:"+str(random.randint(1000, 9999)), fill=C_STREAM, font=("Consolas", 7), anchor="e", tags="render")
+
         # Left side circular stats
         lx, ly = 180, self.H - 450
         canvas.create_arc(lx-50, ly-50, lx+50, ly+50, start=self.angle_1, extent=270, outline=C_LINE, width=2, style="arc", tags="render")
