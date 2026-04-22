@@ -79,6 +79,7 @@ class JarvisUI:
         self.angle_3 = 0.0
         self.angle_4 = 0.0
         self.angle_5 = 0.0
+        self.globe_angle = 0.0
         self.scan_y = 0.0
         self.grid_offset = 0.0
         self.stream_pts = []
@@ -129,14 +130,16 @@ class JarvisUI:
         column_h = self.H - 245
 
         self.left_frame = self._make_panel(left_x, top_y, 320, column_h, "SYSTEM TELEMETRY")
-        self.right_frame = self._make_panel(right_x, top_y, 350, 405, "NEURAL DIALOGUE")
-        self.mission_frame = self._make_panel(right_x, top_y + 425, 350, 200, "MISSION BOARD")
+        self.right_frame = self._make_panel(right_x, top_y, 350, 300, "NEURAL DIALOGUE")
+        self.mission_frame = self._make_panel(right_x, top_y + 315, 350, 150, "MISSION BOARD")
+        self.sat_frame = self._make_panel(right_x, top_y + 480, 350, 140, "ORBITAL TELEMETRY")
         self.quick_frame = self._make_panel(355, self.H - 190, self.W - 745, 70, "QUICK ACTION DOCK")
         self.bottom_frame = self._make_panel(20, self.H - 105, self.W - 40, 78, "COMMAND INPUT")
 
         self._build_left_panel()
         self._build_right_panel()
         self._build_mission_panel()
+        self._build_sat_panel()
         self._build_quick_dock()
         self._build_bottom_bar()
 
@@ -266,7 +269,7 @@ class JarvisUI:
             selectbackground=C_DIM,
             selectforeground=C_TEXT,
             font=("Consolas", 9),
-            height=5,
+            height=3,
         )
         self.mission_list.pack(fill="x", pady=(6, 12))
 
@@ -277,7 +280,7 @@ class JarvisUI:
             fg=C_PRI,
             borderwidth=0,
             highlightthickness=0,
-            height=5,
+            height=2,
             wrap="word",
             padx=10,
             pady=10,
@@ -286,6 +289,24 @@ class JarvisUI:
         self.reco_text.pack(fill="both", expand=True, pady=(6, 0))
         self.reco_text.configure(state="disabled")
         self._render_recommendations()
+
+    def _build_sat_panel(self):
+        body = tk.Frame(self.sat_frame, bg=C_PANEL)
+        body.pack(fill="both", expand=True, padx=12, pady=12)
+
+        self.sat_vars = {
+            "ID": tk.StringVar(value="STARK-01"),
+            "ALT": tk.StringVar(value="35,786 km"),
+            "LAT": tk.StringVar(value="0.00°"),
+            "LON": tk.StringVar(value="0.00°"),
+            "STATUS": tk.StringVar(value="SYNCHRONIZED")
+        }
+
+        for key, var in self.sat_vars.items():
+            row = tk.Frame(body, bg=C_PANEL)
+            row.pack(fill="x", pady=1)
+            tk.Label(row, text=key, fg=C_MUTED, bg=C_PANEL, font=("Consolas", 8)).pack(side="left")
+            tk.Label(row, textvariable=var, fg=C_ACC, bg=C_PANEL, font=("Consolas", 8, "bold")).pack(side="right")
 
     def _build_quick_dock(self):
         dock = tk.Frame(self.quick_frame, bg=C_PANEL)
@@ -579,6 +600,7 @@ class JarvisUI:
         self.angle_3 = (self.angle_3 + speed * 2.2) % 360
         self.angle_4 = (self.angle_4 + speed * 0.8) % 360
         self.angle_5 = (self.angle_5 - speed * 3.5) % 360
+        self.globe_angle = (self.globe_angle + 0.02) % (2 * math.pi)
 
         # Grid and Stream motion
         self.grid_offset = (self.grid_offset + (speed * 0.5)) % 36
@@ -611,6 +633,11 @@ class JarvisUI:
             x_start = self.FCX + i * 180 + gx
             x_end = self.FCX + i * 900 + gx
             c.create_line(x_start, horizon_y + gy, x_end, self.H + 400 + gy, fill=C_GRID, width=1, tags="render")
+
+        # Orbital data rings
+        for i in range(2):
+            r = 300 + i * 40
+            c.create_arc(self.FCX - r, self.FCY - r, self.FCX + r, self.FCY + r, start=self.angle_1 * (1 + i), extent=60, outline=C_LINE, width=1, style="arc", tags="render")
 
         # Horizontal scrolling grid lines
         for i in range(15):
@@ -650,15 +677,123 @@ class JarvisUI:
         c.create_text(34, 52, text=self.status_text, fill=status_color, font=("Bahnschrift SemiBold", 12), anchor="w", tags="render")
 
         # Decorative Coordinates/Data
-        for i in range(3):
-            tx = 34 + i * 100
-            canvas_text = f"SEC_{i+1}: {random.randint(100, 999)}.{random.randint(0,99)}"
-            c.create_text(tx, 75, text=canvas_text, fill=C_DIM, font=("Consolas", 7), anchor="w", tags="render")
+        if self.tick % 10 == 0:
+            self.dec_data = [f"SEC_{i+1}: {random.randint(100, 999)}.{random.randint(0,99)}" for i in range(3)]
 
+        if hasattr(self, 'dec_data'):
+            for i, canvas_text in enumerate(self.dec_data):
+                tx = 34 + i * 100
+                c.create_text(tx, 75, text=canvas_text, fill=C_DIM, font=("Consolas", 7), anchor="w", tags="render")
+
+        self._draw_globe(c)
         self._draw_reactor(c)
         self._draw_hud_badges(c)
         self._draw_brainwave(c)
         self._draw_side_telemetry(c)
+
+    def _draw_globe(self, canvas):
+        R = 140 * self.scale
+        dist = 500
+        zoom = 500
+
+        # Draw 3D Wireframe Globe
+        points = []
+
+        # Latitudes
+        for lat in range(-90, 91, 15):
+            phi = math.radians(lat)
+            ring = []
+            for lon in range(0, 361, 10):
+                theta = math.radians(lon) + self.globe_angle
+
+                x = R * math.cos(phi) * math.cos(theta)
+                y = R * math.sin(phi)
+                z = R * math.cos(phi) * math.sin(theta)
+
+                # Projection
+                z_eff = z + dist
+                px = self.FCX + (x * zoom / z_eff)
+                py = self.FCY + (y * zoom / z_eff)
+
+                if z < 0: # Front side
+                    ring.append((px, py))
+                else:
+                    if ring:
+                        canvas.create_line(ring, fill=C_GRID, width=1, tags="render")
+                        ring = []
+            if ring:
+                canvas.create_line(ring, fill=C_GRID, width=1, tags="render")
+
+        # Longitudes
+        for lon in range(0, 181, 20):
+            theta_base = math.radians(lon) + self.globe_angle
+            line = []
+            for lat in range(-90, 91, 5):
+                phi = math.radians(lat)
+                theta = theta_base
+
+                x = R * math.cos(phi) * math.cos(theta)
+                y = R * math.sin(phi)
+                z = R * math.cos(phi) * math.sin(theta)
+
+                z_eff = z + dist
+                px = self.FCX + (x * zoom / z_eff)
+                py = self.FCY + (y * zoom / z_eff)
+
+                if z < 0:
+                    line.append((px, py))
+                else:
+                    if line:
+                        canvas.create_line(line, fill=C_GRID, width=1, tags="render")
+                        line = []
+            if line:
+                canvas.create_line(line, fill=C_GRID, width=1, tags="render")
+
+        # Satellite Orbits
+        orbit_colors = [C_PRI_SOFT, C_ACC, C_GREEN]
+        for i in range(3):
+            orbit_angle = self.globe_angle * (1.2 + i * 0.3)
+            tilt = math.radians(45 + i * 30)
+
+            orbit_pts = []
+            for a in range(0, 361, 5):
+                rad = math.radians(a)
+                # Planar orbit
+                ox = (R + 40 + i*20) * math.cos(rad)
+                oy = (R + 40 + i*20) * math.sin(rad)
+                oz = 0
+
+                # Rotate orbit (tilt)
+                ry = oy * math.cos(tilt) - oz * math.sin(tilt)
+                rz = oy * math.sin(tilt) + oz * math.cos(tilt)
+
+                # Rotate orbit (time)
+                rx = ox * math.cos(self.globe_angle * 0.5) - rz * math.sin(self.globe_angle * 0.5)
+                rz2 = ox * math.sin(self.globe_angle * 0.5) + rz * math.cos(self.globe_angle * 0.5)
+
+                z_eff = rz2 + dist
+                px = self.FCX + (rx * zoom / z_eff)
+                py = self.FCY + (ry * zoom / z_eff)
+
+                if rz2 < 0:
+                    orbit_pts.append((px, py))
+                    # Draw satellite ping
+                    if abs(a - (self.tick * 2 + i * 120) % 360) < 5:
+                        canvas.create_oval(px-4, py-4, px+4, py+4, fill=orbit_colors[i], outline=C_TEXT, width=1, tags="render")
+                        canvas.create_text(px+10, py-10, text=f"SAT-{i+1}", fill=orbit_colors[i], font=("Consolas", 7, "bold"), tags="render")
+                        if i == 0:
+                            # Use satellite specific coordinates 'rad' and 'tilt'
+                            # This is a simplification for visual effect
+                            sat_lat = math.degrees(rad) % 180 - 90
+                            sat_lon = math.degrees(rad + tilt) % 360 - 180
+                            self.sat_vars["LAT"].set(f"{sat_lat:.2f}°")
+                            self.sat_vars["LON"].set(f"{sat_lon:.2f}°")
+                else:
+                    if orbit_pts:
+                        canvas.create_line(orbit_pts, fill=C_DIM, width=1, dash=(2, 4), tags="render")
+                        orbit_pts = []
+            if orbit_pts:
+                canvas.create_line(orbit_pts, fill=C_DIM, width=1, dash=(2, 4), tags="render")
 
     def _draw_reactor(self, canvas):
         color = "#3f4b52" if self.is_muted else (C_RED if self.is_sleeping else C_PRI)
@@ -676,7 +811,7 @@ class JarvisUI:
         canvas.create_oval(self.FCX - radius - 85, self.FCY - radius - 85, self.FCX + radius + 85, self.FCY + radius + 85, outline=C_DIM, width=1, tags="render")
 
         # Technical Labels around reactor
-        labels = ["THRM", "CORE", "SYNC", "FLUX"]
+        labels = ["THRM", "CORE", "SYNC", "FLUX", "ORBT", "SENS"]
         for i, label in enumerate(labels):
             angle = math.radians(self.angle_4 * 0.5 + i * 90)
             dist = radius + 95
@@ -706,7 +841,8 @@ class JarvisUI:
             start = self.angle_5 + i * 120
             canvas.create_arc(self.FCX - 58, self.FCY - 58, self.FCX + 58, self.FCY + 58, start=start, extent=40, outline=C_ACC if self.speaking else C_PRI, width=1, style="arc", tags="render")
 
-        # ── CORE RADIANCE ──
+        # ── CORE RADIANCE (Faded for Globe focus) ──
+        color = C_DIM if not self.speaking else color
         pulse = 42 + (6 if self.speaking else 0)
         glow_color = C_ACC if (self.speaking and self.tick % 2 == 0) else C_GLOW
         for glow, outline, w in ((pulse + 32, C_DIM, 1), (pulse + 20, glow_color, 2), (pulse + 8, color, 3), (pulse, C_TEXT, 4)):
@@ -722,11 +858,13 @@ class JarvisUI:
             ripple = radius + 100 + int((self.tick % 18) * 4)
             canvas.create_oval(self.FCX - ripple, self.FCY - ripple, self.FCX + ripple, self.FCY + ripple, outline=C_ACC, width=1, tags="render")
 
-        if self._has_face and self._face_pil:
-            scaled_size = int(self.FACE_SZ * self.scale * 0.78)
-            if self._face_scale_cache is None or self._face_scale_cache[0] != scaled_size:
-                scaled = self._face_pil.resize((scaled_size, scaled_size), Image.LANCZOS)
+        if self._has_face and self._face_pil and self.speaking:
+            scaled_size = int(self.FACE_SZ * self.scale * 0.45) # Smaller face to fit in globe
+            if self._face_scale_cache is None or abs(self._face_scale_cache[0] - scaled_size) > 2:
+                # Use NEAREST for faster scaling during animation, or only resize when delta > 2
+                scaled = self._face_pil.resize((scaled_size, scaled_size), Image.BILINEAR)
                 self._face_scale_cache = (scaled_size, ImageTk.PhotoImage(scaled))
+            # Subtle blend
             canvas.create_image(self.FCX, self.FCY, image=self._face_scale_cache[1], tags="render")
 
     def _draw_hud_badges(self, canvas):
@@ -755,7 +893,13 @@ class JarvisUI:
         lx, ly = 180, self.H - 450
         canvas.create_arc(lx-50, ly-50, lx+50, ly+50, start=self.angle_1, extent=270, outline=C_LINE, width=2, style="arc", tags="render")
         canvas.create_text(lx, ly, text=f"{int(self.angle_1)}°", fill=C_PRI, font=("Consolas", 10, "bold"), tags="render")
-        canvas.create_text(lx, ly+65, text="CORE ORIENTATION", fill=C_MUTED, font=("Consolas", 7), tags="render")
+        canvas.create_text(lx, ly+65, text="GLOBAL ORIENTATION", fill=C_MUTED, font=("Consolas", 7), tags="render")
+
+        # Scanning Radar
+        rx_c, ry_c = 180, 250
+        canvas.create_oval(rx_c-60, ry_c-60, rx_c+60, ry_c+60, outline=C_GRID, width=1, tags="render")
+        canvas.create_line(rx_c, ry_c, rx_c + 60*math.cos(self.globe_angle*5), ry_c + 60*math.sin(self.globe_angle*5), fill=C_PRI_SOFT, tags="render")
+        canvas.create_text(rx_c, ry_c+75, text="SURVEILLANCE RADAR", fill=C_MUTED, font=("Consolas", 7), tags="render")
 
         # Right side vertical bars
         rx, ry = self.W - 150, self.H - 450
