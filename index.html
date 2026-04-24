@@ -1,196 +1,466 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Educational Resources - Free Study Materials for Students</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>JARVIS OS</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@400;500;600&display=swap');
 
-    <!-- GOOGLE FONTS -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-        as="style">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  :root {
+    --bg:      #06090f;
+    --bg2:     #080d18;
+    --panel:   #0c1525;
+    --panel2:  #0f1c30;
+    --border:  #1a3356;
+    --border2: #1e4a72;
+    --cyan:    #64f1ff; /* Tony Stark Cyan */
+    --cyan-glow: rgba(100, 241, 255, 0.4);
+    --amber:   #ffc857; /* Tony Stark Amber */
+    --amber-glow: rgba(255, 200, 87, 0.4);
+    --text:    #ddeeff;
+    --muted:   #5a8aaa;
+    --green:   #00e5a0;
+    --red:     #ff3b30;
+    --font-mono: 'Consolas', 'Bahnschrift', monospace;
+  }
 
-    <!-- FONT AWESOME -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
-        media="print" onload="this.media='all'">
+  * { margin:0; padding:0; box-sizing:border-box; }
 
-    <!-- TAILWIND CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
+  body {
+    font-family: 'Rajdhani', var(--font-mono);
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    overflow: hidden;
+    user-select: none;
+    cursor: default;
+  }
 
-    <meta property="og:image" content="https://apilage.lk/banner_3.png">
-    <meta name="twitter:image" content="https://apilage.lk/banner_3.png">
-    <meta name="description"
-        content="Access free educational resources for students affected by recent floods. Browse materials by grade or subject and download instantly.">
+  ::-webkit-scrollbar { width:4px; }
+  ::-webkit-scrollbar-track { background: var(--bg2); }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius:2px; }
 
-    <style>
-        * {
-            font-family: 'Inter', sans-serif;
-        }
+  #app { display:flex; flex-direction:column; height:100vh; border: 1px solid var(--border); }
 
-        /* Custom Styles for a more polished UI */
-        body {
-            background-color: #f8fafc; /* Softer gray background */
-        }
+  /* ── TITLEBAR ── */
+  #titlebar {
+    height: 52px;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    flex-shrink: 0;
+    -webkit-app-region: drag;
+    position: relative;
+    z-index: 100;
+  }
+  #titlebar * { -webkit-app-region: no-drag; }
 
-        #google_translate_element {
-            position: fixed;
-            top: 1rem;
-            right: 1rem;
-            z-index: 1000;
-            background: white;
-            padding: 0.25rem 0.5rem;
-            border-radius: 0.5rem;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            font-size: 0.875rem;
-        }
+  .brand { display:flex; align-items:center; gap:10px; }
+  .brand-icon svg { width:32px; height:32px; }
+  .brand-text h1 { font-family:'Orbitron',sans-serif; font-size:13px; font-weight:700; color:var(--text); letter-spacing:2px; }
+  .online-badge { display:flex; align-items:center; gap:4px; }
+  .online-dot { width:7px; height:7px; background:var(--green); border-radius:50%;
+                box-shadow:0 0 6px var(--green); animation:pulse-dot 2s infinite; }
+  @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.5} }
+  .online-text { font-size:10px; color:var(--green); font-weight:600; letter-spacing:1px; }
 
-        .goog-te-gadget img {
-            display: none;
-        }
+  .title-center {
+    position:absolute; left:50%; transform:translateX(-50%);
+    text-align:center; pointer-events:none;
+  }
+  .title-center h2 {
+    font-family:'Orbitron',sans-serif; font-size:22px; font-weight:900;
+    color:var(--cyan); letter-spacing:6px;
+    text-shadow:0 0 20px var(--cyan-glow);
+  }
+  .title-center span { font-size:10px; color:var(--muted); letter-spacing:3px; }
 
-        .header-card {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-        }
+  .nav { display:flex; align-items:center; gap:4px; margin-left:auto; margin-right:16px; }
+  .nav-btn {
+    display:flex; align-items:center; gap:6px; padding:8px 14px;
+    background:transparent; border:none; color:var(--muted); cursor:pointer;
+    font-family:'Orbitron',sans-serif; font-size:11px; font-weight:600;
+    border-radius:4px; transition:all 0.2s; letter-spacing:1px;
+  }
+  .nav-btn:hover { color:var(--cyan); background: rgba(100,241,255,0.05); }
+  .nav-btn.active { color:var(--cyan); text-shadow: 0 0 10px var(--cyan-glow); border-bottom: 2px solid var(--cyan); border-radius: 0; }
+  .nav-btn svg { width:14px; height:14px; }
 
-        .filter-btn {
-            transition: all 0.2s ease-in-out;
-            border: 1px solid transparent;
-        }
+  .win-btns { display:flex; gap:2px; }
+  .win-btn {
+    width:32px; height:32px; display:flex; align-items:center; justify-content:center;
+    background:transparent; border:none; cursor:pointer;
+    font-size:16px; color:var(--muted); transition:all 0.2s;
+  }
+  .win-btn:hover { background:rgba(255,255,255,0.1); color:var(--text); }
+  .win-btn.close:hover { background:var(--red); color:#fff; }
 
-        .filter-btn.active {
-            background-color: #3b82f6; /* Professional blue */
-            color: white;
-            border-color: #3b82f6;
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
-            transform: translateY(-2px);
-        }
+  /* ── VIEWS ── */
+  #content { flex:1; overflow:hidden; position:relative; }
+  .view {
+    position: absolute; inset: 0;
+    display: none;
+    grid-template-columns: 292px 1fr 300px;
+    gap:8px; padding:8px;
+    overflow:hidden;
+  }
+  .view.active { display: grid; }
 
-        .filter-btn:not(.active):hover {
-            background-color: #f3f4f6;
-            border-color: #d1d5db;
-        }
-    </style>
+  /* ── PANELS ── */
+  .panel {
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:8px;
+    overflow:hidden;
+    position:relative;
+    display: flex;
+    flex-direction: column;
+  }
+  .panel::before {
+    content:''; position:absolute; top:0;left:0;right:0; height:1px;
+    background:linear-gradient(90deg,transparent,var(--cyan),transparent);
+    opacity:0.4;
+  }
+
+  .panel-header {
+    padding:8px 14px 7px;
+    background:var(--panel2);
+    border-bottom:1px solid var(--border);
+    display:flex; align-items:center; gap:8px;
+    font-family:'Orbitron',sans-serif; font-size:10px; font-weight:600;
+    color:var(--cyan); letter-spacing:2px;
+  }
+  .panel-header::before {
+    content:''; width:3px; height:16px; background:var(--cyan); border-radius:2px;
+    box-shadow:0 0 8px var(--cyan);
+  }
+
+  /* ── COLUMN LAYOUTS ── */
+  .col-side { display:flex; flex-direction:column; gap:8px; overflow:hidden; }
+  .col-center { display:flex; flex-direction:column; gap:8px; overflow:hidden; }
+
+  /* ── COMPONENTS ── */
+  #jarvis-circle-panel { height:220px; flex-shrink:0; }
+  #jarvis-canvas { width:100%; height:100%; display:block; }
+
+  .metric-row { padding:8px 14px; }
+  .metric-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:4px; }
+  .metric-label { font-size:11px; color:var(--muted); font-weight:600; font-family:'Orbitron'; }
+  .metric-val { font-size:11px; color:var(--cyan); font-family:var(--font-mono); font-weight:bold; }
+  .sparkline-wrap { height:16px; }
+  canvas.sparkline { width:100%; height:16px; display:block; }
+
+  .qa-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; padding:10px; }
+  .qa-btn {
+    background:var(--panel2); border:1px solid var(--border);
+    border-radius:8px; padding:12px 6px; display:flex;
+    flex-direction:column; align-items:center; gap:6px;
+    cursor:pointer; transition:all 0.2s;
+  }
+  .qa-btn:hover { border-color:var(--cyan); background:rgba(100,241,255,0.1); }
+  .qa-btn svg { width:24px; height:24px; color:var(--cyan); }
+  .qa-btn span { font-size:9px; color:var(--muted); font-weight:600; font-family:'Orbitron'; }
+
+  #greeting-panel { height:220px; flex-shrink:0; }
+  #greeting-inner { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; padding:10px 20px; }
+  #greeting-inner h2 { font-family:'Orbitron',sans-serif; font-size:22px; color:var(--text); letter-spacing:1px; margin-bottom:4px; }
+  #greeting-inner p { font-size:13px; color:var(--muted); margin-bottom:12px; }
+  #wave-canvas { width:100%; height:50px; margin-bottom:10px; }
+
+  #mic-btn {
+    width:50px; height:50px; border-radius:50%; border:2px solid var(--cyan);
+    background:var(--panel2); display:flex; align-items:center; justify-content:center;
+    cursor:pointer; transition:all 0.3s; position:relative;
+  }
+  #mic-btn.active { background:var(--cyan); }
+  #mic-btn.active svg { color: #000; }
+  #mic-btn svg { width:20px; height:20px; color:var(--cyan); }
+
+  .activities-row { display:flex; gap:6px; padding:10px; overflow-x:auto; }
+  .activity-btn {
+    display:flex; flex-direction:column; align-items:center; gap:8px;
+    min-width:90px; padding:12px 8px; background:var(--panel2);
+    border:1px solid var(--border); border-radius:8px;
+    cursor:pointer; transition:all 0.2s; flex:1;
+  }
+  .activity-btn:hover { border-color:var(--amber); background:rgba(255,200,87,0.1); }
+  .act-icon svg { width:22px; height:22px; color:var(--amber); }
+  .activity-btn span { font-size:10px; color:var(--muted); font-weight:600; font-family:'Orbitron'; }
+
+  #chat-panel { flex:1; overflow:hidden; }
+  #chat-area { flex:1; overflow-y:auto; padding:14px; display:flex; flex-direction:column; gap:10px; }
+  .msg-user { align-self: flex-end; max-width: 80%; }
+  .msg-user .bubble { background:var(--panel2); border:1px solid var(--border2); border-radius:12px 12px 2px 12px; padding:8px 14px; font-size:13px; }
+  .msg-jarvis { align-self: flex-start; max-width: 85%; }
+  .jarvis-label { font-size:11px; color:var(--cyan); font-weight:bold; font-family:'Orbitron'; margin-bottom:4px; }
+  .msg-jarvis .bubble { background:var(--panel2); border:1px solid var(--border); border-radius:2px 12px 12px 12px; padding:10px 14px; font-size:13px; line-height:1.4; border-left: 3px solid var(--cyan); }
+
+  #chat-input-row { padding:10px; display:flex; gap:10px; border-top:1px solid var(--border); }
+  #chat-input { flex:1; background:var(--panel2); border:1px solid var(--border); border-radius:20px; padding:8px 16px; color:var(--text); font-family:var(--font-mono); outline:none; }
+  #chat-input:focus { border-color:var(--cyan); }
+  #send-btn { width:36px; height:36px; border-radius:50%; background:var(--cyan); border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+  #send-btn svg { width:16px; height:16px; color:#000; }
+
+  #clock-inner { display:flex; align-items:center; justify-content:space-between; padding:16px; height:100%; }
+  .clock-digits { font-family:'Orbitron'; font-size:32px; font-weight:900; color:var(--text); }
+  .clock-ampm { font-family:'Orbitron'; font-size:12px; color:var(--amber); margin-left:4px; }
+  .clock-date { font-size:12px; color:var(--muted); font-family:'Rajdhani'; margin-top:4px; }
+
+  .ctrl-row { display:flex; justify-content:space-around; padding:15px; }
+  .ctrl-btn { display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer; }
+  .ctrl-circle { width:44px; height:44px; border-radius:50%; border:1px solid var(--border2); display:flex; align-items:center; justify-content:center; transition:all 0.2s; }
+  .ctrl-btn:hover .ctrl-circle { box-shadow: 0 0 15px currentColor; background: rgba(255,255,255,0.05); }
+  .ctrl-btn.power { color: var(--red); }
+  .ctrl-btn.cyan { color: var(--cyan); }
+  .ctrl-circle svg { width:20px; height:20px; }
+  .ctrl-btn span { font-size:9px; font-family:'Orbitron'; color: var(--muted); }
+
+  #ironman-canvas { width:70px; height:130px; display:block; }
+  .status-item { display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.05); }
+  .status-name { font-size:11px; color:var(--muted); font-family:'Orbitron'; }
+  .status-online { font-size:10px; color:var(--green); font-weight:bold; }
+
+  #bottombar { height:40px; background:var(--bg2); border-top:1px solid var(--border); display:flex; align-items:center; padding:0 16px; font-size:11px; font-family:'Orbitron'; color:var(--muted); }
+  .bar-dot { width:6px; height:6px; background:var(--green); border-radius:50%; margin-left:8px; box-shadow: 0 0 5px var(--green); }
+
+  /* ── TOOLS VIEW ── */
+  .tools-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:15px; padding:20px; }
+  .tool-card { background:var(--panel2); border:1px solid var(--border); border-radius:12px; padding:25px; display:flex; flex-direction:column; align-items:center; gap:15px; cursor:pointer; transition:all 0.3s; }
+  .tool-card:hover { border-color:var(--cyan); transform:translateY(-5px); box-shadow:0 10px 20px rgba(0,0,0,0.4), 0 0 15px var(--cyan-glow); }
+  .tool-card svg { width:40px; height:40px; color:var(--cyan); }
+  .tool-card h3 { font-size:14px; color:var(--text); letter-spacing:1px; }
+
+  /* ── MEMORY VIEW ── */
+  .memory-container { padding: 20px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
+  .mem-entry { background: var(--panel2); border-left: 4px solid var(--amber); padding: 15px; border-radius: 4px; animation: slideIn 0.3s ease-out; }
+  @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+  .mem-time { font-family: var(--font-mono); font-size: 11px; color: var(--amber); margin-bottom: 5px; }
+  .mem-text { font-size: 14px; color: var(--text); }
+
+  /* ── SYSTEM VIEW ── */
+  .sys-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 25px; }
+  .sys-info-item { background: var(--panel2); padding: 20px; border-radius: 8px; border: 1px solid var(--border); }
+  .sys-info-label { font-family: 'Orbitron'; font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+  .sys-info-val { font-family: var(--font-mono); font-size: 18px; color: var(--cyan); }
+
+  #toast { position:fixed; bottom:60px; left:50%; transform:translateX(-50%); background:var(--panel); border:1px solid var(--cyan); color:var(--cyan); padding:10px 25px; border-radius:30px; font-family:'Orbitron'; font-size:12px; z-index:10000; transition:all 0.4s; opacity: 0; pointer-events: none; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+</style>
 </head>
+<body>
+<div id="app">
+  <div id="titlebar">
+    <div class="brand">
+      <div class="brand-icon">
+        <svg viewBox="0 0 32 32" fill="none"><polygon points="16,2 28,8 28,24 16,30 4,24 4,8" fill="#1a0505" stroke="#ff4422" stroke-width="1.5"/><text x="16" y="21" text-anchor="middle" fill="white" font-size="12" font-weight="bold" font-family="monospace">J</text></svg>
+      </div>
+      <div class="brand-text"><h1>JARVIS OS</h1><div class="online-badge"><div class="online-dot"></div><span class="online-text">ONLINE</span></div></div>
+    </div>
+    <div class="title-center"><h2>JARVIS</h2><span>v2.5.0</span></div>
+    <nav class="nav">
+      <button class="nav-btn active" onclick="switchTab(this,'Main')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg> MAIN</button>
+      <button class="nav-btn" onclick="switchTab(this,'Tools')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg> TOOLS</button>
+      <button class="nav-btn" onclick="switchTab(this,'Memory')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg> MEMORY</button>
+      <button class="nav-btn" onclick="switchTab(this,'System')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2m0 18v-2"/></svg> SYSTEM</button>
+    </nav>
+    <div class="win-btns">
+      <button class="win-btn" onclick="window.pywebview.api.minimize()">&#8722;</button>
+      <button class="win-btn close" onclick="window.pywebview.api.close_app()">&#10005;</button>
+    </div>
+  </div>
 
-<body class="p-4 md:p-6">
-    <!-- Header -->
-    <header class="bg-white rounded-xl header-card sticky top-4 z-50">
-        <div class="container mx-auto px-4 py-3">
-            <div class="flex items-center justify-between">
-                <a href="/" class="flex items-center gap-3">
-                    <div class="bg-blue-600 p-3 rounded-lg">
-                        <i class="fas fa-book-open text-2xl text-white"></i>
-                    </div>
-                    <div>
-                        <h1 class="text-xl md:text-2xl font-bold text-gray-800">Educational Resources</h1>
-                        <p class="text-xs md:text-sm text-gray-500">Support for flood-affected students</p>
-                    </div>
-                </a>
-                <a href="/"
-                    class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 md:px-5 py-2 rounded-lg transition-colors text-sm md:text-base font-medium">
-                    <i class="fas fa-home mr-2 opacity-70"></i>Home
-                </a>
-            </div>
+  <div id="content">
+    <div id="view-Main" class="view active">
+      <div class="col-side">
+        <div class="panel" id="jarvis-circle-panel"><canvas id="jarvis-canvas"></canvas></div>
+        <div class="panel"><div class="panel-header">CORE METRICS</div>
+          <div class="metric-row"><div class="metric-top"><span class="metric-label">CPU</span><span class="metric-val" id="cpu-val">0%</span></div><div class="sparkline-wrap"><canvas class="sparkline" id="spark-cpu"></canvas></div></div>
+          <div class="metric-row"><div class="metric-top"><span class="metric-label">RAM</span><span class="metric-val" id="ram-val">0%</span></div><div class="sparkline-wrap"><canvas class="sparkline" id="spark-ram"></canvas></div></div>
+          <div class="metric-row"><div class="metric-top"><span class="metric-label">NET</span><span class="metric-val" id="net-val">0 Mbps</span></div><div class="sparkline-wrap"><canvas class="sparkline" id="spark-net"></canvas></div></div>
         </div>
-    </header>
-
-    <div class="container mx-auto max-w-7xl px-4 py-6 md:py-8">
-        <!-- Breadcrumb -->
-        <div id="breadcrumb" class="mb-6 flex items-center gap-2 text-sm text-gray-500 flex-wrap">
-            <a href="#" onclick="showGrades(); return false;" class="hover:text-blue-600 transition-colors">
-                <i class="fas fa-home mr-1.5"></i>All Grades
-            </a>
-        </div>
-
-        <!-- Search & Filter Bar -->
-        <div class="bg-white rounded-xl shadow-sm p-4 md:p-6 mb-8">
-            <div class="flex flex-col md:flex-row items-stretch md:items-center gap-4">
-                <div class="flex-1">
-                     <h2 class="text-lg font-semibold text-gray-700 mb-3">Browse Resources</h2>
-                    <div class="relative">
-                        <input type="text" id="searchInput" placeholder="Search for notes, past papers, etc."
-                            onkeyup="searchMaterials(this.value)"
-                            class="w-full px-4 py-3 pl-11 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none text-sm md:text-base">
-                        <i
-                            class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                    </div>
-                </div>
-                <div class="md:ml-4">
-                     <h2 class="text-lg font-semibold text-gray-700 mb-3">Filter by Type</h2>
-                    <div id="filterContainer" class="flex flex-wrap gap-2">
-                        <button class="filter-btn px-4 py-2 rounded-lg bg-gray-100 text-gray-800 font-medium" data-filter="" onclick="filterByType('')">All Types</button>
-                        <button class="filter-btn px-4 py-2 rounded-lg bg-gray-100 text-gray-800 font-medium" data-filter="notes" onclick="filterByType('notes')">Notes</button>
-                        <button class="filter-btn px-4 py-2 rounded-lg bg-gray-100 text-gray-800 font-medium" data-filter="past_papers" onclick="filterByType('past_papers')">Past Papers</button>
-                        <button class="filter-btn px-4 py-2 rounded-lg bg-gray-100 text-gray-800 font-medium" data-filter="worksheets" onclick="filterByType('worksheets')">Worksheets</button>
-                        <button class="filter-btn px-4 py-2 rounded-lg bg-gray-100 text-gray-800 font-medium" data-filter="videos" onclick="filterByType('videos')">Videos</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Content Area -->
-        <div id="contentArea">
-            <!-- Dynamic content will be loaded here -->
-        </div>
-
-        <!-- Loading State -->
-        <div id="loadingState" class="text-center py-12">
-            <div class="inline-block">
-                <i class="fas fa-spinner fa-spin text-5xl text-blue-500 mb-4"></i>
-                <p class="text-gray-600 text-lg font-medium">Loading resources...</p>
-            </div>
-        </div>
+        <div class="panel"><div class="panel-header">QUICK LINKS</div><div class="qa-grid">
+          <div class="qa-btn" onclick="qaAction('files')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg><span>FILES</span></div>
+          <div class="qa-btn" onclick="qaAction('terminal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg><span>TERM</span></div>
+          <div class="qa-btn" onclick="qaAction('browser')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10"/></svg><span>WEB</span></div>
+        </div></div>
+      </div>
+      <div class="col-center">
+        <div class="panel" id="greeting-panel"><div id="greeting-inner"><h2 id="greeting-text">Initializing...</h2><p>All systems online, Sir.</p><canvas id="wave-canvas"></canvas><div id="mic-btn" onclick="toggleMic()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg></div></div></div>
+        <div class="panel"><div class="panel-header">ACTIVE MODULES</div><div class="activities-row">
+          <div class="activity-btn" onclick="activity('Scanner')"><div class="act-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg></div><span>SCANNER</span></div>
+          <div class="activity-btn" onclick="activity('Defense')"><div class="act-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><span>DEFENSE</span></div>
+          <div class="activity-btn" onclick="activity('Network')"><div class="act-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><span>NET-LINK</span></div>
+        </div></div>
+        <div class="panel" id="chat-panel"><div class="panel-header">COMMAND INTERFACE</div><div id="chat-area"></div><div id="chat-input-row"><input id="chat-input" placeholder="Enter command..." onkeydown="if(event.key==='Enter')sendMsg()"><button id="send-btn" onclick="sendMsg()"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 2L11 13 2 9l20-7z"/></svg></button></div></div>
+      </div>
+      <div class="col-side">
+        <div class="panel"><div id="clock-inner"><div><div class="clock-digits" id="clock-h">00:00</div><div class="clock-date" id="clock-date">Initializing...</div></div><canvas id="analog-canvas" width="88" height="88"></canvas></div></div>
+        <div class="panel"><div class="panel-header">POWER MANAGEMENT</div><div class="ctrl-row">
+          <div class="ctrl-btn cyan" onclick="sysAction('Reboot')"><div class="ctrl-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg></div><span>REBOOT</span></div>
+          <div class="ctrl-btn power" onclick="sysAction('shutdown')"><div class="ctrl-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.36 6.64a9 9 0 11-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg></div><span>SHUTDOWN</span></div>
+        </div></div>
+        <div class="panel" style="flex:1"><div class="panel-header">DIAGNOSTIC AVATAR</div><div style="display:flex; padding:15px; gap:15px;"><canvas id="ironman-canvas" width="70" height="130"></canvas><div style="flex:1"><div class="status-item"><span class="status-name">CORE</span><span class="status-online">STABLE</span></div><div class="status-item"><span class="status-name">HULL</span><span class="status-online">100%</span></div><div class="status-item"><span class="status-name">OS</span><span class="status-online">v2.5</span></div></div></div></div>
+      </div>
     </div>
 
-    <!-- Download Modal -->
-    <div id="downloadModal"
-        class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div class="sticky top-0 bg-white p-5 border-b border-gray-200 flex items-center justify-between">
-                <h3 class="text-xl font-bold text-gray-800">Download Material</h3>
-                <button onclick="closeDownloadModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
-                    <i class="fas fa-times text-2xl"></i>
-                </button>
-            </div>
-            <div id="modalContent" class="p-6">
-                <!-- Modal content loaded here -->
-            </div>
+    <div id="view-Tools" class="view">
+      <div style="grid-column: span 3; display: flex; flex-direction: column; gap: 8px;">
+        <div class="panel" style="flex: 1;">
+          <div class="panel-header">ADVANCED SYSTEM TOOLS</div>
+          <div class="tools-grid">
+            <div class="tool-card" onclick="qaAction('terminal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg><h3>TERMINAL</h3></div>
+            <div class="tool-card" onclick="qaAction('files')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg><h3>FILE SYSTEM</h3></div>
+            <div class="tool-card" onclick="qaAction('browser')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10"/></svg><h3>WEB ACCESS</h3></div>
+            <div class="tool-card" onclick="activity('Scanner')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><h3>SCANNER</h3></div>
+          </div>
         </div>
+      </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="border-t border-gray-200 mt-12">
-        <div class="container mx-auto max-w-7xl px-4 py-6">
-            <div class="text-center text-sm text-gray-500">
-                <p>
-                    <i class="fas fa-heart text-red-500 mr-1"></i>
-                    Providing free educational resources to support students.
-                </p>
-                <p class="mt-2 text-xs">
-                    © 2025 Flood Support Portal. All materials are for educational purposes.
-                </p>
-            </div>
+    <div id="view-Memory" class="view">
+      <div style="grid-column: span 3; display: flex; flex-direction: column;">
+        <div class="panel" style="flex: 1;">
+          <div class="panel-header">NEURAL MEMORY LOGS</div>
+          <div class="memory-container" id="memory-list"></div>
         </div>
-    </footer>
+      </div>
+    </div>
 
-    <!-- Google Translate Widget -->
-    <div id="google_translate_element"></div>
-    <script type="text/javascript">
-        function googleTranslateElementInit() {
-            new google.translate.TranslateElement({
-                pageLanguage: 'en',
-                includedLanguages: 'ta,si',
-                layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
-                autoDisplay: false
-            }, 'google_translate_element');
-        }
-    </script>
-    <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+    <div id="view-System" class="view">
+      <div style="grid-column: span 3; display: flex; flex-direction: column;">
+        <div class="panel" style="flex: 1;">
+          <div class="panel-header">STARK INDUSTRIES SYSTEM SPECS</div>
+          <div class="sys-info-grid">
+            <div class="sys-info-item"><div class="sys-info-label">PROCESSOR</div><div class="sys-info-val">STARK-X9 NEURAL</div></div>
+            <div class="sys-info-item"><div class="sys-info-label">OS VERSION</div><div class="sys-info-val">v2.5.0-JARVIS</div></div>
+            <div class="sys-info-item"><div class="sys-info-label">ENCRYPTION</div><div class="sys-info-val">AES-1024 QUANTUM</div></div>
+            <div class="sys-info-item"><div class="sys-info-label">LOCATION</div><div class="sys-info-val">MALIBU HQ</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-    <script src="js/educational_resources.js?V=15.04.12.2025"></script>
+  <div id="bottombar"><span>STARK INDUSTRIES SECURE PROTOCOL // INITIALIZED // READY</span><div class="bar-dot"></div></div>
+</div>
+<div id="toast"></div>
+
+<script>
+let micActive = false, animTick = 0;
+let sparkData = { cpu: Array(40).fill(0), ram: Array(40).fill(0), net: Array(40).fill(0) };
+let waveHistory = Array(120).fill(0);
+
+function switchTab(el, name) {
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  showToast('ACCESSING ' + name.toUpperCase() + '...');
+}
+
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock-h').textContent = now.toLocaleTimeString('en-US', {hour12: false, hour: '2-digit', minute: '2-digit'});
+  document.getElementById('clock-date').textContent = now.toLocaleDateString('en-US', {weekday:'long', month:'short', day:'numeric'}).toUpperCase();
+  const greet = now.getHours() < 12 ? 'GOOD MORNING' : now.getHours() < 18 ? 'GOOD AFTERNOON' : 'GOOD EVENING';
+  document.getElementById('greeting-text').textContent = greet + ', MR. STARK';
+}
+setInterval(updateClock, 1000); updateClock();
+
+function drawJarvisCircle() {
+  const c = document.getElementById('jarvis-canvas'); if(!c) return;
+  const ctx = c.getContext('2d'), w = c.width = c.offsetWidth, h = c.height = c.offsetHeight, cx = w/2, cy = h/2, t = animTick * 0.04;
+  ctx.clearRect(0,0,w,h);
+  [{r:80, s:0.5, d:[5,10], c:'#64f1ff55'}, {r:65, s:-0.7, d:[10,5], c:'#ffc85777'}, {r:45, s:1, d:[2,4], c:'#64f1ff99'}].forEach(r => {
+    ctx.save(); ctx.translate(cx,cy); ctx.rotate(t*r.s); ctx.beginPath(); ctx.arc(0,0,r.r,0,Math.PI*2); ctx.setLineDash(r.d); ctx.strokeStyle=r.c; ctx.lineWidth=1.5; ctx.stroke(); ctx.restore();
+  });
+  ctx.font='bold 12px Orbitron'; ctx.fillStyle='#64f1ff'; ctx.textAlign='center'; ctx.fillText('JARVIS', cx, cy+4);
+}
+
+function drawWave() {
+  const c = document.getElementById('wave-canvas'); if(!c) return;
+  const ctx = c.getContext('2d'), w = c.width = c.offsetWidth, h = c.height = 50, mid = 25;
+  waveHistory.shift(); waveHistory.push(micActive ? (Math.random()-0.5)*40 : Math.sin(animTick*0.1)*10 + Math.sin(animTick*0.2)*5);
+  ctx.clearRect(0,0,w,h); ctx.beginPath(); ctx.moveTo(0,mid);
+  waveHistory.forEach((v,i) => ctx.lineTo(i*(w/120), mid-v));
+  ctx.strokeStyle='#64f1ff'; ctx.lineWidth=2; ctx.stroke();
+}
+
+function drawSparkline(id, data, color) {
+  const c = document.getElementById(id); if(!c) return;
+  const ctx = c.getContext('2d'), w = c.width = c.offsetWidth, h = 16;
+  ctx.clearRect(0,0,w,h); ctx.beginPath();
+  data.forEach((v,i) => { const x = i*(w/39), y = h - (v/100)*12 - 2; i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y); });
+  ctx.strokeStyle=color; ctx.lineWidth=1.5; ctx.stroke();
+}
+
+function drawIronMan() {
+  const c = document.getElementById('ironman-canvas'); if(!c) return;
+  const ctx = c.getContext('2d'); ctx.clearRect(0,0,70,130);
+  ctx.strokeStyle='#1a5080'; ctx.lineWidth=1.5; ctx.strokeRect(20,5,30,30);
+  ctx.beginPath(); ctx.arc(35,55,10,0,Math.PI*2); ctx.strokeStyle='#64f1ff'; ctx.stroke();
+  ctx.fillStyle='#64f1ff33'; ctx.fill();
+}
+
+function updateStats() {
+  if(window.pywebview) {
+    window.pywebview.api.get_stats().then(r => {
+      const s = JSON.parse(r);
+      sparkData.cpu.push(s.cpu); sparkData.cpu.shift();
+      sparkData.ram.push(s.ram); sparkData.ram.shift();
+      sparkData.net.push(Math.min(s.net, 100)); sparkData.net.shift();
+      document.getElementById('cpu-val').textContent = s.cpu.toFixed(0)+'%';
+      document.getElementById('ram-val').textContent = s.ram.toFixed(0)+'%';
+      document.getElementById('net-val').textContent = s.net.toFixed(1)+' Mbps';
+    });
+  }
+  drawSparkline('spark-cpu', sparkData.cpu, '#64f1ff');
+  drawSparkline('spark-ram', sparkData.ram, '#ffc857');
+  drawSparkline('spark-net', sparkData.net, '#64f1ff');
+}
+setInterval(updateStats, 2000);
+
+function animate() { animTick++; drawJarvisCircle(); drawWave(); if(animTick%30===0){drawIronMan(); updateAnalog();} requestAnimationFrame(animate); }
+
+function updateAnalog() {
+  const c = document.getElementById('analog-canvas'); if(!c) return;
+  const ctx = c.getContext('2d'), now = new Date(), cx=44, cy=44;
+  ctx.clearRect(0,0,88,88); ctx.beginPath(); ctx.arc(cx,cy,40,0,Math.PI*2); ctx.strokeStyle='#1e4a72'; ctx.stroke();
+  const ha = (now.getHours()%12 + now.getMinutes()/60)*Math.PI/6 - Math.PI/2;
+  const ma = now.getMinutes()*Math.PI/30 - Math.PI/2;
+  ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+20*Math.cos(ha), cy+20*Math.sin(ha)); ctx.strokeStyle='#64f1ff'; ctx.lineWidth=3; ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+30*Math.cos(ma), cy+30*Math.sin(ma)); ctx.strokeStyle='#ffc857'; ctx.lineWidth=2; ctx.stroke();
+}
+
+function toggleMic() { micActive = !micActive; document.getElementById('mic-btn').classList.toggle('active', micActive); showToast(micActive ? 'LISTENING...' : 'MIC STANDBY'); }
+
+function sendMsg() {
+  const i = document.getElementById('chat-input'), t = i.value.trim(); if(!t) return; i.value = '';
+  const a = document.getElementById('chat-area'), ts = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  const u = document.createElement('div'); u.className='msg-user'; u.innerHTML=`<div class="bubble">${t}</div>`; a.appendChild(u);
+  addMemoryEntry('User Command: ' + t);
+  setTimeout(() => {
+    const j = document.createElement('div'); j.className='msg-jarvis'; j.innerHTML=`<div class="jarvis-label">JARVIS</div><div class="bubble">COMMAND RECEIVED. PROCESSING "${t.toUpperCase()}". ALL SYSTEMS NOMINAL.</div>`;
+    a.appendChild(j); a.scrollTop = a.scrollHeight;
+  }, 600); a.scrollTop = a.scrollHeight;
+}
+
+function addMemoryEntry(text) {
+  const m = document.getElementById('memory-list'), e = document.createElement('div'), ts = new Date().toLocaleTimeString();
+  e.className = 'mem-entry'; e.innerHTML = `<div class="mem-time">${ts}</div><div class="mem-text">${text}</div>`;
+  m.prepend(e);
+}
+
+function qaAction(t) { if(window.pywebview) window.pywebview.api.execute_action(t); showToast('INITIATING ' + t.toUpperCase() + '...'); addMemoryEntry('System Action: ' + t); }
+function activity(t) { showToast('ACTIVATING ' + t.toUpperCase() + '...'); addMemoryEntry('Module Activated: ' + t); }
+function sysAction(t) { if(t==='shutdown' && confirm('SECURE SHUTDOWN?')) window.pywebview.api.close_app(); else showToast('SYSTEM ' + t.toUpperCase() + '...'); }
+
+function showToast(m) { const t = document.getElementById('toast'); t.textContent = m; t.style.opacity = '1'; setTimeout(() => t.style.opacity = '0', 2000); }
+
+animate();
+addMemoryEntry('JARVIS OS v2.5.0 Boot Sequence Complete.');
+</script>
 </body>
-
 </html>
