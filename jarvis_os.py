@@ -19,9 +19,42 @@ class JarvisAPI:
         self._win = None
         self._last_net = None
         self._last_time = None
+        self._memory_path = "memory.json"
+        self._init_memory()
+
+    def _init_memory(self):
+        if not os.path.exists(self._memory_path):
+            default_mem = {
+                "user": {
+                    "name": "Tony Stark",
+                    "hobbies": "Inventing, Saving the World",
+                    "biometrics": "Oxygen: 98%, Heart Rate: 72 bpm"
+                },
+                "logs": [
+                    {"time": time.ctime(), "text": "JARVIS OS v2.5.0 Boot Sequence Complete."}
+                ],
+                "chat_history": []
+            }
+            self.save_memory(json.dumps(default_mem))
 
     def set_window(self, window):
         self._win = window
+
+    def get_memory(self):
+        try:
+            with open(self._memory_path, 'r') as f:
+                return f.read()
+        except Exception as e:
+            return json.dumps({"error": str(e)})
+
+    def save_memory(self, data_json):
+        try:
+            data = json.loads(data_json)
+            with open(self._memory_path, 'w') as f:
+                json.dump(data, f, indent=4)
+            return json.dumps({"status": "success"})
+        except Exception as e:
+            return json.dumps({"status": "error", "message": str(e)})
 
     def get_stats(self):
         if not HAS_PSUTIL:
@@ -114,7 +147,29 @@ class JarvisAPI:
                 else:
                     subprocess.Popen(["gnome-calculator"])
             elif action_type == 'shutdown':
-                self.close_app()
+                if sys.platform == "win32":
+                    os.system("shutdown /s /t 1")
+                else:
+                    os.system("shutdown -h now")
+            elif action_type == 'restart':
+                if sys.platform == "win32":
+                    os.system("shutdown /r /t 1")
+                else:
+                    os.system("reboot")
+            elif action_type == 'lock':
+                if sys.platform == "win32":
+                    os.system("rundll32.exe user32.dll,LockWorkStation")
+                elif sys.platform == "darwin":
+                    os.system("open -a ScreenSaverEngine")
+                else:
+                    os.system("xdg-screensaver lock")
+            elif action_type == 'sleep':
+                if sys.platform == "win32":
+                    os.system("rundll32.exe powrprof.dll,SetSuspendState 0,1,0")
+                elif sys.platform == "darwin":
+                    os.system("pmset sleepnow")
+                else:
+                    os.system("systemctl suspend")
             return json.dumps({"status": "success", "action": action_type})
         except Exception as e:
             return json.dumps({"status": "error", "message": str(e)})
@@ -482,10 +537,25 @@ HTML = r"""<!DOCTYPE html>
   .tool-card h3 { font-size:14px; color:var(--text); letter-spacing:1px; font-family: 'Orbitron'; }
 
   /* ── MEMORY VIEW ── */
-  .memory-container { padding: 20px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
-  .mem-entry { background: var(--panel2); border-left: 4px solid var(--orange); padding: 15px; border-radius: 4px; }
+  .memory-layout { display: grid; grid-template-columns: 1fr 2fr; gap: 15px; padding: 20px; height: 100%; overflow: hidden; }
+  .memory-sidebar { display: flex; flex-direction: column; gap: 15px; }
+  .memory-container { flex: 1; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; padding-right: 10px; }
+  .mem-entry { background: var(--panel2); border-left: 4px solid var(--orange); padding: 15px; border-radius: 4px; border-bottom: 1px solid var(--border); }
   .mem-time { font-family: var(--font-mono); font-size: 11px; color: var(--orange); margin-bottom: 5px; }
-  .mem-text { font-size: 14px; color: var(--text); }
+  .mem-text { font-size: 14px; color: var(--text); line-height: 1.4; }
+
+  .user-profile-card { background: var(--panel2); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .profile-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
+  .profile-avatar { width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--cyan); display: flex; align-items: center; justify-content: center; font-size: 30px; background: var(--bg); }
+  .profile-info h3 { font-family: 'Orbitron'; font-size: 16px; color: var(--text); }
+  .profile-info p { font-size: 12px; color: var(--muted); }
+
+  .profile-field { margin-bottom: 15px; }
+  .profile-field label { display: block; font-size: 10px; color: var(--cyan); text-transform: uppercase; margin-bottom: 5px; letter-spacing: 1px; }
+  .profile-field input, .profile-field textarea { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 8px; color: var(--text); font-family: 'Rajdhani'; font-size: 14px; outline: none; transition: border-color 0.2s; }
+  .profile-field input:focus, .profile-field textarea:focus { border-color: var(--cyan); }
+  .save-mem-btn { background: var(--cyan2); color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; font-family: 'Orbitron'; font-size: 10px; width: 100%; transition: background 0.2s; }
+  .save-mem-btn:hover { background: var(--cyan); }
 
   /* ── SYSTEM VIEW ── */
   .sys-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 25px; }
@@ -565,6 +635,10 @@ HTML = r"""<!DOCTYPE html>
             <div class="metric-top"><span class="metric-label">RAM Usage</span><span class="metric-val" id="ram-val">45%</span></div>
             <div class="sparkline-wrap"><canvas class="sparkline" id="spark-ram"></canvas></div>
           </div>
+          <div class="metric-row">
+            <div class="metric-top"><span class="metric-label">Disk Usage</span><span class="metric-val" id="disk-val">62%</span></div>
+            <div class="sparkline-wrap"><canvas class="sparkline" id="spark-disk"></canvas></div>
+          </div>
           <div class="metric-row" style="padding-bottom:8px">
             <div class="metric-top"><span class="metric-label">Network</span><span class="metric-val" id="net-val">120.4 Mbps</span></div>
             <div class="sparkline-wrap"><canvas class="sparkline" id="spark-net"></canvas></div>
@@ -642,14 +716,31 @@ HTML = r"""<!DOCTYPE html>
 
     <!-- TOOLS VIEW -->
     <div id="view-Tools" class="view">
-      <div style="grid-column: span 3;">
-        <div class="panel" style="height: 100%;">
+      <div style="grid-column: span 3; display: flex; flex-direction: column; gap: 8px;">
+        <div class="panel" style="flex: 1;">
           <div class="panel-header">ADVANCED SYSTEM TOOLS</div>
           <div class="tools-grid">
             <div class="tool-card" onclick="qaAction('terminal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg><h3>TERMINAL</h3></div>
             <div class="tool-card" onclick="qaAction('files')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg><h3>FILE SYSTEM</h3></div>
             <div class="tool-card" onclick="qaAction('browser')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10"/></svg><h3>WEB ACCESS</h3></div>
             <div class="tool-card" onclick="activity('Scanner')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><h3>SCANNER</h3></div>
+          </div>
+        </div>
+        <div class="panel" style="flex: 1;">
+          <div class="panel-header">SECURITY PROTOCOLS</div>
+          <div class="tools-grid" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));">
+            <div class="tool-card" style="border-left: 4px solid var(--red);" onclick="activity('House Party Protocol')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#ff3b30" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+              <h3 style="color: var(--red);">HOUSE PARTY</h3>
+            </div>
+            <div class="tool-card" style="border-left: 4px solid var(--orange);" onclick="activity('Clean Slate Protocol')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#ff8c42" stroke-width="2"><path d="M21 11V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2h6"/><path d="M12 11l4 4 4-4m-4 4V7"/></svg>
+              <h3 style="color: var(--orange);">CLEAN SLATE</h3>
+            </div>
+            <div class="tool-card" style="border-left: 4px solid var(--green);" onclick="activity('Sentinel Mode')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#00e5a0" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <h3 style="color: var(--green);">SENTINEL</h3>
+            </div>
           </div>
         </div>
       </div>
@@ -659,8 +750,37 @@ HTML = r"""<!DOCTYPE html>
     <div id="view-Memory" class="view">
       <div style="grid-column: span 3;">
         <div class="panel" style="height: 100%;">
-          <div class="panel-header">NEURAL MEMORY LOGS</div>
-          <div class="memory-container" id="memory-list"></div>
+          <div class="panel-header">NEURAL MEMORY CORE</div>
+          <div class="memory-layout">
+            <div class="memory-sidebar">
+              <div class="user-profile-card">
+                <div class="profile-header">
+                  <div class="profile-avatar">👤</div>
+                  <div class="profile-info">
+                    <h3 id="prof-name-display">Tony Stark</h3>
+                    <p>Primary User</p>
+                  </div>
+                </div>
+                <div class="profile-field">
+                  <label>Full Name</label>
+                  <input type="text" id="prof-name-input" value="Tony Stark">
+                </div>
+                <div class="profile-field">
+                  <label>Hobbies / Interests</label>
+                  <textarea id="prof-hobbies-input" rows="3">Inventing, Saving the World</textarea>
+                </div>
+                <div class="profile-field">
+                  <label>Biometrics</label>
+                  <input type="text" id="prof-bio-input" value="Oxygen: 98%, Heart Rate: 72 bpm">
+                </div>
+                <button class="save-mem-btn" onclick="saveMemoryData()">SYNCHRONIZE MEMORY</button>
+              </div>
+            </div>
+            <div class="memory-container">
+              <div class="panel-header" style="background:transparent; border:none; padding-left:0;">LOG HISTORY</div>
+              <div id="memory-list"></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -697,8 +817,59 @@ HTML = r"""<!DOCTYPE html>
 <script>
 // ── State ──────────────────────────────────────────────────────────────────
 let micActive = false, animTick = 0;
-let sparkData = { cpu: Array(40).fill(20), ram: Array(40).fill(40), net: Array(40).fill(10) };
+let sparkData = { cpu: Array(40).fill(20), ram: Array(40).fill(40), disk: Array(40).fill(60), net: Array(40).fill(10) };
 let waveHistory = Array(120).fill(0);
+let appMemory = { user: {}, logs: [], chat_history: [] };
+
+// ── Memory Management ──────────────────────────────────────────────────────
+function loadMemory() {
+  if (window.pywebview) {
+    window.pywebview.api.get_memory().then(raw => {
+      appMemory = JSON.parse(raw);
+      document.getElementById('prof-name-input').value = appMemory.user.name;
+      document.getElementById('prof-hobbies-input').value = appMemory.user.hobbies;
+      document.getElementById('prof-bio-input').value = appMemory.user.biometrics;
+      document.getElementById('prof-name-display').textContent = appMemory.user.name;
+      updateMemoryList();
+    });
+  }
+}
+
+function saveMemoryData() {
+  appMemory.user.name = document.getElementById('prof-name-input').value;
+  appMemory.user.hobbies = document.getElementById('prof-hobbies-input').value;
+  appMemory.user.biometrics = document.getElementById('prof-bio-input').value;
+  document.getElementById('prof-name-display').textContent = appMemory.user.name;
+
+  if (window.pywebview) {
+    window.pywebview.api.save_memory(JSON.stringify(appMemory)).then(res => {
+      const s = JSON.parse(res);
+      if (s.status === 'success') {
+        showToast('MEMORY SYNCHRONIZED');
+        addMemoryEntry('Biometric and profile data updated.');
+      }
+    });
+  }
+}
+
+function updateMemoryList() {
+  const m = document.getElementById('memory-list');
+  m.innerHTML = '';
+  appMemory.logs.slice().reverse().forEach(log => {
+    const e = document.createElement('div');
+    e.className = 'mem-entry';
+    e.innerHTML = `<div class="mem-time">${log.time}</div><div class="mem-text">${escHtml(log.text)}</div>`;
+    m.appendChild(e);
+  });
+}
+
+function addMemoryEntry(text) {
+  const log = { time: new Date().toLocaleString(), text: text };
+  appMemory.logs.push(log);
+  if (appMemory.logs.length > 50) appMemory.logs.shift();
+  updateMemoryList();
+  if (window.pywebview) window.pywebview.api.save_memory(JSON.stringify(appMemory));
+}
 
 // ── Clock ──────────────────────────────────────────────────────────────────
 function updateClock() {
@@ -794,14 +965,17 @@ function updateStats() {
       const s = JSON.parse(raw);
       sparkData.cpu.push(s.cpu); sparkData.cpu.shift();
       sparkData.ram.push(s.ram); sparkData.ram.shift();
+      sparkData.disk.push(s.disk); sparkData.disk.shift();
       sparkData.net.push(Math.min(s.net,100)); sparkData.net.shift();
       document.getElementById('cpu-val').textContent = s.cpu.toFixed(0)+'%';
       document.getElementById('ram-val').textContent = s.ram.toFixed(0)+'%';
+      document.getElementById('disk-val').textContent = s.disk.toFixed(0)+'%';
       document.getElementById('net-val').textContent = s.net.toFixed(1)+' Mbps';
     });
   }
   drawSparkline('spark-cpu', sparkData.cpu, '#00d4ff');
   drawSparkline('spark-ram', sparkData.ram, '#00d4ff');
+  drawSparkline('spark-disk', sparkData.disk, '#ff8c42');
   drawSparkline('spark-net', sparkData.net, '#ff8c42');
 }
 setInterval(updateStats, 2000);
@@ -828,11 +1002,19 @@ function sendMsg() {
   u.innerHTML = `<div class="msg-sender-label">You</div><div class="bubble">${escHtml(t)}</div><div class="msg-meta">${ts}</div>`;
   a.appendChild(u);
   addMemoryEntry('User Command: ' + t);
+
+  const lower = t.toLowerCase();
+  let response = `Processing: "${escHtml(t)}". All systems nominal, sir.`;
+  if (lower.includes('lock')) { response = "Locking workstation immediately, sir."; setTimeout(() => qaAction('lock'), 1000); }
+  else if (lower.includes('terminal')) { response = "Accessing secure terminal..."; setTimeout(() => qaAction('terminal'), 1000); }
+  else if (lower.includes('status')) { response = "All systems operational. CPU and Memory usage within normal parameters."; }
+
   setTimeout(() => {
     const j = document.createElement('div'); j.className = 'msg-jarvis';
-    j.innerHTML = `<div class="jarvis-label">JARVIS</div><div class="bubble">Processing: "${escHtml(t)}". All systems nominal, sir.</div><div class="msg-meta">${ts}</div>`;
+    j.innerHTML = `<div class="jarvis-label">JARVIS</div><div class="bubble">${response}</div><div class="msg-meta">${ts}</div>`;
     a.appendChild(j); a.scrollTop = a.scrollHeight;
-  }, 800); a.scrollTop = a.scrollHeight;
+  }, 800);
+  a.scrollTop = a.scrollHeight;
 }
 
 function addMemoryEntry(text) {
@@ -843,7 +1025,14 @@ function addMemoryEntry(text) {
 
 function qaAction(t) { if (window.pywebview) window.pywebview.api.execute_action(t); showToast('Opening ' + t + '...'); addMemoryEntry('System Action: ' + t); }
 function activity(t) { showToast(t + ' ready'); addMemoryEntry('Module Activated: ' + t); }
-function sysAction(t) { if (t==='shutdown' && confirm('Shut down?')) window.pywebview.api.close_app(); else showToast('Executing ' + t + '...'); }
+function sysAction(t) {
+  const labels = { shutdown: 'SHUT DOWN', restart: 'RESTART', lock: 'LOCK', sleep: 'SLEEP' };
+  if (confirm(`Confirm ${labels[t]}?`)) {
+    if (window.pywebview) window.pywebview.api.execute_action(t);
+    showToast('EXECUTING ' + labels[t] + '...');
+    addMemoryEntry('System Control: ' + labels[t]);
+  }
+}
 function toggleMic() { micActive = !micActive; document.getElementById('mic-btn').classList.toggle('active', micActive); }
 function showToast(m) { const t = document.getElementById('toast'); t.textContent = m; t.style.opacity='1'; setTimeout(()=>t.style.opacity='0', 2000); }
 
